@@ -17,7 +17,8 @@
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "lib": ["ESNext"],
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "typeRoots": [ "types/*.ts" ],
   },
   "include": [ "./**/*.ts" ],
   "exclude": [

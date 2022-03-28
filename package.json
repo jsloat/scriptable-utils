@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "deploy": "git push"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jsloat/scriptable-utils.git"
