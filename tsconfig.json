@@ -11,17 +11,15 @@
     "noEmit": true,
     // Enable strictest settings like strictNullChecks & noImplicitAny.
     "strict": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "noImplicitAny": true,
     "outDir": ".",
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "lib": ["ESNext"],
-    "typeRoots": [ "src/types/*.ts" ],
-    "baseUrl": "src",
     "noUncheckedIndexedAccess": true
   },
-  "include": [ "src/**/*.ts", "./*.ts" ],
+  "include": [ "./**/*.ts" ],
   "exclude": [
     "node_modules",
   ],
