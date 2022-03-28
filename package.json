@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "git push"
+    "deploy": "git push",
+    "test": "tsc"
   },
   "repository": {
     "type": "git",
