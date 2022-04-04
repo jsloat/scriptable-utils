@@ -28,6 +28,7 @@ export const red = c`a12a3a`;
 export const red_d1 = c`82212e`;
 export const red_d2 = c`611923`;
 
+export const yellow_l3 = c`eae5d6`;
 export const yellow_l2 = c`ddd4bb`;
 export const yellow_l1 = c`cfc3a0`;
 export const yellow = c`bcab79`;
