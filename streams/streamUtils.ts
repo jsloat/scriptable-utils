@@ -1,3 +1,5 @@
+import { OK } from '../input/Confirm';
+
 type DataTypeBase = AnyObj;
 
 type UpdateCallback<D extends DataTypeBase> = (newAttr: Partial<D>) => any;
@@ -19,10 +21,16 @@ type StreamConstructorOpts<DataType extends DataTypeBase> = {
   showStreamDataUpdateDebug?: boolean;
 };
 
+/** If a single callback is called more than this number per session, a warning
+ * is triggered */
+const CALLBACK_WARNING_THRESHOLD = 100;
+
 export class Stream<DataType extends DataTypeBase> {
   showStreamDataUpdateDebug: boolean;
   data: DataType | null;
   updateCallbacks: CallbackWithOpts<DataType>[] = [];
+  /** Used to alert user to high volume of callbacks triggered */
+  callbackExecutionCount: Record<string, number> = {};
 
   constructor({
     defaultState,
@@ -79,6 +87,14 @@ export class Stream<DataType extends DataTypeBase> {
       if (this.showStreamDataUpdateDebug)
         console.log(`Running stream update callback with ID "${id}"`);
       callback((singleValObj || this.data) as unknown as Partial<DataType>);
+      this.callbackExecutionCount[id] =
+        (this.callbackExecutionCount[id] ?? 0) + 1;
+      if (this.callbackExecutionCount[id]! > CALLBACK_WARNING_THRESHOLD) {
+        OK('Overactive callback warning', {
+          message: `Callback "${id}" has run over ${CALLBACK_WARNING_THRESHOLD} times.`,
+        });
+        delete this.callbackExecutionCount[id];
+      }
     });
   }
 
@@ -126,6 +142,8 @@ export class Stream<DataType extends DataTypeBase> {
 
 export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
 
+type Subscription = { unsubscribe: () => void };
+
 /**
  * Subscribe a stream to another stream.
  *
@@ -144,6 +162,8 @@ export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
  * This action is triggered whenever a change occurs in source$
  *
  * If no stateReducer argument passed, don't change state on reload.
+ *
+ * Returns an object that allows you to unsubscribe.
  */
 // ts-unused-exports:disable-next-line
 export const subscribe = <
@@ -157,9 +177,10 @@ export const subscribe = <
     latestDependentState: DependentState,
     latestSourceState: SourceState
   ) => DependentState | null = state => state
-) => {
+): Subscription => {
+  const callbackId = subscriptionName;
   source$.registerUpdateCallback({
-    callbackId: subscriptionName,
+    callbackId,
     callback: async () => {
       const latestDependentData = dependent$.getData();
       const latestSourceData = source$.getData();
@@ -168,10 +189,14 @@ export const subscribe = <
       if (reducedData) await dependent$.setData(reducedData);
     },
   });
+  return {
+    unsubscribe: () => source$.unregisterUpdateCallback(callbackId),
+  };
 };
 
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
-  streamDict: StreamDict
+  streamDict: StreamDict,
+  name: string
 ) => Stream<{ [key in keyof StreamDict]: StreamDataType<StreamDict[key]> }>;
 /**
  * Create a new stream that combines the data of multiple streams. Combined
@@ -181,7 +206,7 @@ type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
  *
  * The returned stream will update whwnever its combined streams do.
  */
-export const combineStreams: CombineStreams = streamDict => {
+export const combineStreams: CombineStreams = (streamDict, name) => {
   const defaultState = Object.entries(streamDict).reduce(
     (accState, [namespace, $]) => ({ ...accState, [namespace]: $.getData() }),
     {} as any
@@ -189,6 +214,7 @@ export const combineStreams: CombineStreams = streamDict => {
   const combined$ = new Stream({ defaultState });
   Object.entries(streamDict).forEach(([namespace, $]) =>
     $.registerUpdateCallback({
+      callbackId: `Combined stream: ${name}/${namespace}`,
       callback: () => {
         const latestCombinedState = combined$.getData();
         const latestSourceState = $.getData();
