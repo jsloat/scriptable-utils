@@ -11,7 +11,7 @@ type CallbackWithOpts<D> = {
 
 type RegisterUpdateCallbackOpts<D extends DataTypeBase> = {
   callback: UpdateCallback<D>;
-  callbackId?: string;
+  callbackId: string;
   overwriteExistingCallback?: boolean;
   onlyTheseKeys?: (keyof D)[];
 };
@@ -49,7 +49,6 @@ export class Stream<DataType extends DataTypeBase> {
    * @param callbackId Optionally provide a unique string ID to ensure the same callback is not added multiple times.
    * @param overwriteExistingCallback If ID provided, by default existing callback w/ that ID will be overwritten. If set to false, first callback set will remain.
    * @param onlyTheseKeys Only call the callback if the provided keys of DataType are updated
-   * Returns the callback ID
    */
   registerUpdateCallback({
     callback,
@@ -57,7 +56,6 @@ export class Stream<DataType extends DataTypeBase> {
     overwriteExistingCallback = true,
     onlyTheseKeys = [],
   }: RegisterUpdateCallbackOpts<DataType>) {
-    const parsedCallbackId = callbackId || UUID.string();
     const callbackIdAlreadyRegistered = this.updateCallbacks.some(
       ({ id }) => id === callbackId
     );
@@ -66,9 +64,8 @@ export class Stream<DataType extends DataTypeBase> {
 
     if (!overwriteDisallowed)
       this.updateCallbacks = this.updateCallbacks
-        .filter(({ id }) => id !== parsedCallbackId)
-        .concat({ callback, id: parsedCallbackId, onlyTheseKeys });
-    return parsedCallbackId;
+        .filter(({ id }) => id !== callbackId)
+        .concat({ callback, id: callbackId, onlyTheseKeys });
   }
 
   unregisterUpdateCallback(callbackId: string) {
