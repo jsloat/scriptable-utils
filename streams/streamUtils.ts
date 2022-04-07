@@ -55,7 +55,7 @@ export class Stream<DataType extends DataTypeBase> {
     callbackId,
     overwriteExistingCallback = true,
     onlyTheseKeys = [],
-  }: RegisterUpdateCallbackOpts<DataType>) {
+  }: RegisterUpdateCallbackOpts<DataType>): StreamCallback {
     const callbackIdAlreadyRegistered = this.updateCallbacks.some(
       ({ id }) => id === callbackId
     );
@@ -66,6 +66,8 @@ export class Stream<DataType extends DataTypeBase> {
       this.updateCallbacks = this.updateCallbacks
         .filter(({ id }) => id !== callbackId)
         .concat({ callback, id: callbackId, onlyTheseKeys });
+
+    return { remove: () => this.unregisterUpdateCallback(callbackId) };
   }
 
   unregisterUpdateCallback(callbackId: string) {
@@ -139,8 +141,6 @@ export class Stream<DataType extends DataTypeBase> {
 
 export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
 
-type Subscription = { unsubscribe: () => void };
-
 /**
  * Subscribe a stream to another stream.
  *
@@ -174,9 +174,9 @@ export const subscribe = <
     latestDependentState: DependentState,
     latestSourceState: SourceState
   ) => DependentState | null = state => state
-): Subscription => {
+) => {
   const callbackId = subscriptionName;
-  source$.registerUpdateCallback({
+  return source$.registerUpdateCallback({
     callbackId,
     callback: async () => {
       const latestDependentData = dependent$.getData();
@@ -186,9 +186,6 @@ export const subscribe = <
       if (reducedData) await dependent$.setData(reducedData);
     },
   });
-  return {
-    unsubscribe: () => source$.unregisterUpdateCallback(callbackId),
-  };
 };
 
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(

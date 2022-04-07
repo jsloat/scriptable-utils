@@ -210,3 +210,5 @@ declare type ArrCallback<T, R = unknown> = (
   index: number,
   array: T[]
 ) => R;
+
+declare type StreamCallback = { remove: () => void };
