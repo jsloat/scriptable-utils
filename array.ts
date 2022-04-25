@@ -160,3 +160,7 @@ export const mapFind = <T, U>(
   map: ArrCallback<T, U>,
   find: ArrCallback<U> = Boolean
 ) => arr.map(map).find(find);
+
+/** Shorthand for filtering primitive values out of an array. */
+export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>
+  arr.filter(el => !exclude.includes(el));
