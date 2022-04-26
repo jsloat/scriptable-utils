@@ -103,7 +103,9 @@ declare type Typeguard<T extends V, V = any> = (val: V) => val is T;
 
 declare type NotUndefined<T> = Exclude<T, undefined>;
 
-declare type AnyObj = Record<string | number | symbol, any>;
+declare type ObjKey = string | number | symbol;
+
+declare type AnyObj = Record<ObjKey, any>;
 
 declare type ObjComparison<T, R = boolean> = (a: T, b: T) => R;
 
@@ -212,3 +214,34 @@ declare type ArrCallback<T, R = unknown> = (
 ) => R;
 
 declare type StreamCallback = { remove: () => void };
+
+type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
+  SubSubKeyOrVal extends void
+    ? SubKeyOrVal
+    : SubKeyOrVal extends ObjKey
+    ? Record<SubKeyOrVal, SubSubKeyOrVal>
+    : never;
+
+/**
+ * Util type to define nested object structures in a concise way.
+ *
+ * For example, this:
+ * `Record<string, Record<number, Record<string, Set<any>>>>`
+ *
+ * Could be rewritten as:
+ * `Index<string, number, string, Set<any>>`
+ */
+declare type Index<
+  A extends ObjKey,
+  B,
+  C = void,
+  D = void,
+  E = void,
+  F = void
+> = Record<
+  A,
+  _subrecordOrValue<
+    B,
+    _subrecordOrValue<C, _subrecordOrValue<D, _subrecordOrValue<E, F>>>
+  >
+>;
