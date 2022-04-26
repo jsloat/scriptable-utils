@@ -15,6 +15,7 @@ export default async (
     initValue,
     placeholder,
     flavor,
+    hideClipboardButton = flavor === 'number',
   }: TextInputOpts = {}
 ) => {
   const clipboardValue = Pasteboard.paste();
@@ -27,7 +28,7 @@ export default async (
     title,
     conditionalArr([
       { isCancel: true, label: cancelText },
-      clipboardValue && { label: USE_CLIPBOARD_LABEL },
+      !hideClipboardButton && clipboardValue && { label: USE_CLIPBOARD_LABEL },
       { label: submitText },
     ]),
     {
