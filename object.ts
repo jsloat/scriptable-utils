@@ -1,4 +1,10 @@
-import { getType, isFunc, PrimitiveType, safeArrLookup } from './common';
+import {
+  getType,
+  isFunc,
+  isObject,
+  PrimitiveType,
+  safeArrLookup,
+} from './common';
 import sortObjects from './sortObjects';
 
 /**
@@ -283,3 +289,26 @@ export const arrToObjMap = <T, O extends AnyObj>(
   arr: T[],
   arrayItemToAttr: (item: T) => [key: keyof O, value: O[keyof O]]
 ) => objectFromEntries(arr.map(arrayItemToAttr));
+
+/**
+ * Rudimentary setIn function that allows setting a value at any level within an
+ * object. If a level in the path doesn't yet exist,it is created. NB: there is
+ * no type safety here, use with caution.
+ */
+export const setIn = <T extends AnyObj>(
+  obj: T,
+  path: [keyof T, ...ObjKey[]],
+  value: any
+): T => {
+  const [currPath, ...restPath] = path;
+  if (restPath.length) {
+    obj[currPath] = setIn(
+      (isObject(obj[currPath]) ? obj[currPath] : {}) as T[keyof T],
+      restPath as [T[keyof T], ...ObjKey[]],
+      value
+    );
+  } else {
+    obj[currPath] = value;
+  }
+  return obj;
+};
