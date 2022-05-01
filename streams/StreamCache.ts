@@ -4,7 +4,7 @@ import persisted, { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
 
 type NestedDataShape<T = any> = { data: T | null };
-type LoadData<T> = () => MaybePromise<T>;
+type LoadData<T> = (currData: T | null) => MaybePromise<T>;
 type LoadPersistedData<S, P> = (
   streamData: S
 ) => MaybePromise<NestedDataShape<P>>;
@@ -87,7 +87,7 @@ class StreamCache<StreamData, PersistedData> {
       return;
     }
     try {
-      const streamData = await this.loadData();
+      const streamData = await this.loadData(this.cache$.getData().data);
       this.cache$.setData({ data: streamData });
       if (!(this.loadPersistedData && this.io)) return;
       const persistedData = await this.loadPersistedData(streamData);
