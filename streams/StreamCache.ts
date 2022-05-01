@@ -4,17 +4,15 @@ import persisted, { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
 
 type NestedDataShape<T = any> = { data: T | null };
-type LoadData<T> = (currData: T | null) => MaybePromise<T>;
-type LoadPersistedData<S, P> = (
-  streamData: S
-) => MaybePromise<NestedDataShape<P>>;
+
+type LoadData<S, P> = (currCacheData: S | null) => MaybePromise<{
+  cachedData: S;
+  persistedData?: P extends void ? never : P;
+}>;
 
 type Opts<StreamData, PersistedData> = {
-  loadData: LoadData<StreamData>;
+  loadData: LoadData<StreamData, PersistedData>;
   autoRefreshInterval?: number;
-  loadPersistedData?: PersistedData extends void
-    ? undefined
-    : LoadPersistedData<StreamData, PersistedData>;
   /** If provided, stop attempting to load data after n failures */
   maxRetries?: number;
   /** If true, don't throw an error on data load failure. */
@@ -22,16 +20,12 @@ type Opts<StreamData, PersistedData> = {
 };
 
 /** Used to create a caching mechanism for data that must be fetched. */
-class StreamCache<StreamData, PersistedData> {
+export class StreamCache<StreamData, PersistedData> {
   id: ID;
-  protected loadData: LoadData<StreamData>;
+  protected loadData: LoadData<StreamData, PersistedData>;
   protected autoRefreshInterval: number | null;
   protected refreshTimer: RepeatingTimer | null;
-  protected io: Persisted<NestedDataShape<PersistedData>> | null;
-  protected loadPersistedData: LoadPersistedData<
-    StreamData,
-    PersistedData
-  > | null;
+  protected io: Persisted<NestedDataShape<PersistedData>>;
   protected cache$: Stream<NestedDataShape<StreamData>>;
   protected isPersistedDataLoaded: boolean;
   protected maxLoadDataErrors: number | null;
@@ -41,7 +35,6 @@ class StreamCache<StreamData, PersistedData> {
   constructor({
     loadData,
     autoRefreshInterval,
-    loadPersistedData,
     maxRetries,
     failSilently = false,
   }: Opts<StreamData, PersistedData>) {
@@ -51,15 +44,12 @@ class StreamCache<StreamData, PersistedData> {
     this.refreshTimer = this.autoRefreshInterval
       ? new RepeatingTimer({ interval: this.autoRefreshInterval })
       : null;
-    this.loadPersistedData = loadPersistedData || null;
-    this.io =
-      this.loadPersistedData &&
-      persisted<NestedDataShape<PersistedData>>({
-        filename: UUID.string(),
-        defaultData: { data: null },
-        disableCache: true,
-        prettify: false,
-      });
+    this.io = persisted<NestedDataShape<PersistedData>>({
+      filename: UUID.string(),
+      defaultData: { data: null },
+      disableCache: true,
+      prettify: false,
+    });
     this.cache$ = new Stream<NestedDataShape<StreamData>>({
       defaultState: { data: null },
     });
@@ -87,10 +77,12 @@ class StreamCache<StreamData, PersistedData> {
       return;
     }
     try {
-      const streamData = await this.loadData(this.cache$.getData().data);
-      this.cache$.setData({ data: streamData });
-      if (!(this.loadPersistedData && this.io)) return;
-      const persistedData = await this.loadPersistedData(streamData);
+      const { cachedData, persistedData } = await this.loadData(
+        this.cache$.getData().data
+      );
+      this.cache$.setData({ data: cachedData });
+      if (!persistedData) return;
+      // @ts-ignore
       await this.io.write({ data: persistedData });
       // Restart the clock for the current repeat interval
       if (this.refreshTimer?.isRunning && resetTimer) {
@@ -125,10 +117,7 @@ class StreamCache<StreamData, PersistedData> {
   }
 
   async getPersistedData() {
-    if (!this.io) {
-      throw new Error('No persisted data to get');
-    }
-    return await this.io.getData({ useCache: false });
+    return this.io.getData({ useCache: false });
   }
 
   cleanup() {
