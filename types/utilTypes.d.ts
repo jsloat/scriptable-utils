@@ -93,6 +93,8 @@ declare type SortOrder = 'ASC' | 'DESC';
 
 declare type MapFn<Input, Output> = (input: Input) => Output;
 
+declare type NoParamFn<Output = any> = () => Output;
+
 declare type OptionalMapFn<Input, Output> = (input?: Input) => Output;
 
 declare type Identity<T> = MapFn<T, T>;
