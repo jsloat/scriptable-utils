@@ -10,6 +10,7 @@ export const ICONS = {
   HEART: '❤️',
   STAR: '✭',
   FOLDER: '📁',
+  CHEVRON_LEFT: '‹',
   CHEVRON_RIGHT: '›',
 };
 
