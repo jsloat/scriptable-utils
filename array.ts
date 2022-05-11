@@ -164,3 +164,9 @@ export const mapFind = <T, U>(
 /** Shorthand for filtering primitive values out of an array. */
 export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>
   arr.filter(el => !exclude.includes(el));
+
+export const isNotInArr = <T>(
+  el: T,
+  exclude: T[],
+  isEqual: (a: T, b: T) => boolean = (a, b) => a === b
+) => !exclude.some(x => isEqual(el, x));
