@@ -33,6 +33,8 @@ export const isFunc = (val: any): val is (...args: any[]) => any =>
 
 export const isBoolean = (val: any): val is boolean => typeof val === 'boolean';
 
+export const isSymbol = (val: any): val is symbol => typeof val === 'symbol';
+
 //
 //
 //
