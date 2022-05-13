@@ -99,13 +99,11 @@ export const intersection = <T extends PrimitiveType, U extends PrimitiveType>(
 };
 
 /** AKA "complement" in set theory */
-export const inANotB = <T extends PrimitiveType, U extends PrimitiveType>(
+export const inANotB = <T, U>(
   a: (T | U)[],
-  b: (T | U)[]
-) => {
-  const bSet = new Set(b);
-  return a.filter(aEl => !bSet.has(aEl));
-};
+  b: (T | U)[],
+  isEqual: (a: T | U, b: T | U) => boolean = (a, b) => a === b
+) => a.filter(aEl => !b.some(bEl => isEqual(aEl, bEl)));
 
 /** Returns first non-nullish value */
 export const coalesce = <T>(arr: (T | Falsy)[]) => arr.filter(ExcludeFalsy)[0];
