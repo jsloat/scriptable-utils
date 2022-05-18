@@ -247,3 +247,6 @@ declare type Index<
     _subrecordOrValue<C, _subrecordOrValue<D, _subrecordOrValue<E, F>>>
   >
 >;
+
+/** With autosuggestion for keys */
+declare type Omit_<T, K extends keyof T> = Omit<T, K>;
