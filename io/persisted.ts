@@ -282,6 +282,15 @@ const getSet =
     await _write(ioObj, currData);
   };
 
+type ObjKeyDelete<T, K extends keyof T = keyof T> = (key: K) => Promise<void>;
+const getObjKeyDelete =
+  <T, K extends keyof T>(ioObj: IOObject<T>): ObjKeyDelete<T, K> =>
+  async key => {
+    const currData = await _fetchData(ioObj);
+    delete currData[key];
+    await _write(ioObj, currData);
+  };
+
 //
 
 export type Persisted<T> = {
@@ -303,7 +312,12 @@ export type Persisted<T> = {
       filter: Filter<UnwrapArr<T>>;
     }
   : T extends AnyObj
-  ? { hasKey: HasKey<T>; get: Get<T>; set: Set<T> }
+  ? {
+      hasKey: HasKey<T>;
+      get: Get<T>;
+      set: Set<T>;
+      deleteObjKey: ObjKeyDelete<T>;
+    }
   : AnyObj);
 
 const persisted = <T>(opts: CreateIObjectOpts<T>): Persisted<T> => {
@@ -330,6 +344,7 @@ const persisted = <T>(opts: CreateIObjectOpts<T>): Persisted<T> => {
     hasKey: getHasKey(ioObject),
     get: getGet(ioObject),
     set: getSet(ioObject),
+    deleteObjKey: getObjKeyDelete(ioObject),
   } as unknown as Persisted<T>;
 };
 export default persisted;
