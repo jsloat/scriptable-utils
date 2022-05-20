@@ -6,6 +6,8 @@ const c = ([hex]: TemplateStringsArray) => new Color(hex!);
 export const white = c`ffffff`;
 export const black = c`000000`;
 
+export const grayMinus3 = c`fdfdfd`;
+export const grayMinus2 = c`fcfcfc`;
 export const grayMinus1 = c`fbfbfb`;
 export const gray0 = c`efefef`;
 export const gray1 = c`d8d8d8`;
