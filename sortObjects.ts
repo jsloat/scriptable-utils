@@ -10,13 +10,21 @@ export const RAISE_A = -1;
 export const RAISE_B = 1;
 export const NO_CHANGE = 0;
 
+/** Generates a sorter based on the `shouldRaise` predicates passed in.
+ * Predicates are evaluated in order. If no predicates match either of the
+ * elements, NO_CHANGE is returned. */
+export const getSimpleSorter =
+  <T>(...shouldRaisePreds: Predicate<T>[]): ((a: T, b: T) => number) =>
+  (a, b) => {
+    for (const shouldRaise of shouldRaisePreds) {
+      if (shouldRaise(a) && !shouldRaise(b)) return RAISE_A;
+      if (shouldRaise(b) && !shouldRaise(a)) return RAISE_B;
+    }
+    return NO_CHANGE;
+  };
+
 // A non-nullish compare value should always be before a nullish one, regardless of sort order.
-const getNullishCompareReturn = (a: any, b: any) => {
-  if (isNullish(a) && !isNullish(b)) return RAISE_B;
-  if (!isNullish(a) && isNullish(b)) return RAISE_A;
-  if (isNullish(a) && isNullish(b)) return NO_CHANGE;
-  throw new Error('getNullishCompareReturn: unreachable state');
-};
+const getNullishCompareReturn = getSimpleSorter<any>(val => !isNullish(val));
 
 const isNullishOr = (typeguard: (val: any) => boolean) => (val: any) =>
   isNullish(val) || typeguard(val);
@@ -63,7 +71,7 @@ export default <EntityType>(
     const allCompareVals = arr.map(getCompareVal);
     const getTypedCompareVal = <T>(e: EntityType) => getCompareVal(e) as T;
 
-    if (allCompareVals.every(isNullishOr(isString)))
+    if (allCompareVals.every(isNullishOr(isString))) {
       return arr
         .slice(0)
         .sort((a, b) =>
@@ -73,8 +81,9 @@ export default <EntityType>(
             sortOrder
           )
         );
+    }
 
-    if (allCompareVals.every(isNullishOr(isDate)))
+    if (allCompareVals.every(isNullishOr(isDate))) {
       return arr
         .slice(0)
         .sort((a, b) =>
@@ -84,8 +93,9 @@ export default <EntityType>(
             sortOrder
           )
         );
+    }
 
-    if (allCompareVals.every(isNullishOr(isNumber)))
+    if (allCompareVals.every(isNullishOr(isNumber))) {
       return arr
         .slice(0)
         .sort((a, b) =>
@@ -95,6 +105,7 @@ export default <EntityType>(
             sortOrder
           )
         );
+    }
 
     throw new Error(
       'Error in sortObjects: Unsupported sort type, or inconsistent types'
