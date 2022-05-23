@@ -1,6 +1,7 @@
 import { composeIdentities } from '../flow';
 import { Stream } from '../streams';
 import persisted, { Persisted } from './persisted';
+import { getTemporaryFilename } from './utils';
 
 type DataObj<M, P> = { inMemoryData: M; persistedData: P };
 
@@ -32,7 +33,6 @@ export default class PersistedCache<
   InMemoryData,
   InPersistedData
 > {
-  id: ID;
   private splitData: SplitData<CombinedData, InMemoryData, InPersistedData>;
   private joinData: JoinData<CombinedData, InMemoryData, InPersistedData>;
   private io: Persisted<InPersistedData>;
@@ -43,12 +43,11 @@ export default class PersistedCache<
     splitData,
     joinData,
   }: Opts<CombinedData, InMemoryData, InPersistedData>) {
-    this.id = UUID.string();
     this.splitData = splitData;
     this.joinData = joinData;
     const { inMemoryData, persistedData } = splitData(defaultData);
     this.io = persisted<InPersistedData>({
-      filename: this.id,
+      filename: getTemporaryFilename(),
       defaultData: persistedData,
       disableCache: true,
       prettify: false,
