@@ -1,6 +1,7 @@
 import { getBookmarkedPath } from '../common';
 import { Confirm } from '../input/Confirm';
-import { filterJoin } from '../object';
+import { filterJoin, segment } from '../object';
+import { lowerIncludes } from '../string';
 import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
 
 export const PROJECT_ARCHIVE_DIR_NAME = '*Archive';
@@ -200,4 +201,49 @@ export const trimPathStart = (path: string, levelsShown = 2) => {
     .slice(Math.max(0, components.length - levelsShown))
     .map(cleanICloudDirName)
     .join('/');
+};
+
+type RecursiveSearchOpts = {
+  includeDirectories?: boolean;
+  filterFilenameByString?: string;
+};
+/** Return matching filepaths under the root directory. By default only returns
+ * filepaths for files, not directories. Filtering by filename does not look at
+ * the file's path, only its filename. */
+const recursiveFilepathSearch = (
+  rootPath: string,
+  opts: RecursiveSearchOpts = {}
+): string[] => {
+  const { includeDirectories = false, filterFilenameByString } = opts;
+  const fm = FileManager.iCloud();
+  const childPaths = fm
+    .listContents(rootPath)
+    .map(childName => `${rootPath}/${childName}`);
+  const { filePaths, directoryPaths } = segment(childPaths, {
+    filePaths: path => !fm.isDirectory(path),
+    directoryPaths: 'UNMATCHED',
+  });
+  const filterPath = (path: string) =>
+    filterFilenameByString
+      ? lowerIncludes(fm.fileName(path, false), filterFilenameByString)
+      : true;
+  return [
+    ...filePaths.filter(filterPath),
+    ...(includeDirectories ? directoryPaths.filter(filterPath) : []),
+    ...directoryPaths.flatMap(path => recursiveFilepathSearch(path, opts)),
+  ];
+};
+
+const MAX_SEARCH_FILES_RESPONSES = 200;
+/** Search all files (not directories) under a root path whose filename
+ * (excluding extension) includes the given query.
+ *
+ * NB that this truncates search results if over a threshhold. Traversing all
+ * files is fast, but mapping a large number of filePaths to `FileInfo` objects
+ * can get quite slow. */
+export const searchFiles = (rootPath: string, query: string) => {
+  const allFilePaths = recursiveFilepathSearch(rootPath, {
+    filterFilenameByString: query,
+  });
+  return allFilePaths.slice(0, MAX_SEARCH_FILES_RESPONSES).map(getFileInfo);
 };
