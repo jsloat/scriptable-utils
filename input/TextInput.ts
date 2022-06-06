@@ -15,10 +15,10 @@ export default async (
     initValue,
     placeholder,
     flavor,
-    hideClipboardButton = flavor === 'number',
+    showClipboardButton = false,
   }: TextInputOpts = {}
 ) => {
-  const clipboardValue = Pasteboard.paste();
+  const clipboardValue = showClipboardButton && Pasteboard.paste();
   const USE_CLIPBOARD_LABEL = `📋 ${clipboardValue}`;
   const {
     textFieldValues: { inputText },
@@ -28,7 +28,7 @@ export default async (
     title,
     conditionalArr([
       { isCancel: true, label: cancelText },
-      !hideClipboardButton && clipboardValue && { label: USE_CLIPBOARD_LABEL },
+      showClipboardButton && clipboardValue && { label: USE_CLIPBOARD_LABEL },
       { label: submitText },
     ]),
     {

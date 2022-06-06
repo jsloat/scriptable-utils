@@ -64,6 +64,6 @@ export type TextInputOpts = {
   onSubmit?: (result: string) => any;
   onCancel?: () => any;
   flavor?: TextFieldKeyboardFlavor;
-  hideClipboardButton?: boolean;
+  showClipboardButton?: boolean;
 } & TextField &
   Pick<BaseOpts<never>, 'message'>;
