@@ -1,3 +1,4 @@
+import { composeIdentities } from '../flow';
 import { OK } from '../input/Confirm';
 
 type DataTypeBase = AnyObj;
@@ -103,6 +104,14 @@ export class Stream<DataType extends DataTypeBase> {
     if (!this.isInitialized) this.init(data);
     else this.data = data;
     if (!suppressChangeTrigger) await this.runCallbacks();
+  }
+
+  async updateData(...reducers: Identity<DataType>[]) {
+    if (!this.data) {
+      throw new Error('Attempting to update stream data while uninitialized');
+    }
+    this.data = composeIdentities(...reducers)(this.data);
+    await this.runCallbacks();
   }
 
   async updateAttr<K extends keyof DataType>(key: K, val: DataType[K]) {
