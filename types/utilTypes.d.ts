@@ -250,3 +250,5 @@ declare type Index<
 
 /** With autosuggestion for keys */
 declare type Omit_<T, K extends keyof T> = Omit<T, K>;
+/** With autosuggestion for keys */
+declare type Extract_<T, U extends T> = Extract<T, U>;
