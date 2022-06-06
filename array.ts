@@ -1,4 +1,4 @@
-import { ExcludeFalsy, PrimitiveType } from './common';
+import { ExcludeFalsy, isString, PrimitiveType } from './common';
 import { objectEntries, objectKeys } from './object';
 import sortObjects from './sortObjects';
 
@@ -146,7 +146,7 @@ export const conditionalArr: ConditionalArr = (
   joinWith?: string
 ): any => {
   const filteredArr = arr.filter(ExcludeFalsy);
-  return joinWith ? filteredArr.join(joinWith) : filteredArr;
+  return isString(joinWith) ? filteredArr.join(joinWith) : filteredArr;
 };
 
 export const isLengthOne = <T>(arr: T[]): arr is [T] => arr.length === 1;

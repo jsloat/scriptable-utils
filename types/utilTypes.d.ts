@@ -145,6 +145,10 @@ declare type NonNullishRecord<T extends Record<string, unknown>> = {
   [k in keyof T]: NonNullish<T[k]>;
 };
 
+declare type PartialWithNull<T extends AnyObj> = {
+  [key in keyof T]: T[key] | null;
+};
+
 declare type PickRequired<T, K extends keyof T> = Pick<Required<T>, K>;
 declare type PickPartial<T, K extends keyof T> = Pick<Partial<T>, K>;
 
