@@ -24,6 +24,8 @@ export const gray8 = c`161616`;
 //  {color}_l1 = a lighter shade by degree 1
 // https://coolors.co/253031-315659-2978a0-bcab79-c6e0ff
 
+export const red_l4 = c`e3949e`;
+export const red_l3 = c`da717e`;
 export const red_l2 = c`d14d5e`;
 export const red_l1 = c`c33245`;
 export const red = c`a12a3a`;
@@ -43,6 +45,8 @@ export const dark_green = c`253031`;
 export const dark_green_d1 = c`1a2223`;
 export const dark_green_d2 = c`121717`;
 
+export const green_l4 = c`96babd`;
+export const green_l3 = c`73a3a7`;
 export const green_l2 = c`508c91`;
 export const green_l1 = c`417376`;
 export const green = c`315659`;
