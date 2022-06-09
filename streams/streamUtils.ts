@@ -22,16 +22,49 @@ type StreamConstructorOpts<DataType extends DataTypeBase> = {
   showStreamDataUpdateDebug?: boolean;
 };
 
-/** If a single callback is called more than this number per session, a warning
+type CallbackExecutionCount = Record<string, number>;
+
+/** How often to poll check for number of callbacks */
+const CALLBACK_TIMER_INTERVAL = 1000 * 30;
+/** If a single callback is called more than this number per interval, a warning
  * is triggered */
-const CALLBACK_WARNING_THRESHOLD = 100;
+const CALLBACK_WARNING_THRESHOLD = 20;
+
+const registeredCallbackTimers: Timer[] = [];
+/** Stops repeating timers for all active streams. The timers are used to poll
+ * for overactive streams. Since there's no clear end-of-life for streams, this
+ * function ensures that the timers are all cleaned up when exiting the script.
+ * */
+export const stopStreamTimers = () =>
+  registeredCallbackTimers.forEach(t => t.invalidate());
+
+const alertOveractiveCallbacks = (
+  callbackExecutionCount: CallbackExecutionCount
+) =>
+  Object.entries(callbackExecutionCount).forEach(([id, count]) => {
+    if (count > CALLBACK_WARNING_THRESHOLD) {
+      OK('Overactive callback warning', {
+        message: `Callback "${id}" has run over ${CALLBACK_WARNING_THRESHOLD} times in the last ${CALLBACK_TIMER_INTERVAL} ms.`,
+      });
+    }
+  });
+
+const getBaseOveractiveCallbackTimer = () => {
+  const t = new Timer();
+  t.timeInterval = CALLBACK_TIMER_INTERVAL;
+  t.repeats = true;
+  return t;
+};
 
 export class Stream<DataType extends DataTypeBase> {
   showStreamDataUpdateDebug: boolean;
   data: DataType | null;
   updateCallbacks: CallbackWithOpts<DataType>[] = [];
   /** Used to alert user to high volume of callbacks triggered */
-  callbackExecutionCount: Record<string, number> = {};
+  callbackExecutionCount: CallbackExecutionCount = {};
+  /** Used to periodically check if callbacks have been called too many time
+   * within a period. */
+  overactiveCallbackTimer: Timer;
 
   constructor({
     defaultState,
@@ -40,6 +73,12 @@ export class Stream<DataType extends DataTypeBase> {
     this.showStreamDataUpdateDebug = showStreamDataUpdateDebug;
     this.data = defaultState || null;
     this.updateCallbacks = [];
+    this.overactiveCallbackTimer = getBaseOveractiveCallbackTimer();
+    this.overactiveCallbackTimer.schedule(() => {
+      alertOveractiveCallbacks(this.callbackExecutionCount);
+      this.callbackExecutionCount = {};
+    });
+    registeredCallbackTimers.push(this.overactiveCallbackTimer);
   }
 
   init(initData: DataType, force = false) {
@@ -89,12 +128,6 @@ export class Stream<DataType extends DataTypeBase> {
       callback((singleValObj || this.data) as unknown as Partial<DataType>);
       this.callbackExecutionCount[id] =
         (this.callbackExecutionCount[id] ?? 0) + 1;
-      if (this.callbackExecutionCount[id]! > CALLBACK_WARNING_THRESHOLD) {
-        OK('Overactive callback warning', {
-          message: `Callback "${id}" has run over ${CALLBACK_WARNING_THRESHOLD} times.`,
-        });
-        delete this.callbackExecutionCount[id];
-      }
     });
   }
 

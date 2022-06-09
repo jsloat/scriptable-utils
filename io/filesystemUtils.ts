@@ -20,7 +20,7 @@ export const getDocumentsCategoryChildDirPath = (
 export const getProjectPath = (projName: string) =>
   getDocumentsCategoryChildDirPath('project', projName);
 
-const createDirIfNotExists = (dirPath: string) => {
+export const createDirIfNotExists = (dirPath: string) => {
   const f = FileManager.iCloud();
   if (!f.fileExists(dirPath)) f.createDirectory(dirPath);
   return dirPath;
