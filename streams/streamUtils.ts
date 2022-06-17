@@ -263,3 +263,13 @@ export const combineStreams: CombineStreams = (streamDict, name) => {
   );
   return combined$;
 };
+
+/** Call this to create a reducer-getter generator for the given type. The
+ * reducer-getter generator can then be used to create functions that take some
+ * arguments and return a reducer for the given entity type. */
+export const makeReducerGetter =
+  <T>() =>
+  <A extends any[]>(getUpdatedVal: (currVal: T, ...args: A) => T) =>
+  (...args: A): Identity<T> =>
+  currVal =>
+    getUpdatedVal(currVal, ...args);

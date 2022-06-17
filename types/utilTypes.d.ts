@@ -258,3 +258,17 @@ declare type Omit_<T, K extends keyof T> = Omit<T, K>;
 declare type Extract_<T, U extends T> = Extract<T, U>;
 
 declare type ValOf<T extends AnyObj, K extends keyof T> = T[K];
+
+/**
+ * Returns tuple from inferred Map type.
+ *
+ * For example:
+ * ```
+ * type MyMap = Map<string, boolean>;
+ * type MyMapEntry = MapEntry<MyMap>;
+ * // Returns `[string, boolean]`
+ * ```
+ */
+declare type MapEntry<M extends Map<any, any>> = M extends Map<infer T, infer U>
+  ? [T, U]
+  : never;
