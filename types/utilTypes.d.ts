@@ -101,7 +101,9 @@ declare type Identity<T> = MapFn<T, T>;
 
 declare type Predicate<T> = MapFn<T, boolean>;
 
-declare type Typeguard<T extends V, V = any> = (val: V) => val is T;
+declare type Typeguard<AssertedType extends ActualType, ActualType = any> = (
+  val: ActualType
+) => val is AssertedType;
 
 declare type NotUndefined<T> = Exclude<T, undefined>;
 
@@ -219,6 +221,13 @@ declare type ArrCallback<T, R = unknown> = (
   array: T[]
 ) => R;
 
+declare type ReduceCallback<Final, Source> = (
+  previousValue: Final,
+  currentValue: Source,
+  currentIndex: number,
+  array: Source[]
+) => Final;
+
 declare type StreamCallback = { remove: () => void };
 
 type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
@@ -272,3 +281,5 @@ declare type ValOf<T extends AnyObj, K extends keyof T> = T[K];
 declare type MapEntry<M extends Map<any, any>> = M extends Map<infer T, infer U>
   ? [T, U]
   : never;
+
+declare type Entry<T extends AnyObj> = [key: keyof T, val: T[keyof T]];

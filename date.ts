@@ -4,6 +4,7 @@ import { ExcludeFalsy } from './common';
 import persisted from './io/persisted';
 import { getDomainColor } from './colors';
 import { CALENDAR_TITLES } from './privateConfig';
+import { compose, filter, map, toArray } from './arrayTransducers';
 
 // ts-unused-exports:disable-next-line
 export const ONE_MILLISECOND = 1;
@@ -288,10 +289,11 @@ export const getEventDomain = (event: CalendarEvent): Domain => {
 };
 
 export const getAllEventCals = async () =>
-  await Promise.all(
-    Object.values(CALENDAR_TITLES)
-      .filter(ExcludeFalsy)
-      .map(Calendar.forEventsByTitle)
+  Promise.all(
+    toArray(
+      Object.values(CALENDAR_TITLES),
+      compose(filter(ExcludeFalsy), map(Calendar.forEventsByTitle))
+    )
   );
 
 export const calBlacklistTitles = persisted<string[]>({
@@ -299,13 +301,13 @@ export const calBlacklistTitles = persisted<string[]>({
   defaultData: [],
 });
 
-/** @deprecated */
-export const excludeBlacklistedEvents = async (events: CalendarEvent[]) => {
-  await calBlacklistTitles.getData();
-  return events.filter(
-    event => !calBlacklistTitles.has({ item: event.title, useCache: true })
+export const initEventBlacklistCache = () => calBlacklistTitles.getData();
+
+export const excludeBlacklistedEvents = () =>
+  filter(
+    (event: CalendarEvent) =>
+      !calBlacklistTitles.has({ item: event.title, useCache: true })
   );
-};
 
 /** Get all events within x days in the past or future from now */
 export const getEventsInXDayRadius = async (x: number) => {
@@ -322,8 +324,10 @@ export const getEventsBetweenNowAndXDays = async (x: number) => {
   const inXDays = addToDate(NOW, { days: x });
   const startDate = x <= 0 ? inXDays : NOW;
   const endDate = x <= 0 ? NOW : inXDays;
-  return await excludeBlacklistedEvents(
-    await CalendarEvent.between(startDate, endDate, allCals)
+  await initEventBlacklistCache();
+  return toArray(
+    await CalendarEvent.between(startDate, endDate, allCals),
+    excludeBlacklistedEvents()
   );
 };
 
@@ -347,14 +351,14 @@ export type EventWithStatus = {
   isOngoing: boolean;
   isFuture: boolean;
 };
-export const enhanceCalEventsWithStatus = (
-  events: CalendarEvent[]
-): EventWithStatus[] => {
+export const enhanceCalEventsWithStatus = () => {
   const NOW = new Date();
-  return events.map(event => ({
-    event,
-    isCompleted: event.endDate < NOW,
-    isOngoing: event.startDate <= NOW && event.endDate >= NOW,
-    isFuture: event.startDate > NOW,
-  }));
+  return map(
+    (event: CalendarEvent): EventWithStatus => ({
+      event,
+      isCompleted: event.endDate < NOW,
+      isOngoing: event.startDate <= NOW && event.endDate >= NOW,
+      isFuture: event.startDate > NOW,
+    })
+  );
 };

@@ -1,4 +1,5 @@
 import { insertBetween } from '../../array';
+import { compose, filter, map, toArray } from '../../arrayTransducers';
 import { isNullish, isNumber } from '../../common';
 import { splitByRegex } from '../../string';
 import { MultipartOpts } from './types';
@@ -32,12 +33,14 @@ export const extractMultipartResponseArray = <R>(response: string) => {
     response,
     /(\r|\n)--[^ ]+(\r|\n)/
   );
-  const chunks = splitByBoundaryLikeString.filter(Boolean);
-  const withoutEmptyChunks = chunks
-    .map(normalizeLineBreaks)
-    .filter(chunk => Boolean(chunk.replace(/\n/g, '')));
-  return withoutEmptyChunks.map(chunk =>
-    extractJSONDataFromMultipartChunk<R>(chunk.split('\n'))
+  return toArray(
+    splitByBoundaryLikeString,
+    compose(
+      filter(Boolean),
+      map(normalizeLineBreaks),
+      filter(chunk => Boolean(chunk.replace(/\n/g, ''))),
+      map(chunk => extractJSONDataFromMultipartChunk<R>(chunk.split('\n')))
+    )
   );
 };
 

@@ -1,6 +1,7 @@
+import { map, toSegmented } from '../arrayTransducers';
 import { getBookmarkedPath } from '../common';
 import { Confirm } from '../input/Confirm';
-import { filterJoin, segment } from '../object';
+import { filterJoin } from '../object';
 import { lowerIncludes } from '../string';
 import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
 
@@ -61,8 +62,7 @@ export const getFileInfo = (path: string): FileInfo => {
 export const getDirContents = (filePath: string) =>
   FileManager.iCloud()
     .listContents(filePath)
-    .map(childName => `${filePath}/${childName}`)
-    .map(getFileInfo);
+    .map(childName => getFileInfo(`${filePath}/${childName}`));
 
 export const getProjectDirContents = (projName: string) =>
   getDirContents(getProjectPath(projName));
@@ -216,13 +216,11 @@ const recursiveFilepathSearch = (
 ): string[] => {
   const { includeDirectories = false, filterFilenameByString } = opts;
   const fm = FileManager.iCloud();
-  const childPaths = fm
-    .listContents(rootPath)
-    .map(childName => `${rootPath}/${childName}`);
-  const { filePaths, directoryPaths } = segment(childPaths, {
-    filePaths: path => !fm.isDirectory(path),
-    directoryPaths: 'UNMATCHED',
-  });
+  const { filePaths, directoryPaths } = toSegmented(
+    fm.listContents(rootPath),
+    map(childName => `${rootPath}/${childName}`),
+    { filePaths: path => !fm.isDirectory(path), directoryPaths: 'UNMATCHED' }
+  );
   const filterPath = (path: string) =>
     filterFilenameByString
       ? lowerIncludes(fm.fileName(path, false), filterFilenameByString)

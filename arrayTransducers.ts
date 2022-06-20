@@ -1,9 +1,23 @@
+import {
+  getSegmentConsts,
+  getSegmentReducer,
+  PrimitiveType,
+  SegmentRules,
+} from './common';
 import sortObjects from './sortObjects';
 
-type Reducer<Result, Input> = (result: Result, input: Input) => Result;
+type Reducer<Result, Input> = (
+  result: Result,
+  input: Input,
+  index: number
+) => Result;
+
+type ArrCallbackNoArr<Val, Result> = (value: Val, index: number) => Result;
+
+type Joiner<Result, Item> = Reducer<Result, Item>;
 
 type Transducer<InitVal = unknown, FinalVal = InitVal> = <Result = unknown>(
-  joinData: Reducer<Result, FinalVal>
+  joinData: Joiner<Result, FinalVal>
 ) => Reducer<Result, InitVal>;
 
 type Compose = {
@@ -32,16 +46,27 @@ type Compose = {
     t4: Transducer<D, E>,
     t5: Transducer<E, F>
   ): Transducer<A, F>;
-
-  /** Any number of transducers w/ the same typing */
-  <A, B>(...t: Transducer<A, B>[]): Transducer<A, B>;
-  /** 6+ operators, untyped! */
-  <A, B, C, D, E, F>(
+  /** 6 operators */
+  <A, B, C, D, E, F, G>(
     t1: Transducer<A, B>,
     t2: Transducer<B, C>,
     t3: Transducer<C, D>,
     t4: Transducer<D, E>,
     t5: Transducer<E, F>,
+    t6: Transducer<F, G>
+  ): Transducer<A, G>;
+
+  /** Any number of transducers w/ the same typing */
+  <A, B>(...t: Transducer<A, B>[]): Transducer<A, B>;
+
+  /** Unsupported arity! */
+  <A, B, C, D, E, F, G>(
+    t1: Transducer<A, B>,
+    t2: Transducer<B, C>,
+    t3: Transducer<C, D>,
+    t4: Transducer<D, E>,
+    t5: Transducer<E, F>,
+    t6: Transducer<F, G>,
     ...rest: Transducer[]
   ): Transducer<A, unknown>;
 };
@@ -54,36 +79,49 @@ export const compose: Compose =
   (...transducers: Transducer[]): Transducer =>
   joinData =>
     transducers.reduceRight(
-      (result, transducer) => transducer(result),
+      (accJoinData, transducer) => transducer(accJoinData),
       joinData
     );
 
 // OPERATORS
 
 export const map =
-  <Init, Mapped>(mapFn: MapFn<Init, Mapped>): Transducer<Init, Mapped> =>
+  <Init, Mapped>(
+    mapFn: ArrCallbackNoArr<Init, Mapped>
+  ): Transducer<Init, Mapped> =>
   joinData =>
-  (result, input) =>
-    joinData(result, mapFn(input));
+  (result, input, i) =>
+    joinData(result, mapFn(input, i), i);
 
-export const filter =
-  <T>(predicate: MapFn<T, any>): Transducer<T> =>
+export const flatten =
+  <UnflattenedAtom>(): Transducer<
+    (UnflattenedAtom | UnflattenedAtom[])[],
+    UnflattenedAtom[]
+  > =>
   joinData =>
-  (result, input) =>
-    predicate(input) ? joinData(result, input) : result;
+  (result, input, i) =>
+    joinData(result, input.flat() as UnflattenedAtom[], i);
 
-export const excludeFalsy =
-  <T>(): Transducer<T | Falsy, T> =>
+type Filter = {
+  /** Typeguard filter w/ type assertion */
+  <Asserted extends Actual, Actual>(
+    predicate: Typeguard<Asserted, Actual>
+  ): Transducer<Actual, Asserted>;
+  /** Boolean filter */
+  <T>(predicate: ArrCallbackNoArr<T, any>): Transducer<T>;
+};
+export const filter: Filter =
+  <T>(predicate: ArrCallbackNoArr<T, any>): Transducer<T> =>
   joinData =>
-  (result, input) =>
-    input ? joinData(result, input as T) : result;
+  (result, input, i) =>
+    predicate(input, i) ? joinData(result, input, i) : result;
 
 export const tap =
-  <T>(callback: (val: T) => any): Transducer<T> =>
+  <T>(callback: ArrCallbackNoArr<T, any>): Transducer<T> =>
   joinData =>
-  (result, input) => {
-    callback(input);
-    return joinData(result, input);
+  (result, input, i) => {
+    callback(input, i);
+    return joinData(result, input, i);
   };
 
 export const identity =
@@ -92,43 +130,77 @@ export const identity =
   result =>
     result;
 
+/** Returns only the first `take` elements of the transformed array. This is
+ * suboptimal, since it should break early if the limit is reached. */
+export const take =
+  <T>(take: number): Transducer<T> =>
+  joinData =>
+  (result, input, i) =>
+    i < take ? joinData(result, input, i) : result;
+
+// JOINERS
+
+const joinUnique = <T, U extends PrimitiveType>(
+  getCompareVal: MapFn<T, U>
+): Joiner<T[], T> => {
+  const hasSeen = new Set<U>();
+  return (acc, val) => {
+    const compareVal = getCompareVal(val);
+    if (hasSeen.has(compareVal)) return acc;
+    hasSeen.add(compareVal);
+    return acc.concat(val);
+  };
+};
+
+const joinSum = (): Joiner<number, number> => (sum, val) => sum + val;
+
+const joinCount = (): Joiner<number, any> => count => count + 1;
+
+const joinReduce = <Result, Value>(
+  reduce: Reducer<Result, Value>
+): Joiner<Result, Value> => reduce;
+
+const joinSet =
+  <T>(): Joiner<Set<T>, T> =>
+  (set, val) =>
+    set.add(val);
+
+const joinFind =
+  <T>(isMatch: MapFn<T, any>): Joiner<T | undefined, T> =>
+  (acc, val) =>
+    acc || (isMatch(val) ? val : acc);
+
+const joinConcat =
+  <T>(): Joiner<T[], T | T[]> =>
+  (acc, val) =>
+    acc.concat(val);
+
+const joinFlat =
+  <T>(): Joiner<T[], (T | T[])[]> =>
+  (acc, val) =>
+    acc.concat(val.flat() as T[]);
+
 // EXECUTORS
 
 /** Returns an array resulting from given transformation */
 export const toArray = <Init, Final>(
   sourceData: Init[],
-  xform: Transducer<Init, Final>
-) =>
-  sourceData.reduce(
-    xform((acc: Final[], val) => acc.concat(val)),
-    []
-  );
+  xform: Transducer<Init, Final | Final[]>
+) => sourceData.reduce(xform(joinConcat()), []);
 
-/** Returns only the first `take` elements of the transformed array. This is
- * suboptimal, since it should break early if the limit is reached. */
-export const toArrayTake = <Init, Final>(
+export const toUniqueArray = <Init, Final, CompareVal extends PrimitiveType>(
   sourceData: Init[],
   xform: Transducer<Init, Final>,
-  take: number
-) =>
-  sourceData.reduce(
-    xform((acc: Final[], val) => (acc.length === take ? acc : acc.concat(val))),
-    []
-  );
+  getCompareVal: MapFn<Final, CompareVal> = x => x as unknown as CompareVal
+) => sourceData.reduce(xform(joinUnique(getCompareVal)), []);
 
 /** Returns sum of transformed array */
 export const toSum = <T>(sourceData: T[], xform: Transducer<T, number>) =>
-  sourceData.reduce(
-    xform((sum: number, val) => sum + val),
-    0
-  );
+  sourceData.reduce(xform(joinSum()), 0);
 
 /** Returns count of transformed array */
 export const toCount = <T>(sourceData: T[], xform: Transducer<T, any>) =>
-  sourceData.reduce(
-    xform((count: number) => count + 1),
-    0
-  );
+  sourceData.reduce(xform(joinCount()), 0);
 
 /** Transform the source data with a given transducer (`xform`), then reduce
  * that into another entity. This will only traverse the array once. */
@@ -137,11 +209,7 @@ export const toReduce = <Init, Final, ReduceResult>(
   xform: Transducer<Init, Final>,
   reduce: Reducer<ReduceResult, Final>,
   reduceSeed: ReduceResult
-) =>
-  sourceData.reduce(
-    xform((result: ReduceResult, val) => reduce(result, val)),
-    reduceSeed
-  );
+) => sourceData.reduce(xform(joinReduce(reduce)), reduceSeed);
 
 /** This is really just shorthand for combining transducers and sorting. The
  * array will be traversed once for the transducer, then the result sorted. */
@@ -151,3 +219,34 @@ export const toSort = <Init, Final>(
   getCompareVal: (entity: Final) => any,
   sortOrder?: SortOrder
 ) => sortObjects(toArray(sourceData, xform), getCompareVal, sortOrder);
+
+export const toSegmented = <Init, Final, RuleKey extends string>(
+  sourceData: Init[],
+  xform: Transducer<Init, Final>,
+  segmentRules: SegmentRules<RuleKey, Final>
+) =>
+  sourceData.reduce(
+    xform(getSegmentReducer(segmentRules)),
+    getSegmentConsts(segmentRules).seed
+  );
+
+export const toSet = <Init, Final extends PrimitiveType>(
+  sourceData: Init[],
+  xform: Transducer<Init, Final>
+) => sourceData.reduce(xform(joinSet()), new Set());
+
+export const toFind = <Init, Final>(
+  sourceData: Init[],
+  xform: Transducer<Init, Final>,
+  isMatch: MapFn<Final, any>
+) => sourceData.reduce(xform(joinFind(isMatch)), undefined);
+
+export const toPromiseAll = <Init, Final extends Promise<any>>(
+  sourceData: Init[],
+  xform: Transducer<Init, Final>
+) => Promise.all(sourceData.reduce(xform(joinConcat()), []));
+
+export const toFlat = <Init, Final extends any[]>(
+  sourceData: Init[],
+  xform: Transducer<Init, Final>
+) => sourceData.reduce(xform(joinFlat()), []);

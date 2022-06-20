@@ -184,3 +184,56 @@ export const safeObjLookup = <
   }
   return val as NotUndefined<O[K]>;
 };
+
+// ts-unused-exports:disable-next-line
+export const objectFromEntries = <K extends string | number | symbol, V>(
+  entries: [key: K, val: V][]
+) => Object.fromEntries(entries) as Record<K, V>;
+
+export type SegmentRules<RuleKey extends string, T> = Record<
+  RuleKey,
+  ((item: T) => boolean) | 'UNMATCHED'
+>;
+
+export const getSegmentConsts = <RuleKey extends string, T>(
+  segmentRules: SegmentRules<RuleKey, T>
+) => {
+  const segmentKeys = Object.keys(segmentRules) as RuleKey[];
+  return {
+    segmentKeys,
+    unmatchedRuleKeys: segmentKeys.filter(k => segmentRules[k] === 'UNMATCHED'),
+    seed: objectFromEntries(segmentKeys.map(key => [key, [] as T[]])),
+  };
+};
+
+export const getSegmentReducer = <T, K extends string>(
+  segmentRules: SegmentRules<K, T>
+): ((acc: Record<K, T[]>, item: T) => Record<K, T[]>) => {
+  const { segmentKeys, unmatchedRuleKeys } = getSegmentConsts(segmentRules);
+  return (acc, item) => {
+    const matchingRuleKeys = segmentKeys.filter(key => {
+      const segmentRule = segmentRules[key];
+      return isFunc(segmentRule) ? segmentRule(item) : false;
+    });
+    if (matchingRuleKeys.length) {
+      matchingRuleKeys.forEach(k => acc[k].push(item));
+    } else if (unmatchedRuleKeys.length) {
+      unmatchedRuleKeys.forEach(k => acc[k].push(item));
+    }
+    return acc;
+  };
+};
+
+/**
+ * Given an array of items<T> & rules for segment membership, return segmented object of T[].
+ * Segment rules should be a predicate for type T, or string 'UNMATCHED' to serve as catch-all.
+ * Array entities can belong to multiple segments.
+ */
+export const segment = <T, K extends string>(
+  arr: T[],
+  segmentRules: SegmentRules<K, T>
+): Record<K, T[]> =>
+  arr.reduce(
+    getSegmentReducer(segmentRules),
+    getSegmentConsts(segmentRules).seed
+  );

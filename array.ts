@@ -1,3 +1,4 @@
+import { compose, map, toCount, toFind } from './arrayTransducers';
 import { ExcludeFalsy, isString, PrimitiveType } from './common';
 import { objectEntries, objectKeys } from './object';
 import sortObjects from './sortObjects';
@@ -22,10 +23,8 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
 
 /** Exactly one el in arr matches predicate. Default predicate is Boolean. */
 // ts-unused-exports:disable-next-line
-export const exactlyOne = <T>(
-  arr: T[],
-  predicate: ArrCallback<T, boolean> = Boolean
-) => arr.map(predicate).filter(Boolean).length === 1;
+export const exactlyOne = <T>(arr: T[], predicate: MapFn<T, any> = Boolean) =>
+  toCount(arr, compose(map(predicate)));
 
 export const isHomogeneous = <T extends number | string | boolean>(arr: T[]) =>
   arr.length < 2 || arr.slice(1).every(val => val === arr[0]);
@@ -155,9 +154,9 @@ export const isLengthOne = <T>(arr: T[]): arr is [T] => arr.length === 1;
  * provided, default to Boolean.  */
 export const mapFind = <T, U>(
   arr: T[],
-  map: ArrCallback<T, U>,
-  find: ArrCallback<U> = Boolean
-) => arr.map(map).find(find);
+  mapFn: MapFn<T, U>,
+  find: MapFn<U, any> = Boolean
+) => toFind(arr, map(mapFn), find);
 
 /** Shorthand for filtering primitive values out of an array. */
 export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>

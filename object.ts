@@ -1,7 +1,8 @@
+import { filter, toReduce } from './arrayTransducers';
 import {
   getType,
-  isFunc,
   isObject,
+  objectFromEntries,
   PrimitiveType,
   safeArrLookup,
 } from './common';
@@ -39,17 +40,12 @@ export const arraysHaveSameValues = (arr1: any[], arr2: any[]) => {
 
 // https://stackoverflow.com/questions/53966509/typescript-type-safe-omit-function
 export const omit = <T, K extends (keyof T)[]>(object: T, omitKeysArray: K) =>
-  Object.entries(object)
-    .filter(([key]) => !omitKeysArray.includes(key as keyof T))
-    .reduce(
-      (acc, [key, val]) => ({ ...acc, [key]: val }),
-      {} as { [K2 in Exclude<keyof T, K[number]>]: T[K2] }
-    );
-
-// ts-unused-exports:disable-next-line
-export const objectFromEntries = <K extends string | number | symbol, V>(
-  entries: [key: K, val: V][]
-) => Object.fromEntries(entries) as Record<K, V>;
+  toReduce(
+    Object.entries(object),
+    filter(([key]) => !omitKeysArray.includes(key as keyof T)),
+    (acc, [key, val]) => ({ ...acc, [key]: val }),
+    {} as { [K2 in Exclude<keyof T, K[number]>]: T[K2] }
+  );
 
 export const pick = <T, K extends keyof T>(object: T, includeKeysArray: K[]) =>
   objectFromEntries(
@@ -179,36 +175,6 @@ export const objectKeys = <T extends Record<string, any>>(obj: T) =>
 
 export const objectValues = <T extends Record<string, unknown>>(obj: T) =>
   Object.values(obj) as T[keyof T][];
-
-/**
- * Given an array of items<T> & rules for segment membership, return segmented object of T[].
- * Segment rules should be a predicate for type T, or string 'UNMATCHED' to serve as catch-all.
- * Array entities can belong to multiple segments.
- */
-export const segment = <T, K extends string>(
-  arr: T[],
-  segmentRules: Record<K, ((item: T) => boolean) | 'UNMATCHED'>
-): Record<K, T[]> => {
-  const segmentKeys = Object.keys(segmentRules) as K[];
-  const defaultReturn = objectFromEntries(
-    segmentKeys.map(key => [key, [] as T[]])
-  );
-  const unmatchedRuleKeys = segmentKeys.filter(
-    k => segmentRules[k] === 'UNMATCHED'
-  );
-  return arr.reduce((acc, item) => {
-    const matchingRuleKeys = segmentKeys.filter(key => {
-      const segmentRule = segmentRules[key];
-      return isFunc(segmentRule) ? segmentRule(item) : false;
-    });
-    if (matchingRuleKeys.length) {
-      matchingRuleKeys.forEach(k => acc[k].push(item));
-    } else if (unmatchedRuleKeys.length) {
-      unmatchedRuleKeys.forEach(k => acc[k].push(item));
-    }
-    return acc;
-  }, defaultReturn);
-};
 
 // ts-unused-exports:disable-next-line
 export type UnresolvedPromiseObject<R> = { [K in keyof R]: Promise<R[K]> };

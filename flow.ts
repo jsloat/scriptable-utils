@@ -19,20 +19,6 @@ export const composeIdentities =
   (initData: D) =>
     identities.reduce((currData, identity) => identity(currData), initData);
 
-type Fn<Args, Returns> = (args: Args) => Returns;
-type Compose = {
-  <A, B>(f1: Fn<A, B>): Fn<A, B>;
-  <A, B, C>(f1: Fn<A, B>, f2: Fn<B, C>): Fn<A, C>;
-  <A, B, C, D>(f1: Fn<A, B>, f2: Fn<B, C>, f3: Fn<C, D>): Fn<A, D>;
-  /** Too many functions, unsupported typing! */
-  (...fns: any[]): unknown;
-};
-// ts-unused-exports:disable-next-line
-export const compose: Compose =
-  (...fns: any[]) =>
-  (args: any) =>
-    fns.reduce((result, fn) => fn(result), args);
-
 /** HOF to invert a predicate function */
 export const invert =
   <Args extends any[]>(predicate: (...args: Args) => boolean) =>
