@@ -55,7 +55,7 @@ declare class WebView {
 declare class CallbackURL {
   constructor(baseUrl: string);
   addParameter: (name: string, value: string) => void;
-  open: () => Promise<any>;
+  open: <T = any>() => Promise<T>;
   getURL: () => string;
 }
 

@@ -147,13 +147,17 @@ export class Stream<DataType extends DataTypeBase> {
     await this.runCallbacks();
   }
 
-  async updateAttr<K extends keyof DataType>(key: K, val: DataType[K]) {
+  async updateAttr<K extends keyof DataType>(
+    key: K,
+    val: DataType[K],
+    { suppressChangeTrigger = false } = {}
+  ) {
     if (!this.data)
       throw new Error(
         `Attempting to set stream attribute ${key} before initializing stream.`
       );
     this.data[key] = val;
-    await this.runCallbacks({ [key]: val });
+    if (!suppressChangeTrigger) await this.runCallbacks({ [key]: val });
   }
 
   /** Used to trigger callbacks when no change has occurred */
@@ -169,11 +173,11 @@ export class Stream<DataType extends DataTypeBase> {
     return this.data;
   }
 
-  clearData() {
+  clearData({ runCallbacks = true } = {}) {
     // @ts-ignore
     delete this.data;
     this.data = null;
-    this.runCallbacks();
+    runCallbacks && this.runCallbacks();
   }
 
   get isInitialized() {

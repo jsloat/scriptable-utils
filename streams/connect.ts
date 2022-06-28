@@ -1,6 +1,6 @@
 import { Stream } from './streamUtils';
 
-type Connect<Returns, StreamedProps> = {
+export type Connect<Returns, StreamedProps> = {
   (component: (props: StreamedProps) => Returns): () => Returns;
   <OwnProps>(component: (props: OwnProps & StreamedProps) => Returns): (
     ownProps: OwnProps
@@ -13,7 +13,4 @@ export const getConnect =
   ): Connect<Returns, StreamedProps> =>
   (component: (props: any & StreamedProps) => Returns) =>
   (ownProps: any = {}) =>
-    component({
-      ...ownProps,
-      ...stream.getData(),
-    });
+    component({ ...ownProps, ...stream.getData() });

@@ -188,6 +188,14 @@ declare type MapKeys<
         keyof { [key in keyof NewKeyMap as Required<NewKeyMap>[key]]: any }
       >;
 
+/** Map some of the values of existing keys to new values */
+declare type MapVals<
+  Source extends AnyObj,
+  PartialNewVals extends {
+    [key in keyof Source]?: any;
+  }
+> = Omit<Source, keyof PartialNewVals> & PartialNewVals;
+
 declare type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
@@ -283,3 +291,9 @@ declare type MapEntry<M extends Map<any, any>> = M extends Map<infer T, infer U>
   : never;
 
 declare type Entry<T extends AnyObj> = [key: keyof T, val: T[keyof T]];
+
+type WithoutNeverKeys<T extends AnyObj> = {
+  [K in keyof T]: T[K] extends never ? never : K;
+}[keyof T];
+
+declare type WithoutNever<T extends AnyObj> = Pick<T, WithoutNeverKeys<T>>;

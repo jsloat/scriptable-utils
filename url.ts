@@ -1,104 +1,60 @@
-import { isString } from './common';
-import PersistedLog from './io/PersistedLog';
-import { stringify } from './object';
+import { isBoolean, isNumber, isString } from './common';
 
-const DEBUG = false;
-const LOG_TO_PERSISTED_LOG = true;
-
-const logUrlOpen = (url: string) =>
-  DEBUG && LOG_TO_PERSISTED_LOG ? PersistedLog.log(url) : console.log(url);
+const getValAsString = (val: any) =>
+  isString(val) ? val : JSON.stringify(val);
 
 /** Returns key=val w/ proper encoding */
-const getUrlEncodedParam = (key: string, value: string | number | boolean) => {
-  if (value === undefined) return null;
-  const parsedVal = isString(value) ? value : JSON.stringify(value);
-  return `${key}=${encodeURIComponent(parsedVal)}`;
+const getUrlEncodedParam = (key: ObjKey, val: unknown) => {
+  if (val === undefined) return null;
+  if (!isString(val) && !isNumber(val) && !isBoolean(val)) {
+    throw new Error('Object value type not supported by getUrlEncodedParam');
+  }
+  return [key, encodeURIComponent(getValAsString(val))].join('=');
 };
 
 /** Returns encoded params w/o ? at beginning, e.g. a=1&b=2&c=3 */
 export const getUrlEncodedParams = (params: AnyObj) =>
-  Object.entries(params).reduce((acc, [key, value]) => {
+  Object.entries(params).reduce((params, [key, value]) => {
     const encodedParam = getUrlEncodedParam(key, value);
-    return encodedParam ? `${acc}${acc.length ? '&' : ''}${encodedParam}` : acc;
+    if (!encodedParam) return params;
+    const joiner = params.length ? '&' : '';
+    return [params, encodedParam].join(joiner);
   }, '');
 
-const appendParam = (
+const appendParamReducer = (
   currUrl: string,
-  key: string,
-  value: string | number | boolean
+  [key, val]: [key: ObjKey, val: unknown]
 ) => {
-  const separator = currUrl.includes('?') ? '&' : '?';
-  const encodedParam = getUrlEncodedParam(key, value);
-  return encodedParam ? [currUrl, separator, encodedParam].join('') : currUrl;
+  const joiner = currUrl.includes('?') ? '&' : '?';
+  const encodedParam = getUrlEncodedParam(key, val);
+  return encodedParam ? [currUrl, encodedParam].join(joiner) : currUrl;
 };
 
-export const getUrlWithParams = (url: string, params: AnyObj = {}) =>
-  Object.entries(params).reduce(
-    (acc, [key, value]) => appendParam(acc, key, value),
-    url
-  );
+export const url = (url: string, params: AnyObj = {}) =>
+  Object.entries(params).reduce(appendParamReducer, url);
 
-export class Url {
-  url: string;
+export const openUrl = (url: string) => Safari.open(url);
 
-  constructor(baseUrl: string, params: AnyObj = {}) {
-    this.url = getUrlWithParams(baseUrl, params);
+export const openCallbackUrl = async <ExpectedReturn = void>(
+  baseUrl: string,
+  params: AnyObj = {}
+) => {
+  const cb = new CallbackURL(baseUrl);
+  Object.entries(params).forEach(([key, val]) => {
+    // Params need to be explicitly added like this on CallbackURL objects.
+    if (val !== undefined) cb.addParameter(key, getValAsString(val));
+  });
+  try {
+    return await cb.open<ExpectedReturn>();
+  } catch (e) {
+    const prompt = new Alert();
+    prompt.title = `Error encountered opening callback URL`;
+    prompt.message = String(e);
+    prompt.addAction('OK');
+    await prompt.present();
+    throw new Error(e as any);
   }
-  addParameter(param: string, value: string | number | boolean) {
-    this.url = appendParam(this.url, param, value);
-  }
-  open() {
-    logUrlOpen(this.url);
-    Safari.open(this.url);
-  }
-  getURL() {
-    return this.url;
-  }
-}
-
-type SmartUrlProps = {
-  baseUrl: string;
-  isXCallback?: boolean;
-  params?: AnyObj;
 };
-export class SmartUrl {
-  urlObject: CallbackURL | Url;
-  isXCallback: boolean;
-
-  constructor({ baseUrl, isXCallback = false, params = {} }: SmartUrlProps) {
-    const callback = new CallbackURL(baseUrl);
-    this.urlObject = isXCallback ? callback : new Url(baseUrl);
-    this.isXCallback = isXCallback;
-
-    Object.entries(params).forEach(([key, val]) => {
-      if (val === undefined) return;
-      this.urlObject.addParameter(
-        key,
-        typeof val === 'string' ? val : stringify(val)
-      );
-    });
-  }
-  get url() {
-    return this.urlObject.getURL();
-  }
-  addParam(name: string, value: string) {
-    this.urlObject.addParameter(name, value);
-  }
-  async open() {
-    // Normal URL logged in Url class
-    if (this.isXCallback) logUrlOpen(this.url);
-    try {
-      const result = await this.urlObject.open();
-      return this.isXCallback ? result : null;
-    } catch (e) {
-      const prompt = new Alert();
-      prompt.title = `Error encountered in SmartUrl.open.`;
-      prompt.message = String(e);
-      prompt.addAction('OK');
-      await prompt.present();
-    }
-  }
-}
 
 const FORUMS = [
   'reddit.com',
@@ -113,7 +69,7 @@ const FORUMS = [
 ];
 
 export const getGoogleSearchUrl = (query: string) =>
-  ['https://www.google.com/search?q=', encodeURIComponent(query)].join('');
+  url('https://www.google.com/search', { q: query });
 
 export const getForumSearchUrl = (query: string) => {
   const siteSearchText = FORUMS.reduce(
