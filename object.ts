@@ -278,3 +278,6 @@ export const setIn = <T extends AnyObj>(
   }
   return obj;
 };
+
+export const hasKey = <O extends AnyObj>(obj: O, key: any): key is keyof O =>
+  key in obj;

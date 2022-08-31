@@ -1,83 +1,145 @@
 import { countArrVal } from './array';
+import { isString, objectFromEntries } from './common';
 import { shortSwitch } from './flow';
+import { hasKey, objectKeys } from './object';
+
+type DynamicColor = { color: Color; isDynamic: true };
+export type EnhancedColor = { color: Color; label: string; isDynamic: boolean };
 
 const c = ([hex]: TemplateStringsArray) => new Color(hex!);
 
-export const white = c`ffffff`;
-export const black = c`000000`;
+const getDynamicColorObj = (
+  lightColor: Color,
+  darkColor: Color
+): DynamicColor => {
+  const color = Color.dynamic(lightColor, darkColor);
+  return { color, isDynamic: true };
+};
 
-export const grayMinus3 = c`fdfdfd`;
-export const grayMinus2 = c`fcfcfc`;
-export const grayMinus1 = c`fbfbfb`;
-export const gray0 = c`efefef`;
-export const gray1 = c`d8d8d8`;
-export const gray2 = c`c2c2c2`;
-export const gray3 = c`adadad`;
-export const gray4 = c`979797`;
-export const gray5 = c`6c6c6c`;
-export const gray6 = c`414141`;
-export const gray7 = c`2b2b2b`;
-export const gray8 = c`161616`;
+const isDynamicColor = (val: any): val is DynamicColor =>
+  Boolean(val && 'isDynamic' in val && val.isDynamic);
 
-// Naming convention:
-//  {color}_d1 = a darker shade by degree 1
-//  {color}_l1 = a lighter shade by degree 1
-// https://coolors.co/253031-315659-2978a0-bcab79-c6e0ff
+const COLORS = {
+  white: c`ffffff`,
+  black: c`000000`,
 
-export const red_l4 = c`e3949e`;
-export const red_l3 = c`da717e`;
-export const red_l2 = c`d14d5e`;
-export const red_l1 = c`c33245`;
-export const red = c`a12a3a`;
-export const red_d1 = c`82212e`;
-export const red_d2 = c`611923`;
+  grayMinus3: c`fdfdfd`,
+  grayMinus2: c`fcfcfc`,
+  grayMinus1: c`fbfbfb`,
+  gray0: c`efefef`,
+  gray1: c`d8d8d8`,
+  gray2: c`c2c2c2`,
+  gray3: c`adadad`,
+  gray4: c`979797`,
+  gray5: c`6c6c6c`,
+  gray6: c`414141`,
+  gray7: c`2b2b2b`,
+  gray8: c`161616`,
 
-export const yellow_l3 = c`eae5d6`;
-export const yellow_l2 = c`ddd4bb`;
-export const yellow_l1 = c`cfc3a0`;
-export const yellow = c`bcab79`;
-export const yellow_d1 = c`b4a16a`;
-export const yellow_d2 = c`a38f52`;
+  // Naming convention:
+  //  {color}_d1 = a darker shade by degree 1
+  //  {color}_l1 = a lighter shade by degree 1
+  // https://coolors.co/253031-315659-2978a0-bcab79-c6e0ff
 
-export const dark_green_l2 = c`4f6769`;
-export const dark_green_l1 = c`3d5051`;
-export const dark_green = c`253031`;
-export const dark_green_d1 = c`1a2223`;
-export const dark_green_d2 = c`121717`;
+  red_l4: c`e3949e`,
+  red_l3: c`da717e`,
+  red_l2: c`d14d5e`,
+  red_l1: c`c33245`,
+  red: c`a12a3a`,
+  red_d1: c`82212e`,
+  red_d2: c`611923`,
 
-export const green_l4 = c`96babd`;
-export const green_l3 = c`73a3a7`;
-export const green_l2 = c`508c91`;
-export const green_l1 = c`417376`;
-export const green = c`315659`;
-export const green_d1 = c`244042`;
-export const green_d2 = c`162627`;
+  yellow_l3: c`eae5d6`,
+  yellow_l2: c`ddd4bb`,
+  yellow_l1: c`cfc3a0`,
+  yellow: c`bcab79`,
+  yellow_d1: c`b4a16a`,
+  yellow_d2: c`a38f52`,
 
-export const deep_blue_l2 = c`4da5d1`;
-export const deep_blue_l1 = c`3292c3`;
-export const deep_blue = c`2978a0`;
-export const deep_blue_d1 = c`216282`;
-export const deep_blue_d2 = c`194961`;
+  dark_green_l2: c`4f6769`,
+  dark_green_l1: c`3d5051`,
+  dark_green: c`253031`,
+  dark_green_d1: c`1a2223`,
+  dark_green_d2: c`121717`,
 
-export const blue_l1 = c`ebf4ff`;
-export const blue = c`c6e0ff`;
-export const blue_d1 = c`add2ff`;
-export const blue_d2 = c`85bcff`;
+  green_l4: c`96babd`,
+  green_l3: c`73a3a7`,
+  green_l2: c`508c91`,
+  green_l1: c`417376`,
+  green: c`315659`,
+  green_d1: c`244042`,
+  green_d2: c`162627`,
 
-// Color aliases
+  deep_blue_l2: c`4da5d1`,
+  deep_blue_l1: c`3292c3`,
+  deep_blue: c`2978a0`,
+  deep_blue_d1: c`216282`,
+  deep_blue_d2: c`194961`,
 
-export const domain_personal = deep_blue;
-export const domain_work = yellow;
-export const domain_mix = c`73928D`;
-export const danger = red_l1;
-export const success = green_l2;
-export const bg = Color.dynamic(white, black);
-export const primaryTextColor = Color.dynamic(gray8, gray1);
-export const secondaryTextColor = Color.dynamic(gray6, gray3);
-export const hr = Color.dynamic(gray0, gray7);
+  blue_l1: c`ebf4ff`,
+  blue: c`c6e0ff`,
+  blue_d1: c`add2ff`,
+  blue_d2: c`85bcff`,
+};
+
+const COLOR_ALIASES = {
+  domain_personal: COLORS.deep_blue,
+  domain_work: COLORS.yellow,
+  domain_mix: c`73928D`,
+  danger: COLORS.red_l1,
+  success: COLORS.green_l2,
+  bg: getDynamicColorObj(COLORS.white, COLORS.black),
+  primaryTextColor: getDynamicColorObj(COLORS.gray8, COLORS.gray1),
+  secondaryTextColor: getDynamicColorObj(COLORS.gray6, COLORS.gray3),
+  hr: getDynamicColorObj(COLORS.gray0, COLORS.gray7),
+};
+
+export const colorKeys = [...objectKeys(COLORS), ...objectKeys(COLOR_ALIASES)];
+
+type ColorKey = typeof colorKeys[number];
+
+const getKeyVal = (key: ColorKey) => {
+  if (hasKey(COLORS, key)) return COLORS[key];
+  if (hasKey(COLOR_ALIASES, key)) return COLOR_ALIASES[key];
+  throw new Error(`No color found for key ${key}`);
+};
+
+export const getColor = (key: ColorKey) => {
+  const val = getKeyVal(key);
+  return isDynamicColor(val) ? val.color : val;
+};
+
+export const getDynamicColor = (
+  lightColorOrKey: ColorKey | Color,
+  darkColorOrKey: ColorKey | Color
+) => {
+  const lightColor = isString(lightColorOrKey)
+    ? getColor(lightColorOrKey)
+    : lightColorOrKey;
+  const darkColor = isString(darkColorOrKey)
+    ? getColor(darkColorOrKey)
+    : darkColorOrKey;
+  return Color.dynamic(lightColor, darkColor);
+};
+
+export const getColors = <K extends ColorKey>(...keys: K[]) =>
+  objectFromEntries(keys.map(key => [key, getColor(key)]));
+
+export const getEnhancedColor = (key: ColorKey): EnhancedColor => {
+  const val = getKeyVal(key);
+  const isDynamic = isDynamicColor(val);
+  return {
+    color: isDynamicColor(val) ? val.color : val,
+    label: key,
+    isDynamic,
+  };
+};
 
 export const getDomainColor = (domain: Domain) =>
-  shortSwitch(domain, { personal: domain_personal, work: domain_work });
+  shortSwitch(domain, {
+    personal: getColor('domain_personal'),
+    work: getColor('domain_work'),
+  });
 
 export const getEntityArrColor = <T>(
   arr: T[],
@@ -86,7 +148,13 @@ export const getEntityArrColor = <T>(
   const domains = arr.map(getDomain);
   const personal = countArrVal(domains, 'personal');
   const work = countArrVal(domains, 'work');
-  if (personal && !work) return domain_personal;
-  if (work && !personal) return domain_work;
-  return work || personal ? domain_mix : null;
+  const key: ColorKey | null =
+    personal && !work
+      ? 'domain_personal'
+      : work && !personal
+      ? 'domain_work'
+      : work || personal
+      ? 'domain_mix'
+      : null;
+  return key && getColor(key);
 };
