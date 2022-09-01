@@ -122,8 +122,8 @@ export const getDynamicColor = (
   return Color.dynamic(lightColor, darkColor);
 };
 
-export const getColors = <K extends ColorKey>(...keys: K[]) =>
-  objectFromEntries(keys.map(key => [key, getColor(key)]));
+export const getColors = () =>
+  objectFromEntries(colorKeys.map(key => [key, getColor(key)]));
 
 export const getEnhancedColor = (key: ColorKey): EnhancedColor => {
   const val = getKeyVal(key);

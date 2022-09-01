@@ -123,12 +123,12 @@ const shade = (colorObj: Color, change: number) => {
   );
 };
 
-export const darken = (colorObj: Color, change: number) => {
+export const darken = (colorObj: Color, change = 0.4) => {
   const parsedChange = change < 0 ? change : change * -1;
   return shade(colorObj, parsedChange);
 };
 
-export const lighten = (colorObj: Color, change: number) => {
+export const lighten = (colorObj: Color, change = 0.4) => {
   const parsedChange = change < 0 ? change * -1 : change;
   return shade(colorObj, parsedChange);
 };
