@@ -1,5 +1,5 @@
 import { filterJoin } from './object';
-import { isString, PrimitiveType } from './common';
+import { isString } from './common';
 import { ICONS } from './icons';
 
 export const capitalize = (str: string) =>
@@ -160,7 +160,7 @@ export const extractLinks = (text: string) => {
 
 /** `Array.splice` mutates the source array and returns the spliced elements.
  * This rather clones the array, and returns the clone after being spliced */
-export const spliceInPlace = <T extends PrimitiveType, U extends PrimitiveType>(
+export const spliceInPlace = <T, U>(
   arr: T[],
   startIndex: number,
   deleteCount: number,
