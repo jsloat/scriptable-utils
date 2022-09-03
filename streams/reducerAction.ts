@@ -36,3 +36,22 @@ export const getReducerActionCreator =
       const newState = await reduce(currState, payload as any);
       if (onReduce && newState) await onReduce(newState, currState);
     }) as ReducerAction<P>;
+
+export const getTableReducerCreator =
+  <S>() =>
+  <A extends any[]>(r: (state: S, ...args: A) => MaybePromise<S>) =>
+  (...args: A): MapFn<S, MaybePromise<S>> =>
+  async state =>
+    await r(state, ...args);
+
+/** Attempt at a more streamlined version of `getReducerActionCreator` */
+export const getTableActionCreator =
+  <S>(getState: NoParamFn<S>, setState: MapFn<S, any>) =>
+  <A extends any[]>(
+    reducerGetter: (...args: A) => MaybePromise<MapFn<S, MaybePromise<S>>>
+  ) =>
+  async (...args: A) => {
+    const currState = getState();
+    const reducer = await reducerGetter(...args);
+    setState(await reducer(currState));
+  };

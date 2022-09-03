@@ -19,6 +19,19 @@ export const composeIdentities =
   (initData: D) =>
     identities.reduce((currData, identity) => identity(currData), initData);
 
+export const combineReducers = composeIdentities;
+
+export const combineAsyncReducers =
+  <T>(...reducers: MapFn<T, MaybePromise<T>>[]): MapFn<T, MaybePromise<T>> =>
+  async initData => {
+    let updatedData = initData;
+    for (const index in reducers) {
+      const reducer = reducers[index];
+      updatedData = reducer ? await reducer(updatedData) : updatedData;
+    }
+    return updatedData;
+  };
+
 /** HOF to invert a predicate function */
 export const invert =
   <Args extends any[]>(predicate: (...args: Args) => boolean) =>

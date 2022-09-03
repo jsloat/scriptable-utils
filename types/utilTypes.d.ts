@@ -297,3 +297,5 @@ type WithoutNeverKeys<T extends AnyObj> = {
 }[keyof T];
 
 declare type WithoutNever<T extends AnyObj> = Pick<T, WithoutNeverKeys<T>>;
+
+declare type SortFn<T> = (a: T, b: T) => number;

@@ -107,6 +107,9 @@ export const inANotB = <T, U>(
 /** Returns first non-nullish value */
 export const coalesce = <T>(arr: (T | Falsy)[]) => arr.filter(ExcludeFalsy)[0];
 
+const removeFromArr = <T extends PrimitiveType>(arr: T[], item: T) =>
+  arr.filter(i => i !== item);
+
 /** If item is present return arr without it, else return arr with it added. */
 // ts-unused-exports:disable-next-line
 export const toggleArrayItem = <T extends PrimitiveType>(
@@ -116,11 +119,10 @@ export const toggleArrayItem = <T extends PrimitiveType>(
   forceInclude?: boolean
 ) => {
   const hasItem = arr.includes(item);
-  const isAdding = !hasItem || forceInclude === true;
-  const isRemoving = hasItem || forceInclude === false;
-  if (isAdding) return hasItem ? arr : arr.concat(item);
-  if (isRemoving) return arr.filter(i => i !== item);
-  throw new Error('Unreachable toggleArrayItem');
+  if (forceInclude === true) return hasItem ? arr : arr.concat(item);
+  if (forceInclude === false) return hasItem ? removeFromArr(arr, item) : arr;
+  if (hasItem) return removeFromArr(arr, item);
+  else return arr.concat(item);
 };
 
 export const countArrVal = <T>(arr: T[], countVal: T) =>
