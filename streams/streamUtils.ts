@@ -28,7 +28,7 @@ type CallbackExecutionCount = Record<string, number>;
 const CALLBACK_TIMER_INTERVAL = 1000 * 30;
 /** If a single callback is called more than this number per interval, a warning
  * is triggered */
-const CALLBACK_WARNING_THRESHOLD = 20;
+const CALLBACK_WARNING_THRESHOLD = 40;
 
 const registeredCallbackTimers: Timer[] = [];
 /** Stops repeating timers for all active streams. The timers are used to poll
