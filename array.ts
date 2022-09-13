@@ -169,3 +169,5 @@ export const isNotInArr = <T>(
   exclude: T[],
   isEqual: (a: T, b: T) => boolean = (a, b) => a === b
 ) => !exclude.some(x => isEqual(el, x));
+
+export const isOneOf = <T>(val: T, oneOf: T[]) => oneOf.includes(val);
