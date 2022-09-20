@@ -1,4 +1,4 @@
-import { DestructiveConfirm } from '../input/Confirm';
+import { destructiveConfirm } from '../input/confirm';
 
 const MAX_LOOPS_BEFORE_WARNING = 5;
 
@@ -40,7 +40,7 @@ const getPaginatedResultsRecur = async <Response, Returns>({
   if (onEachPageResult) await onEachPageResult(initResult);
   if (isLastResponse(initResponse)) return initResult;
   if (n === MAX_LOOPS_BEFORE_WARNING) {
-    const shouldContinue = await DestructiveConfirm('Continue requests?', {
+    const shouldContinue = await destructiveConfirm('Continue requests?', {
       message: `You have already made ${MAX_LOOPS_BEFORE_WARNING} requests. Do you want to continue, or return the current results?`,
       cancelButtonTitle: 'Return current results',
       confirmButtonTitle: 'Continue',

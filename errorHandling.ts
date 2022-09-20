@@ -1,4 +1,4 @@
-import { OK } from './input/Confirm';
+import { OK } from './input/confirm';
 import PersistedLog from './io/PersistedLog';
 
 export const alertAndLogError = (error: any, context: string) => {

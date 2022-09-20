@@ -1,6 +1,8 @@
-import { isString } from '../common';
-import Base from './Base';
+import { isString, objectFromEntries } from '../common';
+import alert from './alert';
 import { Button } from './types';
+
+const CANCEL_BUTTON_TEXT = 'Cancel';
 
 type SharedOpts<Returns> = {
   title?: string;
@@ -32,16 +34,19 @@ const quickOptions: QuickOptions = async (
     onCancel,
   }: SharedOpts<any> = {}
 ): Promise<any> => {
-  const { buttonTapped, cancelled } = await Base(
+  const optionButtonEntries = listOptions.map<[string, Button]>(strOrLV => [
+    isString(strOrLV) ? strOrLV : strOrLV.label,
+    {},
+  ]);
+  const { tappedButtonText } = await alert({
     title,
-    [
-      ...listOptions.map<Button>(strOrLV => ({
-        label: isString(strOrLV) ? strOrLV : strOrLV.label,
-      })),
-      { isCancel: true },
-    ],
-    { message }
-  );
+    message,
+    buttons: {
+      ...objectFromEntries(optionButtonEntries),
+      [CANCEL_BUTTON_TEXT]: { isCancel: true },
+    },
+  });
+  const cancelled = tappedButtonText === CANCEL_BUTTON_TEXT;
 
   if (cancelled) {
     await onCancel?.();
@@ -50,8 +55,8 @@ const quickOptions: QuickOptions = async (
 
   const matchingOption = listOptions.find(strOrLV =>
     isString(strOrLV)
-      ? strOrLV === buttonTapped
-      : strOrLV.label === buttonTapped
+      ? strOrLV === tappedButtonText
+      : strOrLV.label === tappedButtonText
   )!;
   const returnValue = isString(matchingOption)
     ? matchingOption

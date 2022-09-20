@@ -1,6 +1,6 @@
 import { map, toSegmented } from '../arrayTransducers';
 import { getBookmarkedPath } from '../common';
-import { Confirm } from '../input/Confirm';
+import { confirm } from '../input/confirm';
 import { filterJoin } from '../object';
 import { lowerIncludes } from '../string';
 import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
@@ -130,7 +130,7 @@ const safelyMoveFile = async ({
     const newFilename = safeTargetFilePath.split('/').slice(-1)[0];
     const approved =
       silentlyRename ||
-      (await Confirm('Rename to avoid naming conflict', {
+      (await confirm('Rename to avoid naming conflict', {
         message: `Update filename to ${newFilename} to avoid naming conflict?`,
         confirmButtonTitle: 'OK',
       }));

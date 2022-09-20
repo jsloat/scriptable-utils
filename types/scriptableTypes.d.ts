@@ -534,12 +534,16 @@ declare class Alert {
   constructor();
   title: string;
   message: string;
+  /** Returns its own index in context of all buttons in  */
   addAction: (title: string) => void;
   addDestructiveAction: (title: string) => void;
+  /** Returns -1 as button index if tapped. NB: this can be called any number of
+   * times, but only the last cancel button will be added to the prompt. */
   addCancelAction: (title: string) => void;
-  addTextField: (placeholder: string, text: string) => TextField;
-  addSecureTextField: (placeholder: string, text: string) => TextField;
+  addTextField: (placeholder?: string, text?: string) => TextField;
+  addSecureTextField: (placeholder?: string, text?: string) => TextField;
   textFieldValue: (index: number) => string;
+  /** Shorthand for `presentAlert` */
   present: () => Promise<number>;
   presentAlert: () => Promise<number>;
   presentSheet: () => Promise<number>;

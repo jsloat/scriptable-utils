@@ -1,67 +1,66 @@
-import { ExcludeFalsy, getRandomArrayItem } from '../common';
-import { BUTTON_TEXTS } from '../privateConfig';
-import Base from './Base';
-import { Button, ConfirmOpts, DestructiveConfirmOpts, OKOpts } from './types';
+import alert from './alert';
 
-const DEFAULT_CONFIRM_TITLE = 'Confirm action';
+const DEFAULT_CONFIRM_DIALOG_TITLE = 'Confirm action?';
+const DEFAULT_CONFIRM_BUTTON_TEXT = 'OK';
+const DEFAULT_CANCEL_BUTTON_TEXT = 'Cancel';
 
-export const Confirm = async (
-  title = DEFAULT_CONFIRM_TITLE,
+const dontShowAgainMap: Record<string, boolean> = {};
+
+type ConfirmOpts = {
+  message?: string;
+  presentAsSheet?: boolean;
+  confirmButtonTitle?: string;
+  cancelButtonTitle?: string;
+  includeCancel?: boolean;
+  isSubmitRed?: boolean;
+  onConfirm?: NoParamFn;
+  onCancel?: NoParamFn;
+  /** Unique key to remember this setting for the session. */
+  dontShowAgainKey?: string;
+};
+
+export const confirm = async (
+  title = DEFAULT_CONFIRM_DIALOG_TITLE,
   {
     message,
-    confirmButtonTitle = 'OK',
-    cancelButtonTitle,
+    confirmButtonTitle = DEFAULT_CONFIRM_BUTTON_TEXT,
+    cancelButtonTitle = DEFAULT_CANCEL_BUTTON_TEXT,
     includeCancel = true,
-    isCancelFirst = true,
     presentAsSheet = true,
     isSubmitRed = false,
-    onConfirm = () => {},
-    onCancel = () => {},
-    includeDontShowAgain,
-    onDontShowAgain = () => {},
+    onConfirm,
+    onCancel,
+    dontShowAgainKey,
   }: ConfirmOpts = {}
 ) => {
-  const cancelButton: Button | null = includeCancel
-    ? {
-        label: cancelButtonTitle || 'Cancel',
-        color: isSubmitRed ? 'black' : 'red',
-        isCancel: true,
-      }
-    : null;
-  const confirmColor = isSubmitRed ? 'red' : 'black';
-  const confirmButton: Button = {
-    label: confirmButtonTitle,
-    color: confirmColor,
-  };
+  const shouldBypassDialog = Boolean(
+    dontShowAgainKey && dontShowAgainMap[dontShowAgainKey]
+  );
+  if (shouldBypassDialog) return true;
 
-  const dontShowAgainButtonLabel = `${confirmButtonTitle} (stop asking)`;
-  const dontShowAgainButton: Button = {
-    label: dontShowAgainButtonLabel,
-    color: confirmColor,
-  };
-
-  const confirmButtons = [
-    confirmButton,
-    includeDontShowAgain && dontShowAgainButton,
-  ].filter(ExcludeFalsy);
-  const buttons = (
-    isCancelFirst
-      ? [cancelButton, ...confirmButtons]
-      : [...confirmButtons, cancelButton]
-  ).filter(ExcludeFalsy);
-
-  const { cancelled, buttonTapped } = await Base(title, buttons, {
+  const DONT_SHOW_AGAIN_LABEL = `${confirmButtonTitle} (stop asking)`;
+  const { tappedButtonText } = await alert({
+    title,
     message,
+    buttons: {
+      ...(includeCancel && { [cancelButtonTitle]: { isCancel: true } }),
+      [confirmButtonTitle]: { isRed: isSubmitRed },
+      ...(dontShowAgainKey && {
+        [DONT_SHOW_AGAIN_LABEL]: { isRed: isSubmitRed },
+      }),
+    },
     presentAsSheet,
   });
 
-  if (cancelled) {
-    await onCancel();
+  if (tappedButtonText === DEFAULT_CANCEL_BUTTON_TEXT) {
+    await onCancel?.();
     return false;
   }
 
-  if (buttonTapped === dontShowAgainButtonLabel) await onDontShowAgain();
-  await onConfirm();
+  if (tappedButtonText === DONT_SHOW_AGAIN_LABEL) {
+    dontShowAgainMap[dontShowAgainKey!] = true;
+  }
+  await onConfirm?.();
   return true;
 };
 
@@ -69,58 +68,31 @@ export const Confirm = async (
 // DESTRUCTIVE CONFIRM
 //
 
-export const DestructiveConfirm = async (
+type DestructiveConfirmOpts = Pick<
+  ConfirmOpts,
+  | 'message'
+  | 'confirmButtonTitle'
+  | 'cancelButtonTitle'
+  | 'onConfirm'
+  | 'onCancel'
+  | 'dontShowAgainKey'
+  | 'presentAsSheet'
+>;
+
+export const destructiveConfirm = async (
   title: string,
   { confirmButtonTitle = 'Delete', ...restOpts }: DestructiveConfirmOpts = {}
 ) =>
-  await Confirm(title, {
-    isSubmitRed: true,
-    confirmButtonTitle,
-    ...restOpts,
-  });
-
-/** Returns constructor for destructive confirm with option to not show again.
- * Important that the constructor be generated only once so the shouldAlert flag
- * persists in the session. */
-export const getDismissableDestructiveConfirm = () => {
-  let shouldAlert = true;
-  return async (
-    title: string,
-    {
-      confirmButtonTitle = 'Delete',
-      onConfirm,
-      ...restOpts
-    }: DestructiveConfirmOpts = {}
-  ) => {
-    if (!shouldAlert) {
-      onConfirm && (await onConfirm());
-      return true;
-    }
-    return Confirm(title, {
-      isSubmitRed: true,
-      confirmButtonTitle,
-      includeDontShowAgain: true,
-      onDontShowAgain: () => (shouldAlert = false),
-      onConfirm,
-      ...restOpts,
-    });
-  };
-};
+  await confirm(title, { isSubmitRed: true, confirmButtonTitle, ...restOpts });
 
 //
 // OK
 //
 
-/** @param {string} title, @param {OKOpts} [opts] */
-export const OK = async (
-  title: string,
-  {
-    confirmButtonTitle = getRandomArrayItem(BUTTON_TEXTS),
-    ...restOpts
-  }: OKOpts = {}
-) =>
-  await Confirm(title, {
-    includeCancel: false,
-    confirmButtonTitle,
-    ...restOpts,
-  });
+type OKOpts = Pick<
+  ConfirmOpts,
+  'message' | 'confirmButtonTitle' | 'presentAsSheet' | 'onConfirm'
+>;
+
+export const OK = (title: string, opts: OKOpts = {}) =>
+  confirm(title, { includeCancel: false, ...opts });

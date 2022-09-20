@@ -1,10 +1,10 @@
 import { composeIdentities } from '../flow';
-import { OK } from '../input/Confirm';
+import { OK } from '../input/confirm';
 
 type DataTypeBase = AnyObj;
 
 type UpdateCallback<D extends DataTypeBase> = (newAttr: Partial<D>) => any;
-type CallbackWithOpts<D> = {
+type CallbackWithOpts<D extends DataTypeBase> = {
   id: string;
   callback: UpdateCallback<D>;
   onlyTheseKeys: (keyof D)[];
@@ -154,7 +154,9 @@ export class Stream<DataType extends DataTypeBase> {
   ) {
     if (!this.data)
       throw new Error(
-        `Attempting to set stream attribute ${key} before initializing stream.`
+        `Attempting to set stream attribute ${String(
+          key
+        )} before initializing stream.`
       );
     this.data[key] = val;
     if (!suppressChangeTrigger) await this.runCallbacks({ [key]: val });

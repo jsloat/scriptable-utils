@@ -1,5 +1,6 @@
-import { Confirm } from '../Confirm';
-import { DEFAULT_USE_MINIMUM_DATE } from './consts';
+import { confirm } from '../confirm';
+
+const DEFAULT_USE_MINIMUM_DATE = false;
 
 type DatePickerOpts = {
   description?: string;
@@ -19,7 +20,7 @@ export const PickDate = async ({
   // Canceling a DatePicker throws an error for some reason
   try {
     if (description) {
-      const isConfirmed = await Confirm(description, {
+      const isConfirmed = await confirm(description, {
         confirmButtonTitle: 'Choose date',
       });
       if (!isConfirmed) throw new Error('Abort');
