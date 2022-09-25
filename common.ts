@@ -164,8 +164,8 @@ export const safeArrLookup = <T extends NotUndefined<any>>(
 
 /** Get existent and not-undefined value from an object + key */
 export const safeObjLookup = <
-  O extends Record<string | number, NotUndefined<any>>,
-  K extends keyof O
+  K extends string | number,
+  O extends Record<K, NotUndefined<any>>
 >(
   obj: O,
   key: K,
@@ -237,3 +237,59 @@ export const segment = <T, K extends string>(
     getSegmentReducer(segmentRules),
     getSegmentConsts(segmentRules).seed
   );
+
+type GroupBy = {
+  <ArrVal, Key>(arr: ArrVal[], getGroupKey: MapFn<ArrVal, Key>): {
+    key: Key;
+    val: ArrVal[];
+  }[];
+  <ArrVal, Key, GroupedVal>(
+    arr: ArrVal[],
+    getGroupKey: MapFn<ArrVal, Key>,
+    mapVal: MapFn<ArrVal, GroupedVal>
+  ): { key: Key; val: GroupedVal[] }[];
+};
+/**
+ * Group array values by a common characteristic. Combined values are returned
+ * in an array
+ *
+ * Example:
+ * ```
+ * groupBy(
+ *   [
+ *     { label: 'hiya', val: 1 },
+ *     { label: 'hiya', val: 2 },
+ *     { label: 'hey there', val: 3 },
+ *     { label: 'hiya', val: 1 },
+ *   ],
+ *   ({ label }) => label,
+ *   ({ val }) => val
+ * );
+ * ```
+ *
+ * Returns:
+ * ```
+ * [
+ *   { key: 'hiya', val: [1, 2, 1] },
+ *   { key: 'hey there', val: [3] },
+ * ]
+ * ```
+ *
+ */
+export const groupBy: GroupBy = <ArrVal, GroupedVal>(
+  arr: ArrVal[],
+  getGroupKey: MapFn<ArrVal, any>,
+  mapVal?: MapFn<ArrVal, GroupedVal>
+) =>
+  arr.reduce((acc, arrVal) => {
+    const key = getGroupKey(arrVal);
+    const val = mapVal ? mapVal(arrVal) : arrVal;
+    let wasAlreadyInAcc = false;
+    const mappedAcc = acc.map(accVal => {
+      if (accVal.key !== key) return accVal;
+      wasAlreadyInAcc = true;
+      return { key, val: accVal.val.concat(val) };
+    });
+    if (!wasAlreadyInAcc) mappedAcc.push({ key, val: [val] });
+    return mappedAcc;
+  }, [] as { key: any; val: any[] }[]);

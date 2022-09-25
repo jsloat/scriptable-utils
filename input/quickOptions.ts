@@ -1,15 +1,13 @@
-import { isString, objectFromEntries } from '../common';
+import { ExcludeFalsy, isString, objectFromEntries } from '../common';
 import alert from './alert';
-import { Button } from './types';
+import { AlertOpts, Button } from './types';
 
 const CANCEL_BUTTON_TEXT = 'Cancel';
 
-type SharedOpts<Returns> = {
-  title?: string;
-  message?: string;
-  onOptionSelect?: (result: Returns) => any;
-  onCancel?: () => any;
-};
+type SharedOpts<Returns> = Pick<
+  Partial<AlertOpts>,
+  'title' | 'message' | 'presentAsSheet'
+> & { onOptionSelect?: MapFn<Returns, any>; onCancel?: NoParamFn };
 
 type QuickOptions = {
   /** String options */
@@ -20,27 +18,29 @@ type QuickOptions = {
 
   /** Labeled-value options */
   <Label extends string, Value>(
-    listOptions: LabeledValue<Value, Label>[],
+    listOptions: (LabeledValue<Value, Label> | Falsy)[],
     opts?: SharedOpts<Value>
   ): Promise<Value | null>;
 };
 
 const quickOptions: QuickOptions = async (
-  listOptions: (string | LabeledValue<any>)[],
+  listOptions: (string | LabeledValue<any> | Falsy)[],
   {
     title = 'Select option',
-    message,
     onOptionSelect,
     onCancel,
+    ...alertOpts
   }: SharedOpts<any> = {}
 ): Promise<any> => {
-  const optionButtonEntries = listOptions.map<[string, Button]>(strOrLV => [
-    isString(strOrLV) ? strOrLV : strOrLV.label,
-    {},
-  ]);
+  const validListOptions = listOptions.filter(ExcludeFalsy);
+  if (!validListOptions.length) return null;
+  const optionButtonEntries = validListOptions.map<[string, Button]>(
+    strOrLV => [isString(strOrLV) ? strOrLV : strOrLV.label, {}]
+  );
+  if (!optionButtonEntries.length) return null;
   const { tappedButtonText } = await alert({
     title,
-    message,
+    ...alertOpts,
     buttons: {
       ...objectFromEntries(optionButtonEntries),
       [CANCEL_BUTTON_TEXT]: { isCancel: true },
@@ -53,7 +53,7 @@ const quickOptions: QuickOptions = async (
     return null;
   }
 
-  const matchingOption = listOptions.find(strOrLV =>
+  const matchingOption = validListOptions.find(strOrLV =>
     isString(strOrLV)
       ? strOrLV === tappedButtonText
       : strOrLV.label === tappedButtonText

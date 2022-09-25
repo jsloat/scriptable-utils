@@ -1,15 +1,10 @@
 import { objectKeys } from '../object';
-import { Button, TextFieldConfigOpts, TextFieldKeyboardFlavor } from './types';
-
-type Opts<TextFieldKey extends string, ButtonKey extends string> = {
-  title: string;
-  message?: string;
-  /** `TextFieldKey` values are used to index the final text field values. */
-  textFields?: Record<TextFieldKey, TextFieldConfigOpts>;
-  /** `ButtonKey` values are used as button labels */
-  buttons: Record<ButtonKey, Button>;
-  presentAsSheet?: boolean;
-};
+import {
+  AlertOpts,
+  Button,
+  TextFieldConfigOpts,
+  TextFieldKeyboardFlavor,
+} from './types';
 
 // ALERT CREATION
 
@@ -95,7 +90,7 @@ export default async <
   textFields,
   buttons,
   presentAsSheet = false,
-}: Opts<TextFieldKey, ButtonKey>) => {
+}: AlertOpts<TextFieldKey, ButtonKey>) => {
   const alert = new Alert();
   alert.title = title;
   if (message) alert.message = message;

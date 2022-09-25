@@ -39,7 +39,10 @@ export const arraysHaveSameValues = (arr1: any[], arr2: any[]) => {
 };
 
 // https://stackoverflow.com/questions/53966509/typescript-type-safe-omit-function
-export const omit = <T, K extends (keyof T)[]>(object: T, omitKeysArray: K) =>
+export const omit = <T extends AnyObj, K extends (keyof T)[]>(
+  object: T,
+  omitKeysArray: K
+) =>
   toReduce(
     Object.entries(object),
     filter(([key]) => !omitKeysArray.includes(key as keyof T)),
@@ -47,7 +50,10 @@ export const omit = <T, K extends (keyof T)[]>(object: T, omitKeysArray: K) =>
     {} as { [K2 in Exclude<keyof T, K[number]>]: T[K2] }
   );
 
-export const pick = <T, K extends keyof T>(object: T, includeKeysArray: K[]) =>
+export const pick = <T extends AnyObj, K extends keyof T>(
+  object: T,
+  includeKeysArray: K[]
+) =>
   objectFromEntries(
     objectEntries(object).filter(([key]) => includeKeysArray.includes(key as K))
   ) as unknown as Pick<T, K>;
@@ -129,7 +135,7 @@ type SmooshReturn<T> = Record<keyof T, T[keyof T][]>;
  * not present in an array item.
  */
 // ts-unused-exports:disable-next-line
-export const smoosh = <T>(arrOfObjs: T[]): SmooshReturn<T> => {
+export const smoosh = <T extends AnyObj>(arrOfObjs: T[]): SmooshReturn<T> => {
   const allKeys = arrOfObjs.reduce(
     (keys, obj) => uniqueArray(keys, Object.keys(obj) as (keyof T)[]),
     [] as (keyof T)[]
@@ -166,7 +172,7 @@ export const countArray = <T extends string | number>(
 };
 
 // ts-unused-exports:disable-next-line
-export const objectEntries = <T>(
+export const objectEntries = <T extends AnyObj>(
   obj: T
 ): { [K in keyof T]: [K, T[K]] }[keyof T][] => Object.entries(obj) as any;
 

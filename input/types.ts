@@ -22,3 +22,16 @@ export type Button = {
   // If true, use `addCancelAction`
   isCancel?: boolean;
 };
+
+export type AlertOpts<
+  TextFieldKey extends string = string,
+  ButtonKey extends string = string
+> = {
+  title: string;
+  message?: string;
+  /** `TextFieldKey` values are used to index the final text field values. */
+  textFields?: Record<TextFieldKey, TextFieldConfigOpts>;
+  /** `ButtonKey` values are used as button labels */
+  buttons: Record<ButtonKey, Button>;
+  presentAsSheet?: boolean;
+};
