@@ -1,100 +1,44 @@
-import { composeIdentities } from '../flow';
-import { OK } from '../input/confirm';
-
 type DataTypeBase = AnyObj;
 
 type UpdateCallback<D extends DataTypeBase> = (newAttr: Partial<D>) => any;
 type CallbackWithOpts<D extends DataTypeBase> = {
   id: string;
   callback: UpdateCallback<D>;
-  onlyTheseKeys: (keyof D)[];
 };
 
 type RegisterUpdateCallbackOpts<D extends DataTypeBase> = {
   callback: UpdateCallback<D>;
+  /** Optionally provide a unique string ID to ensure the same callback is not
+   * added multiple times. */
   callbackId: string;
+  /** If ID provided, by default existing callback w/ that ID will be
+   * overwritten. If set to false, first callback set will remain. */
   overwriteExistingCallback?: boolean;
-  onlyTheseKeys?: (keyof D)[];
 };
 
 type StreamConstructorOpts<DataType extends DataTypeBase> = {
-  defaultState?: DataType;
+  defaultState: DataType;
   showStreamDataUpdateDebug?: boolean;
 };
 
-type CallbackExecutionCount = Record<string, number>;
-
-/** How often to poll check for number of callbacks */
-const CALLBACK_TIMER_INTERVAL = 1000 * 30;
-/** If a single callback is called more than this number per interval, a warning
- * is triggered */
-const CALLBACK_WARNING_THRESHOLD = 40;
-
-const registeredCallbackTimers: Timer[] = [];
-/** Stops repeating timers for all active streams. The timers are used to poll
- * for overactive streams. Since there's no clear end-of-life for streams, this
- * function ensures that the timers are all cleaned up when exiting the script.
- * */
-export const stopStreamTimers = () =>
-  registeredCallbackTimers.forEach(t => t.invalidate());
-
-const alertOveractiveCallbacks = (
-  callbackExecutionCount: CallbackExecutionCount
-) =>
-  Object.entries(callbackExecutionCount).forEach(([id, count]) => {
-    if (count > CALLBACK_WARNING_THRESHOLD) {
-      OK('Overactive callback warning', {
-        message: `Callback "${id}" has run over ${CALLBACK_WARNING_THRESHOLD} times in the last ${CALLBACK_TIMER_INTERVAL} ms.`,
-      });
-    }
-  });
-
-const getBaseOveractiveCallbackTimer = () => {
-  const t = new Timer();
-  t.timeInterval = CALLBACK_TIMER_INTERVAL;
-  t.repeats = true;
-  return t;
-};
-
 export class Stream<DataType extends DataTypeBase> {
-  showStreamDataUpdateDebug: boolean;
-  data: DataType | null;
-  updateCallbacks: CallbackWithOpts<DataType>[] = [];
-  /** Used to alert user to high volume of callbacks triggered */
-  callbackExecutionCount: CallbackExecutionCount = {};
-  /** Used to periodically check if callbacks have been called too many time
-   * within a period. */
-  overactiveCallbackTimer: Timer;
+  private showStreamDataUpdateDebug: boolean;
+  private data: DataType;
+  private updateCallbacks: CallbackWithOpts<DataType>[] = [];
 
   constructor({
     defaultState,
     showStreamDataUpdateDebug = false,
-  }: StreamConstructorOpts<DataType> = {}) {
+  }: StreamConstructorOpts<DataType>) {
     this.showStreamDataUpdateDebug = showStreamDataUpdateDebug;
-    this.data = defaultState || null;
+    this.data = defaultState;
     this.updateCallbacks = [];
-    this.overactiveCallbackTimer = getBaseOveractiveCallbackTimer();
-    this.overactiveCallbackTimer.schedule(() => {
-      alertOveractiveCallbacks(this.callbackExecutionCount);
-      this.callbackExecutionCount = {};
-    });
-    registeredCallbackTimers.push(this.overactiveCallbackTimer);
   }
 
-  init(initData: DataType, force = false) {
-    if (!this.data || force) this.data = initData;
-  }
-
-  /**
-   * @param callbackId Optionally provide a unique string ID to ensure the same callback is not added multiple times.
-   * @param overwriteExistingCallback If ID provided, by default existing callback w/ that ID will be overwritten. If set to false, first callback set will remain.
-   * @param onlyTheseKeys Only call the callback if the provided keys of DataType are updated
-   */
   registerUpdateCallback({
     callback,
     callbackId,
     overwriteExistingCallback = true,
-    onlyTheseKeys = [],
   }: RegisterUpdateCallbackOpts<DataType>): StreamCallback {
     const callbackIdAlreadyRegistered = this.updateCallbacks.some(
       ({ id }) => id === callbackId
@@ -105,7 +49,7 @@ export class Stream<DataType extends DataTypeBase> {
     if (!overwriteDisallowed)
       this.updateCallbacks = this.updateCallbacks
         .filter(({ id }) => id !== callbackId)
-        .concat({ callback, id: callbackId, onlyTheseKeys });
+        .concat({ callback, id: callbackId });
 
     return { remove: () => this.unregisterUpdateCallback(callbackId) };
   }
@@ -118,48 +62,39 @@ export class Stream<DataType extends DataTypeBase> {
 
   /** Run with singleValObj if only updating one value */
   private async runCallbacks(singleValObj: AnyObj | null = null) {
-    const key = singleValObj && Object.keys(singleValObj)[0];
-    this.updateCallbacks.forEach(({ callback, id, onlyTheseKeys }) => {
-      const isNotWatchedKey =
-        onlyTheseKeys.length && (!key || (key && !onlyTheseKeys.includes(key)));
-      if (isNotWatchedKey) return;
+    this.updateCallbacks.forEach(({ callback, id }) => {
       if (this.showStreamDataUpdateDebug)
         console.log(`Running stream update callback with ID "${id}"`);
       callback((singleValObj || this.data) as unknown as Partial<DataType>);
-      this.callbackExecutionCount[id] =
-        (this.callbackExecutionCount[id] ?? 0) + 1;
     });
   }
 
-  /** Set stream data. This is the only way to trigger an update callback when
-   * setting the entire object */
-  async setData(data: DataType, { suppressChangeTrigger = false } = {}) {
-    if (!this.isInitialized) this.init(data);
-    else this.data = data;
-    if (!suppressChangeTrigger) await this.runCallbacks();
-  }
-
-  async updateData(...reducers: Identity<DataType>[]) {
+  /** Reduce stream data */
+  async updateData(
+    reducer: Identity<DataType>,
+    { suppressChangeTrigger = false } = {}
+  ) {
     if (!this.data) {
       throw new Error('Attempting to update stream data while uninitialized');
     }
-    this.data = composeIdentities(...reducers)(this.data);
-    await this.runCallbacks();
+    this.data = reducer(this.data);
+    if (!suppressChangeTrigger) await this.runCallbacks();
   }
 
-  async updateAttr<K extends keyof DataType>(
+  /** Set full stream data */
+  setData(data: DataType, { suppressChangeTrigger = false } = {}) {
+    return this.updateData(() => data, { suppressChangeTrigger });
+  }
+
+  /** Update a single attribute of stream data */
+  updateAttr<K extends keyof DataType>(
     key: K,
     val: DataType[K],
     { suppressChangeTrigger = false } = {}
   ) {
-    if (!this.data)
-      throw new Error(
-        `Attempting to set stream attribute ${String(
-          key
-        )} before initializing stream.`
-      );
-    this.data[key] = val;
-    if (!suppressChangeTrigger) await this.runCallbacks({ [key]: val });
+    return this.updateData(data => ({ ...data, [key]: val }), {
+      suppressChangeTrigger,
+    });
   }
 
   /** Used to trigger callbacks when no change has occurred */
@@ -175,15 +110,12 @@ export class Stream<DataType extends DataTypeBase> {
     return this.data;
   }
 
-  clearData({ runCallbacks = true } = {}) {
+  /** This is dangerous because a stream is assumed to never be empty. This
+   * should only be used before exiting the script, or if you know that you
+   * won't use this stream again before the script ends. */
+  dangerouslyClearData() {
     // @ts-ignore
-    delete this.data;
-    this.data = null;
-    runCallbacks && this.runCallbacks();
-  }
-
-  get isInitialized() {
-    return Boolean(this.data);
+    this.data = {};
   }
 }
 
@@ -224,7 +156,7 @@ export const subscribe = <
   ) => DependentState | null = state => state
 ) => {
   const callbackId = subscriptionName;
-  return source$.registerUpdateCallback({
+  source$.registerUpdateCallback({
     callbackId,
     callback: async () => {
       const latestDependentData = dependent$.getData();
@@ -234,7 +166,27 @@ export const subscribe = <
       if (reducedData) await dependent$.setData(reducedData);
     },
   });
+  return () => source$.unregisterUpdateCallback(callbackId);
 };
+
+/** Use this function to get subscribe & unsubscribe functions for easy cleanup. */
+export const getSubscribers = <
+  DependentState extends DataTypeBase,
+  SourceState extends DataTypeBase
+>(
+  subscriptionName: string,
+  dependent$: Stream<DependentState>,
+  source$: Stream<SourceState>,
+  stateReducer: (
+    latestDependentState: DependentState,
+    latestSourceState: SourceState
+  ) => DependentState | null = state => state
+) => ({
+  subscribe: () => {
+    subscribe(subscriptionName, dependent$, source$, stateReducer);
+  },
+  unsubscribe: () => source$.unregisterUpdateCallback(subscriptionName),
+});
 
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
   streamDict: StreamDict,

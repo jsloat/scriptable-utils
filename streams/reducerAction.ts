@@ -44,7 +44,10 @@ export const getTableReducerCreator =
   state =>
     r(state, ...args);
 
-/** Attempt at a more streamlined version of `getReducerActionCreator` */
+/** Attempt at a more streamlined version of `getReducerActionCreator`. NB: One
+ * major shortcoming of the typing here is that the `reducerGetter` argument
+ * will not get inferred properly if defined inline. Rather, it must be declared
+ * separately, or declared inline with `getTableReducerCreator`. */
 export const getTableActionCreator =
   <S>(getState: NoParamFn<S>, setState: MapFn<S, any>) =>
   <A extends any[]>(reducerGetter: (...args: A) => MaybePromise<Identity<S>>) =>

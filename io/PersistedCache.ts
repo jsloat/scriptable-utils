@@ -30,7 +30,7 @@ type Opts<Combined, InMemory, InPersisted> = {
  */
 export default class PersistedCache<
   CombinedData,
-  InMemoryData,
+  InMemoryData extends AnyObj,
   InPersistedData
 > {
   private splitData: SplitData<CombinedData, InMemoryData, InPersistedData>;
@@ -99,7 +99,7 @@ export default class PersistedCache<
   }
 
   cleanup() {
-    this.cache$.clearData();
+    this.cache$.dangerouslyClearData();
     this.io.deleteFile();
   }
 }

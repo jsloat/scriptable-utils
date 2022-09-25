@@ -121,7 +121,7 @@ export class StreamCache<StreamData, PersistedData> {
   }
 
   cleanup() {
-    this.cache$.clearData();
+    this.cache$.dangerouslyClearData();
     this.io?.deleteFile();
   }
 }
