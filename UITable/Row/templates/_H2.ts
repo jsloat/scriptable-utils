@@ -11,17 +11,25 @@ type Opts = { label: string; iconKey?: SFSymbolKey } & Pick<
 > &
   Pick<
     RowOpts,
-    'onTap' | 'onDoubleTap' | 'onTripleTap' | 'dismissOnTap' | 'isFaded'
+    | 'onTap'
+    | 'onDoubleTap'
+    | 'onTripleTap'
+    | 'dismissOnTap'
+    | 'isFaded'
+    | 'padding'
   >;
 
 export default ({
   label,
   color = getDynamicColor('black', 'white'),
   iconKey,
+  padding,
   ...rowOpts
 }: Opts) => {
+  const paddingTop = padding?.paddingTop ?? 40;
+  const paddingBottom = padding?.paddingBottom ?? 10;
   const commonRowOpts = {
-    padding: { paddingTop: 40, paddingBottom: 0 },
+    padding: { paddingTop, paddingBottom: 0 },
     rowHeight: 35,
     ...rowOpts,
   };
@@ -38,11 +46,6 @@ export default ({
         ...commonRowOpts,
       })
     : Row({ content: [mainContent], ...commonRowOpts });
-  const underlineRow = _HR({
-    dim: 0.4,
-    marginTop: 0,
-    marginBottom: 10,
-    color,
-  });
+  const underlineRow = _HR({ dim: 0.4, padding: { paddingBottom }, color });
   return [textRow, underlineRow].flat();
 };

@@ -4,28 +4,28 @@ import { fade } from '../../../common';
 import Row from '..';
 import { RowOpts } from '../types';
 
-type Opts = {
-  dim?: number;
-  marginTop?: number;
-  marginBottom?: number;
-  color?: Color;
-  height?: number;
-};
+type Opts = { dim?: number; color?: Color; height?: number } & Pick<
+  RowOpts,
+  'padding'
+>;
 
 const noPadding: Pick<RowOpts, 'padding'> = {
   padding: { paddingTop: 0, paddingBottom: 0 },
 };
 
-/** NB: margin is different from padding in that it will have a different bgColor */
+/** NB: padding is different in this context in that it will have a different
+ * bgColor than the HR row. */
 export default ({
   dim = 0,
-  marginBottom = 0,
-  marginTop = 0,
+  padding: { paddingBottom = 0, paddingTop = 0 } = {
+    paddingBottom: 0,
+    paddingTop: 0,
+  },
   color = getColor('hr'),
   height = 1,
 }: Opts = {}) =>
   conditionalArr([
-    marginTop && Row({ rowHeight: marginTop, ...noPadding }),
+    paddingTop && Row({ rowHeight: paddingTop, ...noPadding }),
     Row({ rowHeight: height, bgColor: fade(color, dim), ...noPadding }),
-    marginBottom && Row({ rowHeight: marginBottom, ...noPadding }),
+    paddingBottom && Row({ rowHeight: paddingBottom, ...noPadding }),
   ]).flat();
