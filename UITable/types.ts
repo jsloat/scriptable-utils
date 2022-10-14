@@ -147,7 +147,7 @@ export type SetRenderOpts<State, Props, $Data> = {
   onConnected$Update?: OnConnected$Update<$Data>;
 };
 
-type RenderOpts<State, Props, $Data> = WithoutNever<{
+export type RenderOpts<State, Props, $Data> = WithoutNever<{
   defaultState?: IfVoid<
     State,
     never,

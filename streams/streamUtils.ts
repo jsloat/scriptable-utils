@@ -1,12 +1,10 @@
-type DataTypeBase = AnyObj;
-
-type UpdateCallback<D extends DataTypeBase> = (newAttr: Partial<D>) => any;
-type CallbackWithOpts<D extends DataTypeBase> = {
+type UpdateCallback<D extends AnyObj> = (newAttr: Partial<D>) => any;
+type CallbackWithOpts<D extends AnyObj> = {
   id: string;
   callback: UpdateCallback<D>;
 };
 
-type RegisterUpdateCallbackOpts<D extends DataTypeBase> = {
+type RegisterUpdateCallbackOpts<D extends AnyObj> = {
   callback: UpdateCallback<D>;
   /** Optionally provide a unique string ID to ensure the same callback is not
    * added multiple times. */
@@ -16,12 +14,12 @@ type RegisterUpdateCallbackOpts<D extends DataTypeBase> = {
   overwriteExistingCallback?: boolean;
 };
 
-type StreamConstructorOpts<DataType extends DataTypeBase> = {
+type StreamConstructorOpts<DataType extends AnyObj> = {
   defaultState: DataType;
   showStreamDataUpdateDebug?: boolean;
 };
 
-export class Stream<DataType extends DataTypeBase> {
+export class Stream<DataType extends AnyObj> {
   private showStreamDataUpdateDebug: boolean;
   private data: DataType;
   private updateCallbacks: CallbackWithOpts<DataType>[] = [];
@@ -144,8 +142,8 @@ export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
  */
 // ts-unused-exports:disable-next-line
 export const subscribe = <
-  DependentState extends DataTypeBase,
-  SourceState extends DataTypeBase
+  DependentState extends AnyObj,
+  SourceState extends AnyObj
 >(
   subscriptionName: string,
   dependent$: Stream<DependentState>,
@@ -171,8 +169,8 @@ export const subscribe = <
 
 /** Use this function to get subscribe & unsubscribe functions for easy cleanup. */
 export const getSubscribers = <
-  DependentState extends DataTypeBase,
-  SourceState extends DataTypeBase
+  DependentState extends AnyObj,
+  SourceState extends AnyObj
 >(
   subscriptionName: string,
   dependent$: Stream<DependentState>,

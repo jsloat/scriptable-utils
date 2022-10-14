@@ -41,7 +41,7 @@ type EntityRowCallbackOpts<E> = {
 
 type CustomCTACallbackOpts<E> = { entities: E[]; rerender: NoParamFn<any> };
 
-type Opts<Entity> = {
+export type SelectableEntityBrowserOpts<Entity> = {
   /** Optionally run this code before launching the table */
   beforeLoad?: NoParamFn<any>;
   onClose?: MapFn<Entity[], any>;
@@ -74,7 +74,7 @@ export default async <E>({
   getUniqueEntityId,
   getCustomCTAs,
   getHeaderOpts,
-}: Opts<E>) => {
+}: SelectableEntityBrowserOpts<E>) => {
   await beforeLoad?.();
 
   const { present, connect, getProps, getState, setState } = getTable<

@@ -233,11 +233,19 @@ export type ButtonStackOpt = ButtonOpts & { flavor?: FlavorOption | Flavor };
 
 /** Use when stacking 2+ buttons to avoid border collision. */
 // ts-unused-exports:disable-next-line
-export const ButtonStack = (opts: (ButtonStackOpt | Falsy)[]) =>
+export const ButtonStack = (
+  opts: (ButtonStackOpt | Falsy)[],
+  commonOpts?: Partial<ButtonStackOpt>
+) =>
   opts
     .filter(ExcludeFalsy)
     .flatMap(({ flavor = 'default', ...restOpts }, i, arr) =>
-      _Button({ flavor, isLast: isLastArrIndex(i, arr), ...restOpts })
+      _Button({
+        flavor,
+        isLast: isLastArrIndex(i, arr),
+        ...restOpts,
+        ...commonOpts,
+      })
     );
 
 //

@@ -18,5 +18,5 @@ export default ({ label, ...restOpts }: Opts) => {
     }),
     getFootnoteReducer()
   );
-  return [LabelRow(), _HR({ marginTop: 10 })].flat();
+  return [LabelRow(), _HR({ padding: { paddingTop: 10 } })].flat();
 };
