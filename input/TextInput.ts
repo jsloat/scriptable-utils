@@ -1,5 +1,3 @@
-import { getRandomArrayItem } from '../common';
-import { BUTTON_TEXTS } from '../privateConfig';
 import alert from './alert';
 import { TextFieldConfigOpts, TextFieldKeyboardFlavor } from './types';
 
@@ -16,7 +14,7 @@ type Opts = {
 export default async (
   title = 'Enter text',
   {
-    submitText = getRandomArrayItem(BUTTON_TEXTS),
+    submitText = 'OK',
     cancelText = 'Cancel',
     onSubmit = () => {},
     onCancel = () => {},
