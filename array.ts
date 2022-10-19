@@ -1,5 +1,5 @@
 import { compose, map, toCount, toFind } from './arrayTransducers';
-import { ExcludeFalsy, isString, PrimitiveType } from './common';
+import { ExcludeFalsy, isString } from './common';
 import { objectEntries, objectKeys } from './object';
 import sortObjects from './sortObjects';
 

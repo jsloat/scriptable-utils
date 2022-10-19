@@ -1,11 +1,5 @@
 import { filter, toReduce } from './arrayTransducers';
-import {
-  getType,
-  isObject,
-  objectFromEntries,
-  PrimitiveType,
-  safeArrLookup,
-} from './common';
+import { getType, isObject, objectFromEntries, safeArrLookup } from './common';
 import sortObjects from './sortObjects';
 
 /**

@@ -1,9 +1,4 @@
-import {
-  getSegmentConsts,
-  getSegmentReducer,
-  PrimitiveType,
-  SegmentRules,
-} from './common';
+import { getSegmentConsts, getSegmentReducer, SegmentRules } from './common';
 import sortObjects from './sortObjects';
 
 type Reducer<Result, Input> = (

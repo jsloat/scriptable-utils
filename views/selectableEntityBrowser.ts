@@ -29,7 +29,7 @@ export type BulkAction<E> = {
   shouldHide?: MapFn<E[], boolean>;
 };
 
-type EntityId = string | number;
+export type EntityId = string | number;
 
 /** Opts passed to consumer from this view when generating an entity row. */
 type EntityRowCallbackOpts<E> = {

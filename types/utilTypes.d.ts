@@ -164,6 +164,12 @@ declare type MakeSomeReqd<
 > = Omit<Source, ExcludeKeys | MakeReqKeys> &
   Pick<Required<Source>, MakeReqKeys>;
 
+declare type MakeSomeOptional<
+  T extends AnyObj,
+  OptionalKeys extends keyof T,
+  ExcludeKeys extends keyof T = never
+> = Omit<T, ExcludeKeys | OptionalKeys> & Pick<Partial<T>, OptionalKeys>;
+
 /** Map obj values to different key names. Optional properties in NewKeyMap will
  * be converted to optional props in the return type.
  *
@@ -299,3 +305,12 @@ type WithoutNeverKeys<T extends AnyObj> = {
 declare type WithoutNever<T extends AnyObj> = Pick<T, WithoutNeverKeys<T>>;
 
 declare type SortFn<T> = (a: T, b: T) => number;
+
+declare type PrimitiveType =
+  | bigint
+  | boolean
+  | null
+  | number
+  | string
+  | symbol
+  | undefined;

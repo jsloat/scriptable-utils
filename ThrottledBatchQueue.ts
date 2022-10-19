@@ -1,4 +1,3 @@
-import { PrimitiveType } from './common';
 import { ONE_SECOND } from './date';
 import { wait } from './flow';
 

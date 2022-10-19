@@ -1,48 +1,62 @@
 import { SFSymbolKey } from '../sfSymbols';
 import { RenderOpts } from '../UITable/types';
-import { SelectableEntityBrowserOpts } from '../views/selectableEntityBrowser';
+import {
+  EntityId,
+  SelectableEntityBrowserOpts,
+} from '../views/selectableEntityBrowser';
 
 export type AppliedFilterState = 'INCLUDE' | 'EXCLUDE' | null;
 
 export type Filter<E> = {
   label: string;
   icon?: SFSymbolKey;
-  filterCagtegory: string;
+  filterCategory: string;
   // Should the entity be included if its state is `INCLUDE`?
   includeEntity: Predicate<E>;
 };
 
-export type AppliedFilter = Omit_<Filter<any>, 'includeEntity'> & {
-  state: AppliedFilterState;
-};
+export type FilterWithState<E> = Filter<E> & { state: AppliedFilterState };
 
-export type AllFilters<E> = {
+export type FilterRecord<E> = {
   [category: string]: Filter<E>[];
 };
 
-export type LoadedFilterCounts = {
-  [category: string]: { [filterLabel: string]: number };
-};
+/** Used to uniquely a filter in a FilterRecord. Key is of the format
+ * `${category}.${filterLabel}` */
+export type FilterKey = `${string}.${string}`;
 
-export type $Props<E> = {
-  allEntities: E[];
-  filteredEntities: E[];
-  filterCounts: LoadedFilterCounts;
+export type FilterKeyToMatchingIDs = Map<FilterKey, Set<EntityId>>;
+
+/** The number represents how many entities will match the filters if the filter
+ * with this `FilterKey` is applied. Used directly in UI.  */
+export type FilterKeyToFilteredCount = Map<FilterKey, number>;
+
+export type $Props = {
+  allEntityIDs: Set<EntityId>;
+  filterKeyToMatchingIDs: FilterKeyToMatchingIDs;
+  filterKeyToFilteredCount: FilterKeyToFilteredCount;
+  numFiltered: number;
+  numTotal: number;
 };
 
 export type Opts<E> = {
   title?: string;
-  getEntities: NoParamFn<MaybePromise<E[]>>;
-  filters: AllFilters<E>;
-  initAppliedFilters?: AppliedFilter[];
+  filters: FilterRecord<E>;
+  initAppliedFilters?: FilterWithState<E>[];
   viewEntityOpts: Omit_<
     SelectableEntityBrowserOpts<E>,
-    'beforeLoad' | 'onClose' | 'getEntities' | 'getHeaderOpts' | 'getCustomCTAs'
+    | 'beforeLoad'
+    | 'onClose'
+    | 'getEntities'
+    | 'getHeaderOpts'
+    | 'getCustomCTAs'
+    | 'getUniqueEntityId'
   >;
-} & Pick<RenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'>;
+} & Pick<RenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'> &
+  Pick<SelectableEntityBrowserOpts<E>, 'getUniqueEntityId' | 'getEntities'>;
 
 export type State = {
-  appliedFilters: AppliedFilter[];
+  filterState: Map<FilterKey, AppliedFilterState>;
   collapsedFilterCategories: string[];
 };
 

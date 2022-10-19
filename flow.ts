@@ -180,6 +180,10 @@ export const wait = (ms: number, callback?: () => any) => {
   );
 };
 
+//
+// Performance measurement
+//
+
 type PerformanceMeasurerOpts = {
   name: string;
   threshold: number;
@@ -187,7 +191,7 @@ type PerformanceMeasurerOpts = {
   /** Notify regardless of threshold */
   logAllMeasurements?: boolean;
 };
-export const getPerformanceMeasurers = ({
+const getPerformanceMeasurers = ({
   name,
   threshold,
   metadata,
@@ -198,10 +202,9 @@ export const getPerformanceMeasurers = ({
     startDate = new Date();
   };
   const stop = () => {
-    if (!startDate)
-      throw new Error(
-        `Attempted to stop performance timer ${name} before starting it.`
-      );
+    if (!startDate) {
+      throw new Error(`Performance timer ${name} stopped before starting.`);
+    }
     const duration = new Date().getTime() - startDate.getTime();
     if (duration < threshold && !logAllMeasurements) return;
     console.warn(
@@ -217,12 +220,40 @@ export const getPerformanceMeasurers = ({
       )
     );
     notifyNow(
-      `${name} took too long`,
-      `Threshold: ${threshold}, actual: ${duration}`
+      `Marker "${name}"`,
+      `Threshold (ms): ${threshold}, actual: ${duration}`
     );
   };
   return { start, stop };
 };
+
+type Measure = <R>(
+  opts: MakeSomeOptional<
+    PerformanceMeasurerOpts,
+    'threshold',
+    'logAllMeasurements'
+  > & { fn: NoParamFn<MaybePromise<R>> }
+) => () => Promise<R>;
+
+/** If threshold is provided, will only notify if it is exceeded, else will log
+ * the duration every time */
+// ts-unused-exports:disable-next-line
+export const measure: Measure =
+  ({ name, fn, threshold, metadata }) =>
+  async () => {
+    const measurer = getPerformanceMeasurers({
+      name,
+      threshold: threshold || 0,
+      metadata,
+      logAllMeasurements: !threshold,
+    });
+    measurer.start();
+    const result = await fn();
+    measurer.stop();
+    return result;
+  };
+
+//
 
 /** Returns null if fn call is throttled */
 export const throttle = <Args extends any[], R>(

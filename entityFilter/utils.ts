@@ -2,86 +2,78 @@ import { SFSymbolKey } from '../sfSymbols';
 import { FlavorOption } from '../UITable/Row/templates';
 import selectableEntityBrowser from '../views/selectableEntityBrowser';
 import {
-  AllFilters,
-  AppliedFilter,
+  FilterRecord,
   Filter,
-  LoadedFilterCounts,
   Props,
   State,
+  FilterKey,
+  FilterWithState,
+  AppliedFilterState,
 } from './types';
 
-type AnyFilter = Filter<any> | AppliedFilter;
+type AnyFilter = Filter<any> | FilterWithState<any>;
 
-const areFiltersEqual = (a: AnyFilter, b: AnyFilter) =>
-  a.label === b.label &&
-  a.filterCagtegory === b.filterCagtegory &&
-  a.icon === b.icon;
+export const getFilterKey = ({ filterCategory, label }: AnyFilter): FilterKey =>
+  `${filterCategory}.${label}`;
 
-export const withoutFilter = <T extends AnyFilter>(
-  filters: T[],
-  filterToRemove: AnyFilter
-) => filters.filter(f => !areFiltersEqual(f, filterToRemove));
-
-export const findFilter = <T extends AnyFilter>(
-  filters: T[],
-  targetFilter: AnyFilter
-) => filters.find(f => areFiltersEqual(f, targetFilter));
-
-export const updateFilterInList = <T extends AnyFilter>(
-  filters: T[],
-  filterToUpdate: AnyFilter,
-  updater: Identity<T>
-) => filters.map(f => (areFiltersEqual(f, filterToUpdate) ? updater(f) : f));
-
-//
-
-export const getFilterPredicate = <E>(
-  appliedFilter: AppliedFilter,
-  allFilters: AllFilters<E>
+const lookupFilterByKey = <E>(
+  filterKey: FilterKey,
+  filterRecord: FilterRecord<E>
 ) => {
-  const { filterCagtegory, label, state: filterState } = appliedFilter;
-  const catFilters = allFilters[filterCagtegory];
-  if (!catFilters) {
-    throw new Error(`Filter category ${filterCagtegory} not found`);
-  }
-  const filter = findFilter(catFilters, appliedFilter);
-  if (!filter) throw new Error(`No filter with label ${label} found`);
-  return (entity: E) => {
-    if (!filterState) return true;
-    const shouldInclude = filter.includeEntity(entity);
-    return filterState === 'INCLUDE' ? shouldInclude : !shouldInclude;
-  };
+  const [category, label] = filterKey.split('.');
+  if (!(category && label)) throw new Error(`Invalid key ${filterKey}`);
+  const filter = filterRecord[category]?.find(f => f.label === label);
+  if (!filter) throw new Error(`No filter found for ${filterKey}`);
+  return filter;
 };
 
+export const getAppliedFilters = <E>(
+  { filterState }: State,
+  allFilters: FilterRecord<E>
+): FilterWithState<E>[] =>
+  [...filterState.entries()]
+    .filter(([_, state]) => state)
+    .map(([key, state]) => ({
+      ...lookupFilterByKey(key, allFilters),
+      state,
+    }));
+
+export const enhanceFilterWithState = <E>(
+  filter: Filter<E>,
+  state: State
+): FilterWithState<E> => ({
+  ...filter,
+  state: state.filterState.get(getFilterKey(filter)) ?? null,
+});
+
 const getAppliedFiltersPredicate =
-  <E>(appliedFilters: AppliedFilter[], allFilters: AllFilters<E>) =>
-  (entity: E) =>
-    appliedFilters.reduce(
-      (acc, filter) => acc && getFilterPredicate(filter, allFilters)(entity),
-      true
-    );
+  <E>(state: State, allFilters: FilterRecord<E>) =>
+  (entity: E) => {
+    const appliedFilters = getAppliedFilters(state, allFilters);
+    return appliedFilters.reduce((acc, filter) => {
+      const shouldInclude = filter.includeEntity(entity);
+      return (
+        acc && (filter.state === 'INCLUDE' ? shouldInclude : !shouldInclude)
+      );
+    }, true);
+  };
 
-export const getFilteredEntities = <E>(
-  allEntities: E[],
-  appliedFilters: AppliedFilter[],
-  allFilters: AllFilters<E>
-) => allEntities.filter(getAppliedFiltersPredicate(appliedFilters, allFilters));
+export const getInitFilterState = <E>(
+  filters: FilterWithState<E>[]
+): State['filterState'] => {
+  const entries = filters
+    .filter(f => f.state)
+    .map<[FilterKey, AppliedFilterState]>(f => [getFilterKey(f), f.state]);
+  return new Map(entries);
+};
 
-/** For an unselected filter, this returns how many of the given entities
- * match it */
-export const getUnappliedFilterCount = <E>(
-  entities: E[],
-  filter: AppliedFilter,
-  allFilters: AllFilters<E>
-) =>
-  entities.filter(entity => getFilterPredicate(filter, allFilters)(entity))
-    .length;
+export const areFiltersApplied = ({ filterState }: State) =>
+  Boolean([...filterState.values()].filter(Boolean).length);
 
-/** When initializing state, don't apply any filters whose state is unapplied */
-export const removeUnappliedFilters = (filters: AppliedFilter[]) =>
-  filters.filter(filter => filter.state !== null);
-
-export const getFilterIcon = ({ icon, state }: AppliedFilter): SFSymbolKey => {
+export const getFilterIcon = <E>({
+  state,
+  icon,
+}: FilterWithState<E>): SFSymbolKey => {
   switch (state) {
     case null:
       return icon ?? 'task_incomplete';
@@ -92,59 +84,23 @@ export const getFilterIcon = ({ icon, state }: AppliedFilter): SFSymbolKey => {
   }
 };
 
-/** Map filters to applied filters, using the current state values to populate
- * filter state. */
-export const mapFiltersToAppliedFilters = <E>(
-  filters: Filter<E>[],
-  appliedFiltersInState: AppliedFilter[]
-): AppliedFilter[] =>
-  filters.map(f => {
-    const inState = findFilter(appliedFiltersInState, f);
-    return { ...f, state: inState?.state ?? null };
-  });
-
-export const loadFilterCounts = <E>(
-  entities: E[],
-  allFilters: AllFilters<E>
-) => {
-  const loadedFilterCounts: LoadedFilterCounts = {};
-  entities.forEach(entity => {
-    Object.entries(allFilters).forEach(([category, filters]) =>
-      filters.forEach(filter => {
-        loadedFilterCounts[category] = {
-          ...(loadedFilterCounts[category] ?? {}),
-        };
-        const currVal = loadedFilterCounts[category]![filter.label];
-        const wouldMatchFilter = filter.includeEntity(entity);
-        if (wouldMatchFilter) {
-          loadedFilterCounts[category]![filter.label] = (currVal ?? 0) + 1;
-        }
-      })
-    );
-  });
-  return loadedFilterCounts;
-};
-
 export const viewEntities = async <E>(
-  { viewEntityOpts, getEntities, filters }: Props<E>,
-  { appliedFilters }: State,
-  reloadProps: NoParamFn
+  { viewEntityOpts, getUniqueEntityId, getEntities, filters }: Props<E>,
+  state: State,
+  reload$Props: NoParamFn
 ) => {
   await selectableEntityBrowser({
     getEntities: async () =>
-      (
-        await getEntities()
-      ).filter(getAppliedFiltersPredicate(appliedFilters, filters)),
+      (await getEntities()).filter(getAppliedFiltersPredicate(state, filters)),
+    getUniqueEntityId,
     ...viewEntityOpts,
   });
-  reloadProps();
+  reload$Props();
 };
 
-export const getFilterButtonFlavor = (
-  { state }: AppliedFilter,
-  isDisabled: boolean
-): FlavorOption => {
-  if (isDisabled) return 'transparentWithBorder';
+export const getFilterButtonFlavor = <E>({
+  state,
+}: FilterWithState<E>): FlavorOption => {
   switch (state) {
     case 'INCLUDE':
       return 'happy';

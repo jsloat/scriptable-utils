@@ -1,4 +1,7 @@
-type UpdateCallback<D extends AnyObj> = (newAttr: Partial<D>) => any;
+type UpdateCallback<D extends AnyObj> = (
+  previousData: D,
+  updatedData: D
+) => any;
 type CallbackWithOpts<D extends AnyObj> = {
   id: string;
   callback: UpdateCallback<D>;
@@ -58,12 +61,11 @@ export class Stream<DataType extends AnyObj> {
     );
   }
 
-  /** Run with singleValObj if only updating one value */
-  private async runCallbacks(singleValObj: AnyObj | null = null) {
+  private async runCallbacks(previousData: DataType, updatedData: DataType) {
     this.updateCallbacks.forEach(({ callback, id }) => {
       if (this.showStreamDataUpdateDebug)
         console.log(`Running stream update callback with ID "${id}"`);
-      callback((singleValObj || this.data) as unknown as Partial<DataType>);
+      callback(previousData, updatedData);
     });
   }
 
@@ -75,8 +77,9 @@ export class Stream<DataType extends AnyObj> {
     if (!this.data) {
       throw new Error('Attempting to update stream data while uninitialized');
     }
+    if (!suppressChangeTrigger)
+      await this.runCallbacks(this.data, reducer(this.data));
     this.data = reducer(this.data);
-    if (!suppressChangeTrigger) await this.runCallbacks();
   }
 
   /** Set full stream data */
@@ -97,7 +100,7 @@ export class Stream<DataType extends AnyObj> {
 
   /** Used to trigger callbacks when no change has occurred */
   triggerChange() {
-    return this.runCallbacks();
+    return this.runCallbacks(this.data, this.data);
   }
 
   getData() {
@@ -150,21 +153,25 @@ export const subscribe = <
   source$: Stream<SourceState>,
   stateReducer: (
     latestDependentState: DependentState,
-    latestSourceState: SourceState
-  ) => DependentState | null = state => state
+    prevSourceState: SourceState,
+    updatedSourceState: SourceState
+  ) => MaybePromise<DependentState | null> = state => state
 ) => {
   const callbackId = subscriptionName;
   source$.registerUpdateCallback({
     callbackId,
-    callback: async () => {
+    callback: async (prevSourceState, updatedSourceState) => {
       const latestDependentData = dependent$.getData();
-      const latestSourceData = source$.getData();
-      const reducedData = stateReducer(latestDependentData, latestSourceData);
+      const reducedData = await stateReducer(
+        latestDependentData,
+        prevSourceState,
+        updatedSourceState
+      );
       // If the reducer returns null, no update should occur
       if (reducedData) await dependent$.setData(reducedData);
     },
   });
-  return () => source$.unregisterUpdateCallback(callbackId);
+  return { unsubscribe: () => source$.unregisterUpdateCallback(callbackId) };
 };
 
 /** Use this function to get subscribe & unsubscribe functions for easy cleanup. */

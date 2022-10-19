@@ -58,14 +58,6 @@ const primitiveTypes: PrimitiveTypeLabel[] = [
   'symbol',
   'undefined',
 ];
-export type PrimitiveType =
-  | bigint
-  | boolean
-  | null
-  | number
-  | string
-  | symbol
-  | undefined;
 
 /** Extended, more granular version of typeof */
 export const getType = (el: any): GetTypeTypes => {
