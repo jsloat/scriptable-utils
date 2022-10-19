@@ -54,6 +54,8 @@ declare type EmptyObject = {
 
 declare type Falsy = false | null | undefined | '' | void | 0;
 
+declare type NotFalsy<T> = Exclude<T, Falsy>;
+
 //
 
 declare type AnyFn = (...args: any) => any;

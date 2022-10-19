@@ -260,6 +260,9 @@ export const readableDaysBetween = (
 
 export const getIsoTimestamp = (date = new Date()) => date.toISOString();
 
+export const areDatesEqual = (d1: Date, d2: Date) =>
+  d1.getTime() === d2.getTime();
+
 //
 // CALENDAR FUNCTIONS
 //
