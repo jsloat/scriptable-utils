@@ -1,3 +1,5 @@
+import ThrottledBatchQueue from '../ThrottledBatchQueue';
+
 type UpdateCallback<D extends AnyObj> = (
   previousData: D,
   updatedData: D
@@ -23,11 +25,18 @@ type StreamConstructorOpts<DataType extends AnyObj> = {
   showStreamDataUpdateDebug?: boolean;
 };
 
+type UpdateDataPayload<T> = {
+  reducer: Identity<T>;
+  suppressChangeTrigger: boolean;
+};
+
 export class Stream<DataType extends AnyObj> {
   private name: string;
   private showStreamDataUpdateDebug: boolean;
   private data: DataType;
   private updateCallbacks: CallbackWithOpts<DataType>[] = [];
+  // Queue to sequentially update data
+  private updateQueue: ThrottledBatchQueue<UpdateDataPayload<DataType>>;
 
   constructor({
     defaultState,
@@ -38,6 +47,20 @@ export class Stream<DataType extends AnyObj> {
     this.data = defaultState;
     this.name = name;
     this.updateCallbacks = [];
+
+    this.updateQueue = new ThrottledBatchQueue({
+      interval: 0,
+      maxEntitiesPerOperation: 1,
+      batchOperation: async ([{ reducer, suppressChangeTrigger }]) => {
+        if (!this.data) {
+          throw new Error('Attempting to update stream data with no data');
+        }
+        const oldData = { ...this.data };
+        const newData = reducer(oldData);
+        this.data = newData;
+        if (!suppressChangeTrigger) await this.runCallbacks(oldData, newData);
+      },
+    });
   }
 
   registerUpdateCallback({
@@ -65,7 +88,7 @@ export class Stream<DataType extends AnyObj> {
     );
   }
 
-  private async runCallbacks(previousData: DataType, updatedData: DataType) {
+  private runCallbacks(previousData: DataType, updatedData: DataType) {
     this.updateCallbacks.forEach(({ callback, id }) => {
       if (this.showStreamDataUpdateDebug)
         console.log(
@@ -76,16 +99,11 @@ export class Stream<DataType extends AnyObj> {
   }
 
   /** Reduce stream data */
-  async updateData(
+  updateData(
     reducer: Identity<DataType>,
     { suppressChangeTrigger = false } = {}
   ) {
-    if (!this.data) {
-      throw new Error('Attempting to update stream data while uninitialized');
-    }
-    if (!suppressChangeTrigger)
-      await this.runCallbacks(this.data, reducer(this.data));
-    this.data = reducer(this.data);
+    this.updateQueue.push({ reducer, suppressChangeTrigger });
   }
 
   /** Set full stream data */

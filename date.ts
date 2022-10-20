@@ -1,7 +1,6 @@
 import { range } from './object';
 import { pluralize } from './string';
 import { ExcludeFalsy } from './common';
-import persisted from './io/persisted';
 import { getDomainColor } from './colors';
 import { CALENDAR_TITLES } from './privateConfig';
 import { compose, filter, map, toArray } from './arrayTransducers';
@@ -299,19 +298,6 @@ export const getAllEventCals = async () =>
     )
   );
 
-export const calBlacklistTitles = persisted<string[]>({
-  filename: 'calBlacklistTitles',
-  defaultData: [],
-});
-
-export const initEventBlacklistCache = () => calBlacklistTitles.getData();
-
-export const excludeBlacklistedEvents = () =>
-  filter(
-    (event: CalendarEvent) =>
-      !calBlacklistTitles.has({ item: event.title, useCache: true })
-  );
-
 /** Get all events within x days in the past or future from now */
 export const getEventsInXDayRadius = async (x: number) => {
   const NOW = new Date();
@@ -319,19 +305,6 @@ export const getEventsInXDayRadius = async (x: number) => {
   const startDate = addToDate(NOW, { days: -1 * x });
   const endDate = addToDate(NOW, { days: x });
   return await CalendarEvent.between(startDate, endDate, allCals);
-};
-
-export const getEventsBetweenNowAndXDays = async (x: number) => {
-  const NOW = new Date();
-  const allCals = await getAllEventCals();
-  const inXDays = addToDate(NOW, { days: x });
-  const startDate = x <= 0 ? inXDays : NOW;
-  const endDate = x <= 0 ? NOW : inXDays;
-  await initEventBlacklistCache();
-  return toArray(
-    await CalendarEvent.between(startDate, endDate, allCals),
-    excludeBlacklistedEvents()
-  );
 };
 
 export const getTodayEvents = async () => {

@@ -93,9 +93,9 @@ declare type XOR<T, U> = T | U extends AnyObj
 
 declare type SortOrder = 'ASC' | 'DESC';
 
-declare type MapFn<Input, Output> = (input: Input) => Output;
+declare type MapFn<Input, Output = unknown> = (input: Input) => Output;
 
-declare type NoParamFn<Output = any> = () => Output;
+declare type NoParamFn<Output = unknown> = () => Output;
 
 declare type OptionalMapFn<Input, Output> = (input?: Input) => Output;
 

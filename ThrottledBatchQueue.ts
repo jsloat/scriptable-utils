@@ -2,11 +2,13 @@ import { ONE_SECOND } from './date';
 import { wait } from './flow';
 
 type Opts<T> = {
-  batchOperation: (entities: T[]) => MaybePromise<any>;
+  batchOperation: (entities: [T, ...T[]]) => MaybePromise<any>;
   initQueue?: T[];
   interval?: number;
   maxEntitiesPerOperation?: number;
   debug?: boolean;
+  /** Optionally provide custom equality function used for deduping */
+  isEqual?: (a: T, b: T) => boolean;
 };
 
 /**
@@ -21,16 +23,17 @@ type Opts<T> = {
  * The consumer specifies what (primitive) data type makes up the actual queue,
  * and what batch action to perform on the queue.
  */
-class ThrottledBatchQueue<T extends PrimitiveType> {
-  private queue: Set<T>;
+class ThrottledBatchQueue<T> {
+  private queue: T[];
   private isRunning = false;
   private isPaused = false;
   private interval: number;
   /** When performing batch operations on the queue, only take a slice of this
    * length, if provided. */
   private maxEntitiesPerOperation: number | null;
-  private batchOperation: (entities: T[]) => MaybePromise<any>;
+  private batchOperation: (entities: [T, ...T[]]) => MaybePromise<any>;
   private debug: boolean;
+  private isEqual: (a: T, b: T) => boolean;
 
   constructor({
     batchOperation,
@@ -38,12 +41,14 @@ class ThrottledBatchQueue<T extends PrimitiveType> {
     interval = ONE_SECOND * 5,
     maxEntitiesPerOperation,
     debug = false,
+    isEqual = (a, b) => a === b,
   }: Opts<T>) {
-    this.queue = new Set(initQueue);
+    this.queue = initQueue;
     this.interval = interval;
     this.maxEntitiesPerOperation = maxEntitiesPerOperation || null;
     this.batchOperation = batchOperation;
     this.debug = debug;
+    this.isEqual = isEqual;
   }
 
   private debugLog(msg: any) {
@@ -56,32 +61,33 @@ class ThrottledBatchQueue<T extends PrimitiveType> {
   private shiftQueue() {
     const clone = [...this.queue];
     if (!this.maxEntitiesPerOperation) {
-      this.queue.clear();
+      this.queue = [];
       return clone;
     }
     const batch = clone.splice(0, this.maxEntitiesPerOperation);
-    this.queue = new Set(clone);
+    this.queue = clone;
     return batch;
   }
 
   private async run() {
     if (this.isRunning) throw new Error('Queue already running');
     if (this.isPaused) throw new Error('Run called while paused');
-    if (!this.queue.size) {
+    if (!this.queue.length) {
       this.debugLog('Nothing left in queue to run.');
       return;
     }
     this.isRunning = true;
     const batchEntities = this.shiftQueue();
     this.debugLog(
-      `Running batch operation on ${batchEntities.length} entities, ${this.queue.size} remaining.`
+      `Running batch operation on ${batchEntities.length} entities, ${this.queue.length} remaining.`
     );
-    if (this.queue.size) this.snoozeRun();
-    if (batchEntities.length) await this.batchOperation(batchEntities);
+    if (this.queue.length) this.snoozeRun();
+    if (batchEntities.length)
+      await this.batchOperation(batchEntities as [T, ...T[]]);
     // This smells, but I want to ensure that snoozeRun gets called ASAP, but
     // also make sure that if the queue gets added to during the batch
     // operation, that those entities get detected.
-    if (this.queue.size) this.snoozeRun();
+    if (this.queue.length) this.snoozeRun();
     this.isRunning = false;
   }
 
@@ -91,7 +97,7 @@ class ThrottledBatchQueue<T extends PrimitiveType> {
       return;
     }
     wait(this.interval, () => {
-      if (!this.queue.size) {
+      if (!this.queue.length) {
         this.debugLog(
           'After snoozing, there is nothing left in the queue to run.'
         );
@@ -102,13 +108,16 @@ class ThrottledBatchQueue<T extends PrimitiveType> {
   }
 
   push(...entities: T[]) {
-    const newEntities = entities.filter(e => !this.queue.has(e));
+    const newEntities = entities.filter(
+      e => !this.queue.some(queuedEntity => this.isEqual(queuedEntity, e))
+    );
     if (!newEntities.length) {
       this.debugLog('Push: all of the pushed entities are in the queue.');
       return;
     }
-    newEntities.forEach(entity => this.queue.add(entity));
-    // If the queue is already running, it should
+    newEntities.forEach(entity => this.queue.push(entity));
+    // If the queue is already running, it should automatically include the
+    // pushed entities
     if (!this.isRunning) this.run();
   }
 
