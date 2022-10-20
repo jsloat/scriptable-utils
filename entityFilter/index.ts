@@ -32,7 +32,9 @@ import {
 export default <E>(opts: Opts<E>) => {
   const { initAppliedFilters, beforeLoad, onDismiss } = opts;
 
+  const instanceID = `entityFilter ${UUID.string()}`;
   const props$ = new Stream<$Props>({
+    name: instanceID,
     defaultState: {
       allEntityIDs: new Set(),
       filterKeyToMatchingIDs: new Map(),
@@ -42,12 +44,11 @@ export default <E>(opts: Opts<E>) => {
     },
   });
 
-  const tableName = `entityFilter ${UUID.string()}`;
   const { present, connect, getState, setState, getProps, payload$ } = getTable<
     State,
     Props<E>,
     $Props
-  >({ name: tableName, connected$: { $: props$ } });
+  >({ name: instanceID, connected$: { $: props$ } });
 
   const hardReloadProps$ = async (state: State) =>
     props$.setData(

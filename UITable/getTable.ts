@@ -45,6 +45,7 @@ const getTable = <
   tableOpts: GetTableOpts<State, Props, $Data>
 ) => {
   const payload$: Payload$<State, Props> = new Stream({
+    name: `table: ${tableOpts.name}`,
     defaultState: {},
   });
   const table = new Table<State, Props, $Data>({ ...tableOpts, payload$ });

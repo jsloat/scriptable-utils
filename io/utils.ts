@@ -48,6 +48,7 @@ type RobustCleanup$Data = {
 
 /** Used for views to plug into status of running function. */
 export const robustCleanup$ = new Stream<RobustCleanup$Data>({
+  name: 'robustCleanup$',
   defaultState: {
     isRunning: false,
     numFailures: 0,

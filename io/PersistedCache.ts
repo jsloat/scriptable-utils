@@ -46,13 +46,17 @@ export default class PersistedCache<
     this.splitData = splitData;
     this.joinData = joinData;
     const { inMemoryData, persistedData } = splitData(defaultData);
+    const filename = getTemporaryFilename();
     this.io = persisted<InPersistedData>({
-      filename: getTemporaryFilename(),
+      filename,
       defaultData: persistedData,
       disableCache: true,
       prettify: false,
     });
-    this.cache$ = new Stream<InMemoryData>({ defaultState: inMemoryData });
+    this.cache$ = new Stream<InMemoryData>({
+      name: `persisted cache ${filename}`,
+      defaultState: inMemoryData,
+    });
   }
 
   /**

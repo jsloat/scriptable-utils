@@ -45,7 +45,10 @@ const createIOObject = <T>({
   defaultData,
   cache$: disableCache
     ? null
-    : new Stream<Cache$Data<T>>({ defaultState: { data: defaultData } }),
+    : new Stream<Cache$Data<T>>({
+        name: `persisted cache ${filename}`,
+        defaultState: { data: defaultData },
+      }),
   // @ts-ignore
   areEntitiesEqual,
 });

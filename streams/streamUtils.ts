@@ -19,20 +19,24 @@ type RegisterUpdateCallbackOpts<D extends AnyObj> = {
 
 type StreamConstructorOpts<DataType extends AnyObj> = {
   defaultState: DataType;
+  name: string;
   showStreamDataUpdateDebug?: boolean;
 };
 
 export class Stream<DataType extends AnyObj> {
+  private name: string;
   private showStreamDataUpdateDebug: boolean;
   private data: DataType;
   private updateCallbacks: CallbackWithOpts<DataType>[] = [];
 
   constructor({
     defaultState,
+    name,
     showStreamDataUpdateDebug = false,
   }: StreamConstructorOpts<DataType>) {
     this.showStreamDataUpdateDebug = showStreamDataUpdateDebug;
     this.data = defaultState;
+    this.name = name;
     this.updateCallbacks = [];
   }
 
@@ -64,7 +68,9 @@ export class Stream<DataType extends AnyObj> {
   private async runCallbacks(previousData: DataType, updatedData: DataType) {
     this.updateCallbacks.forEach(({ callback, id }) => {
       if (this.showStreamDataUpdateDebug)
-        console.log(`Running stream update callback with ID "${id}"`);
+        console.log(
+          `Running stream "${this.name}" update callback with ID "${id}"`
+        );
       callback(previousData, updatedData);
     });
   }
@@ -194,8 +200,10 @@ export const getSubscribers = <
 });
 
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
-  streamDict: StreamDict,
-  name: string
+  opts: {
+    streamDict: StreamDict;
+    name: string;
+  } & Pick<StreamConstructorOpts<any>, 'showStreamDataUpdateDebug'>
 ) => Stream<{ [key in keyof StreamDict]: StreamDataType<StreamDict[key]> }>;
 /**
  * Create a new stream that combines the data of multiple streams. Combined
@@ -205,23 +213,28 @@ type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
  *
  * The returned stream will update whwnever its combined streams do.
  */
-export const combineStreams: CombineStreams = (streamDict, name) => {
+export const combineStreams: CombineStreams = ({
+  streamDict,
+  name,
+  showStreamDataUpdateDebug,
+}) => {
   const defaultState = Object.entries(streamDict).reduce(
     (accState, [namespace, $]) => ({ ...accState, [namespace]: $.getData() }),
     {} as any
   );
-  const combined$ = new Stream({ defaultState });
+  const combined$ = new Stream({
+    defaultState,
+    name,
+    showStreamDataUpdateDebug,
+  });
   Object.entries(streamDict).forEach(([namespace, $]) =>
     $.registerUpdateCallback({
       callbackId: `Combined stream: ${name}/${namespace}`,
-      callback: () => {
-        const latestCombinedState = combined$.getData();
-        const latestSourceState = $.getData();
-        combined$.setData({
+      callback: (_, latestSourceState) =>
+        combined$.updateData(latestCombinedState => ({
           ...latestCombinedState,
           [namespace]: latestSourceState,
-        });
-      },
+        })),
     })
   );
   return combined$;

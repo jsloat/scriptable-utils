@@ -51,6 +51,7 @@ export class StreamCache<StreamData, PersistedData> {
       prettify: false,
     });
     this.cache$ = new Stream<NestedDataShape<StreamData>>({
+      name: `StreamCache ${this.id}`,
       defaultState: { data: null },
     });
     this.isPersistedDataLoaded = false;
