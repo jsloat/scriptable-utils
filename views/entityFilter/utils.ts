@@ -1,10 +1,8 @@
-import { SFSymbolKey } from '../sfSymbols';
-import { FlavorOption } from '../UITable/Row/templates';
-import selectableEntityBrowser from '../views/selectableEntityBrowser';
+import { SFSymbolKey } from '../../sfSymbols';
+import { FlavorOption } from '../../UITable/Row/templates';
 import {
   FilterRecord,
   Filter,
-  Props,
   State,
   FilterKey,
   FilterWithState,
@@ -46,17 +44,15 @@ export const enhanceFilterWithState = <E>(
   state: state.filterState.get(getFilterKey(filter)) ?? null,
 });
 
-const getAppliedFiltersPredicate =
-  <E>(state: State, allFilters: FilterRecord<E>) =>
-  (entity: E) => {
-    const appliedFilters = getAppliedFilters(state, allFilters);
-    return appliedFilters.reduce((acc, filter) => {
+export const getAppliedFiltersPredicate =
+  <E>(appliedFilters: FilterWithState<E>[]) =>
+  (entity: E) =>
+    appliedFilters.reduce((acc, filter) => {
       const shouldInclude = filter.includeEntity(entity);
       return (
         acc && (filter.state === 'INCLUDE' ? shouldInclude : !shouldInclude)
       );
     }, true);
-  };
 
 export const getInitFilterState = <E>(
   filters: FilterWithState<E>[]
@@ -82,20 +78,6 @@ export const getFilterIcon = <E>({
     case 'EXCLUDE':
       return 'cancel';
   }
-};
-
-export const viewEntities = async <E>(
-  { viewEntityOpts, getUniqueEntityId, getEntities, filters }: Props<E>,
-  state: State,
-  reload$Props: NoParamFn
-) => {
-  await selectableEntityBrowser({
-    getEntities: async () =>
-      (await getEntities()).filter(getAppliedFiltersPredicate(state, filters)),
-    getUniqueEntityId,
-    ...viewEntityOpts,
-  });
-  reload$Props();
 };
 
 export const getFilterButtonFlavor = <E>({

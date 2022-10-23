@@ -1,17 +1,17 @@
-import { conditionalArr } from '../array';
-import { ExcludeFalsy } from '../common';
-import { isEqual } from '../object';
-import { Stream } from '../streams';
-import { getTableActionCreator } from '../streams/reducerAction';
-import { subscribe } from '../streams/streamUtils';
-import getTable from '../UITable/getTable';
+import { conditionalArr } from '../../array';
+import { ExcludeFalsy } from '../../common';
+import { isEqual } from '../../object';
+import { Stream } from '../../streams';
+import { getTableActionCreator } from '../../streams/reducerAction';
+import { subscribe } from '../../streams/streamUtils';
+import getTable from '../../UITable/getTable';
 import {
   ButtonStack,
   ButtonStackOpt,
   H1,
   H2,
   Spacer,
-} from '../UITable/Row/templates';
+} from '../../UITable/Row/templates';
 import { recalculateProps$ } from './props$Calculations';
 import {
   handleClearFilters,
@@ -24,13 +24,13 @@ import {
   getFilterButtonFlavor,
   getFilterKey,
   getFilterIcon,
-  viewEntities,
   enhanceFilterWithState,
   areFiltersApplied,
+  getAppliedFilters,
 } from './utils';
 
-export default <E>(opts: Opts<E>) => {
-  const { initAppliedFilters, beforeLoad, onDismiss } = opts;
+export default async <E>(opts: Opts<E>) => {
+  const { initAppliedFilters, beforeLoad, onDismiss, filters } = opts;
 
   const instanceID = `entityFilter ${UUID.string()}`;
   const props$ = new Stream<$Props>({
@@ -97,12 +97,6 @@ export default <E>(opts: Opts<E>) => {
     ButtonStack(
       [
         {
-          text: 'View entities',
-          icon: 'dash_list',
-          onTap: () =>
-            viewEntities(getProps(), state, () => hardReloadProps$(state)),
-        },
-        {
           text: 'Clear filters',
           icon: 'filter',
           onTap: clearFilters,
@@ -168,7 +162,7 @@ export default <E>(opts: Opts<E>) => {
     collapsedFilterCategories: [],
   };
 
-  present({
+  const finalState = await present({
     beforeLoad: () => {
       hardReloadProps$(defaultState);
       return beforeLoad?.();
@@ -188,4 +182,6 @@ export default <E>(opts: Opts<E>) => {
       FilterCategories(),
     ],
   });
+
+  return getAppliedFilters(finalState, filters);
 };

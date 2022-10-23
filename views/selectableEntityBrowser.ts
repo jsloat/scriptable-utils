@@ -3,7 +3,6 @@
  * bulk selection & performing actions on them, and a single-tap action.
  */
 
-import { toggleArrayItem } from '../array';
 import { ExcludeFalsy } from '../common';
 import {
   getTableActionCreator,
@@ -11,16 +10,21 @@ import {
 } from '../streams/reducerAction';
 import { SFSymbolKey } from '../sfSymbols';
 import {
-  Button,
   ButtonStack,
   ButtonStackOpt,
   H1,
+  PaginationController,
   Spacer,
 } from '../UITable/Row/templates';
 import { H1Opts } from '../UITable/Row/templates/_H1';
 import getTable from '../UITable/getTable';
 import { ValidTableEl } from '../UITable/types';
 import listChoose, { ListChooseOption } from '../input/listChoose';
+import { Stream } from '../streams';
+import { FilterRecord, FilterWithState } from './entityFilter/types';
+import { getAppliedFiltersPredicate } from './entityFilter/utils';
+import entityFilter from './entityFilter';
+import { conditionalArr } from '../array';
 
 export type BulkAction<E> = {
   icon?: SFSymbolKey;
@@ -39,12 +43,25 @@ type EntityRowCallbackOpts<E> = {
   isSelected: boolean;
 };
 
-type CustomCTACallbackOpts<E> = { entities: E[]; rerender: NoParamFn<any> };
+type EntityMap<E> = Map<EntityId, E>;
+
+type State<E> = {
+  selectedEntityIds: Set<EntityId>;
+  appliedFilters: FilterWithState<E>[];
+};
+
+type $Props<E> = {
+  entityMap: EntityMap<E>;
+  allEntityIds: EntityId[];
+  allEntitiesCount: number;
+};
+
+type CustomCTACallbackOpts<E> = $Props<E> & { rerender: NoParamFn<any> };
 
 export type SelectableEntityBrowserOpts<Entity> = {
   /** Optionally run this code before launching the table */
   beforeLoad?: NoParamFn<any>;
-  onClose?: MapFn<Entity[], any>;
+  onClose?: MapFn<$Props<Entity>, any>;
   getEntities: NoParamFn<MaybePromise<Entity[]>>;
   getEntityRow: MapFn<EntityRowCallbackOpts<Entity>, ValidTableEl>;
   /** This action occurs when single tapping an entity. */
@@ -53,14 +70,56 @@ export type SelectableEntityBrowserOpts<Entity> = {
    * multiselect is not permitted. */
   bulkActions?: BulkAction<Entity>[];
   /** Optionally generate a header for the view with visible entities as input */
-  getHeaderOpts?: MapFn<Entity[], H1Opts>;
-  getCustomCTAs?: MapFn<CustomCTACallbackOpts<Entity>, ButtonStackOpt[]>;
+  headerOpts?: H1Opts;
+  getCustomCTAs?: MapFn<
+    CustomCTACallbackOpts<Entity>,
+    Omit_<ButtonStackOpt, 'flavor'>[]
+  >;
   /** Used to toggle selection status, etc. */
   getUniqueEntityId: MapFn<Entity, EntityId>;
+  filters?: FilterRecord<Entity>;
 };
 
-type State = { selectedEntityIds: EntityId[] };
-type Props<E> = { entities: E[] };
+//
+
+const selectBulkAction = async <E>(
+  entities: E[],
+  bulkActions: SelectableEntityBrowserOpts<E>['bulkActions']
+) => {
+  if (!bulkActions) return;
+  await listChoose(
+    bulkActions
+      .map<ListChooseOption | null>(({ label, onTap, shouldHide, icon }) =>
+        shouldHide?.(entities)
+          ? null
+          : { label, icon, getValueOnTap: () => onTap(entities) }
+      )
+      .filter(ExcludeFalsy)
+  );
+};
+
+const getDefaultProps$State = <E>(): $Props<E> => ({
+  entityMap: new Map(),
+  allEntityIds: [],
+  allEntitiesCount: 0,
+});
+
+const generateProps = <E>(
+  entities: E[],
+  getUniqueEntityId: SelectableEntityBrowserOpts<E>['getUniqueEntityId']
+) =>
+  entities.reduce((acc, entity) => {
+    const id = getUniqueEntityId(entity);
+    acc.entityMap.set(id, entity);
+    acc.allEntityIds.push(id);
+    acc.allEntitiesCount++;
+    return acc;
+  }, getDefaultProps$State<E>());
+
+const getFilteredEntities = async <E>(
+  getEntities: SelectableEntityBrowserOpts<E>['getEntities'],
+  appliedFilters: FilterWithState<E>[]
+) => (await getEntities()).filter(getAppliedFiltersPredicate(appliedFilters));
 
 //
 
@@ -73,137 +132,161 @@ export default async <E>({
   bulkActions,
   getUniqueEntityId,
   getCustomCTAs,
-  getHeaderOpts,
+  headerOpts,
+  filters,
 }: SelectableEntityBrowserOpts<E>) => {
   await beforeLoad?.();
 
+  const ID = `selectable entity browser ${UUID.string()}`;
+
+  const props$ = new Stream<$Props<E>>({
+    defaultState: getDefaultProps$State(),
+    name: ID,
+  });
+  const reloadEntities = async ({ appliedFilters }: State<E>) =>
+    props$.setData(
+      generateProps(
+        await getFilteredEntities(getEntities, appliedFilters),
+        getUniqueEntityId
+      )
+    );
+
   const { present, connect, getProps, getState, setState } = getTable<
-    State,
-    Props<E>
-  >({ name: `selectable entity browser ${UUID.string()}` });
+    State<E>,
+    void,
+    $Props<E>
+  >({ name: ID, connected$: { $: props$ } });
+
+  const reducer = getTableReducerCreator<State<E>>();
+
+  const handleToggleEntitySelect = reducer((state, id: EntityId) => {
+    const clone = new Set([...state.selectedEntityIds]);
+    clone.has(id) ? clone.delete(id) : clone.add(id);
+    return { ...state, selectedEntityIds: clone };
+  });
+
+  const handleDeselectAll = reducer(state => ({
+    ...state,
+    selectedEntityIds: new Set(),
+  }));
+
+  const handleSetSelectedIds = reducer((state, ids: EntityId[]) => ({
+    ...state,
+    selectedEntityIds: new Set(ids),
+  }));
 
   const action = getTableActionCreator(getState, setState);
-  const reducer = getTableReducerCreator<State>();
+  const toggleEntitySelect = action(handleToggleEntitySelect);
+  const deselectAll = action(handleDeselectAll);
+  const setSelectedIds = action(handleSetSelectedIds);
 
   //
 
-  const toggleEntitySelect = action(
-    reducer((state, entity: E) => ({
-      ...state,
-      selectedEntityIds: toggleArrayItem(
-        state.selectedEntityIds,
-        getUniqueEntityId(entity)
-      ),
-    }))
-  );
+  const Header = connect(() => H1(headerOpts || { title: 'Entity browser' }));
 
-  const deselectAll = action(
-    reducer(state => ({
-      ...state,
-      selectedEntityIds: [],
-    }))
-  );
-
-  const selectFirstEntity = action(
-    reducer((state, entity: E) => ({
-      ...state,
-      selectedEntityIds: [getUniqueEntityId(entity)],
-    }))
-  );
-
-  const selectAll = action(
-    reducer(state => ({
-      ...state,
-      selectedEntityIds: getProps().entities.map(getUniqueEntityId),
-    }))
-  );
-
-  //
-
-  const selectBulkAction = () => {
-    if (!bulkActions) return;
-    const { selectedEntityIds } = getState();
-    const { entities } = getProps();
-    const selectedEntities = entities.filter(e =>
-      selectedEntityIds.some(selectedId => selectedId === getUniqueEntityId(e))
-    );
-    listChoose(
-      bulkActions
-        .map<ListChooseOption | null>(({ label, onTap, shouldHide, icon }) =>
-          shouldHide?.(selectedEntities)
-            ? null
-            : { label, icon, getValueOnTap: () => onTap(entities) }
-        )
-        .filter(ExcludeFalsy)
-    );
+  const FilterCTAOpts = (): ButtonStackOpt | null => {
+    if (!filters) return null;
+    const { appliedFilters } = getState();
+    return {
+      text: 'Edit filters',
+      icon: 'filter',
+      ...(appliedFilters.length && { metadata: appliedFilters.length }),
+      onTap: async () => {
+        const newFilters = await entityFilter({
+          getEntities,
+          filters,
+          getUniqueEntityId,
+          initAppliedFilters: appliedFilters,
+        });
+        setState({ appliedFilters: newFilters });
+        reloadEntities(getState());
+      },
+    };
   };
 
-  //
-
-  const Header = connect(() =>
-    H1(getHeaderOpts?.(getProps().entities) || { title: 'Entity browser' })
-  );
-
-  const SelectionCTA = connect(({ state: { selectedEntityIds } }) => {
-    const { entities } = getProps();
-    if (!(entities.length && bulkActions)) return null;
-    const areAllSelected = selectedEntityIds.length === entities.length;
-    return Button({
+  const SelectionCTAOpts = (): ButtonStackOpt | null => {
+    const { selectedEntityIds } = getState();
+    const { allEntitiesCount, allEntityIds } = getProps();
+    if (!(allEntitiesCount && bulkActions)) return null;
+    const areAllSelected = selectedEntityIds.size === allEntitiesCount;
+    return {
       text: areAllSelected ? 'Clear selection' : 'Select all',
       icon: areAllSelected ? 'cancel' : 'select_all',
-      onTap: areAllSelected ? deselectAll : selectAll,
-    });
+      onTap: () =>
+        areAllSelected ? deselectAll() : setSelectedIds(allEntityIds),
+    };
+  };
+
+  const CTAs = connect(({ state }) => {
+    const stackOpts = conditionalArr([
+      FilterCTAOpts(),
+      SelectionCTAOpts(),
+      ...(getCustomCTAs
+        ? getCustomCTAs({
+            ...getProps(),
+            rerender: () => reloadEntities(state),
+          })
+        : []),
+    ]).map<ButtonStackOpt>(opt => ({
+      ...opt,
+      flavor: 'transparentWithBorder',
+      isLarge: true,
+    }));
+    return stackOpts.length && ButtonStack(stackOpts);
   });
 
-  const CustomCTAs = connect(({ rerender }) => {
-    if (!getCustomCTAs) return null;
-    return ButtonStack(
-      getCustomCTAs({ entities: getProps().entities, rerender: rerender })
-    );
+  const EntityRow = connect(({ state }, id: EntityId) => {
+    const { selectedEntityIds } = state;
+    const { entityMap } = getProps();
+    const numSelected = selectedEntityIds.size;
+    const isSelected = selectedEntityIds.has(id);
+    const entity = entityMap.get(id)!;
+    return [
+      getEntityRow({
+        entity,
+        isSelected,
+        onTap: async () => {
+          if (numSelected) return toggleEntitySelect(id);
+          await openEntity(entity);
+          reloadEntities(state);
+        },
+        onDoubleTap: async () => {
+          if (!numSelected) return setSelectedIds([id]);
+          const isSelectingBulkAction = isSelected && numSelected > 1;
+          if (isSelectingBulkAction) {
+            const selectedEntities = [...selectedEntityIds].map(
+              id => entityMap.get(id)!
+            );
+            await selectBulkAction(selectedEntities, bulkActions);
+          } else await openEntity(entity);
+          deselectAll();
+          reloadEntities(state);
+        },
+      }),
+      Spacer({ rowHeight: 1 }),
+    ].flat();
   });
 
-  const EntityRows = connect(({ state: { selectedEntityIds }, rerender }) =>
-    getProps().entities.flatMap(e => {
-      const numSelected = selectedEntityIds.length;
-      const id = getUniqueEntityId(e);
-      const isSelected = selectedEntityIds.includes(id);
-      return [
-        getEntityRow({
-          entity: e,
-          isSelected,
-          onTap: async () => {
-            if (numSelected) toggleEntitySelect(e);
-            await openEntity(e);
-            rerender();
-          },
-          onDoubleTap: () => {
-            if (numSelected) {
-              isSelected && numSelected > 1
-                ? selectBulkAction()
-                : openEntity(e);
-              deselectAll();
-            } else {
-              selectFirstEntity(e);
-            }
-          },
-        }),
-        Spacer({ rowHeight: 1 }),
-      ].flat();
+  const Pagination = connect(({ rerender }) =>
+    PaginationController({
+      getEntities: () => getProps().allEntityIds,
+      getEntityRow: EntityRow,
+      rerenderParent: rerender,
+      name: ID,
     })
   );
 
   //
 
+  const defaultState: State<E> = {
+    selectedEntityIds: new Set(),
+    appliedFilters: [],
+  };
+
   await present({
-    defaultState: { selectedEntityIds: [] },
-    loadProps: async () => ({ entities: await getEntities() }),
-    onDismiss: async () => onClose?.(await getEntities()),
-    render: () => [
-      Header(),
-      CustomCTAs(),
-      SelectionCTA(),
-      Spacer(),
-      EntityRows(),
-    ],
+    defaultState,
+    beforeLoad: () => reloadEntities(defaultState),
+    onDismiss: () => onClose?.(props$.getData()),
+    render: () => [Header(), CTAs(), Spacer(), Pagination()],
   });
 };

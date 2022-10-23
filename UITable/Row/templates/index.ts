@@ -13,3 +13,4 @@ export { default as getDropdown } from './formElements/_Dropdown';
 export * from './_Button';
 export { default as IconRow } from './_IconRow';
 export { default as HeaderMenu } from './_HeaderMenu';
+export { default as PaginationController } from './_PaginationController';

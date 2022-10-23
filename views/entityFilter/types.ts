@@ -1,9 +1,9 @@
-import { SFSymbolKey } from '../sfSymbols';
-import { RenderOpts } from '../UITable/types';
+import { SFSymbolKey } from '../../sfSymbols';
+import { RenderOpts } from '../../UITable/types';
 import {
   EntityId,
   SelectableEntityBrowserOpts,
-} from '../views/selectableEntityBrowser';
+} from '../../views/selectableEntityBrowser';
 
 export type AppliedFilterState = 'INCLUDE' | 'EXCLUDE' | null;
 
@@ -43,15 +43,6 @@ export type Opts<E> = {
   title?: string;
   filters: FilterRecord<E>;
   initAppliedFilters?: FilterWithState<E>[];
-  viewEntityOpts: Omit_<
-    SelectableEntityBrowserOpts<E>,
-    | 'beforeLoad'
-    | 'onClose'
-    | 'getEntities'
-    | 'getHeaderOpts'
-    | 'getCustomCTAs'
-    | 'getUniqueEntityId'
-  >;
 } & Pick<RenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'> &
   Pick<SelectableEntityBrowserOpts<E>, 'getUniqueEntityId' | 'getEntities'>;
 

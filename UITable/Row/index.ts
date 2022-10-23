@@ -46,7 +46,6 @@ const parsePaddingOpts = (padding: RowOpts['padding']): ParsedPaddingOpts => {
 
 const parseRowOpts = ({
   bgColor = getColor('bg'),
-  // gridLayout = { gridWidth: 12, gutterLeftWidth: 1, gutterRightWidth: 2 },
   rowHeight = 'sm',
   padding,
   content = [],

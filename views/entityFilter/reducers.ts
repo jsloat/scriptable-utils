@@ -1,6 +1,6 @@
-import { toggleArrayItem } from '../array';
-import { cycle } from '../flow';
-import { getTableReducerCreator } from '../streams/reducerAction';
+import { toggleArrayItem } from '../../array';
+import { cycle } from '../../flow';
+import { getTableReducerCreator } from '../../streams/reducerAction';
 import { FilterWithState, AppliedFilterState, State } from './types';
 import { getFilterKey } from './utils';
 

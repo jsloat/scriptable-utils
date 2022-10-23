@@ -1,9 +1,9 @@
 // Calculations run every time the filter state changes. They need to be very
 // performant
 
-import { inANotB, intersection } from '../array';
-import { pick } from '../object';
-import { EntityId } from '../views/selectableEntityBrowser';
+import { inANotB, intersection } from '../../array';
+import { pick } from '../../object';
+import { EntityId } from '../../views/selectableEntityBrowser';
 import {
   $Props,
   Filter,

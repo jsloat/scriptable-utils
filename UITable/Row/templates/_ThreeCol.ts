@@ -1,4 +1,9 @@
 import { conditionalArr } from '../../../array';
+import {
+  DEFAULT_GRID_WIDTH,
+  DEFAULT_LEFT_GUTTER_WIDTH,
+  DEFAULT_RIGHT_GUTTER_WIDTH,
+} from '../consts';
 import { ContentAreaOpts, RowOpts } from '../types';
 import { getRowConstructor } from './utils';
 
@@ -11,9 +16,6 @@ type OwnOpts = {
 type CellID = keyof OwnOpts;
 type WidthMap = Record<CellID, number>;
 
-const GRID_WIDTH = 12;
-const GUTTER_LEFT_WIDTH = 1;
-const GUTTER_RIGHT_WIDTH = 2;
 const ALIGN: Record<CellID, Align> = {
   gutterLeft: 'center',
   main: 'left',
@@ -21,11 +23,11 @@ const ALIGN: Record<CellID, Align> = {
 };
 
 const getWidths = ({ gutterLeft, gutterRight }: OwnOpts): WidthMap => {
-  const gutterLeftWidth = (gutterLeft && GUTTER_LEFT_WIDTH) ?? 0;
-  const gutterRightWidth = (gutterRight && GUTTER_RIGHT_WIDTH) ?? 0;
+  const gutterLeftWidth = (gutterLeft && DEFAULT_LEFT_GUTTER_WIDTH) ?? 0;
+  const gutterRightWidth = (gutterRight && DEFAULT_RIGHT_GUTTER_WIDTH) ?? 0;
   return {
     gutterLeft: gutterLeftWidth,
-    main: GRID_WIDTH - gutterLeftWidth - gutterRightWidth,
+    main: DEFAULT_GRID_WIDTH - gutterLeftWidth - gutterRightWidth,
     gutterRight: gutterRightWidth,
   };
 };
