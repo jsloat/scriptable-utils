@@ -109,7 +109,7 @@ const getTable = <
     updateState,
     getState,
     getProps,
-    isTableActive: () => table.isActive,
+    isTableActive: () => table.isTableActive(),
   };
   return api;
 };

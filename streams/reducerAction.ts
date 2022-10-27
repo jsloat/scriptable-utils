@@ -1,3 +1,5 @@
+import { combineReducers } from '../flow';
+
 type Payload = AnyObj | void;
 
 /** An action that may have payload, which triggers the reduction with that
@@ -37,12 +39,25 @@ export const getReducerActionCreator =
       if (onReduce && newState) await onReduce(newState, currState);
     }) as ReducerAction<P>;
 
+type GetTableReducerCreatorOpts<S> = {
+  // Reducers run every time, before reducer arg
+  preReducers?: Identity<S>[];
+  // Run after reducer arg
+  postReducers?: Identity<S>[];
+};
 export const getTableReducerCreator =
-  <S>() =>
+  <S>({
+    preReducers = [],
+    postReducers = [],
+  }: GetTableReducerCreatorOpts<S> = {}) =>
   <A extends any[]>(r: (state: S, ...args: A) => S) =>
   (...args: A): Identity<S> =>
   state =>
-    r(state, ...args);
+    combineReducers(
+      ...preReducers,
+      state => r(state, ...args),
+      ...postReducers
+    )(state);
 
 /** Attempt at a more streamlined version of `getReducerActionCreator`. NB: One
  * major shortcoming of the typing here is that the `reducerGetter` argument

@@ -4,6 +4,7 @@ import { Persisted } from '../io/persisted';
 import { isEqual } from '../object';
 import RepeatingTimer from '../RepeatingTimer';
 import {
+  AfterFirstRender,
   AfterPropsLoad,
   BeforeEveryRender,
   BeforeLoad,
@@ -14,6 +15,7 @@ import {
   OnDismiss,
   OnSecondRender,
   Payload$,
+  RenderCount,
   SetRenderOpts,
   TableOpts,
 } from './types';
@@ -68,37 +70,37 @@ class CallbackRegister {
 //
 
 export class Table<State, Props, $Data extends AnyObj | void> {
-  table: UITable;
+  private table: UITable;
   // Don't store connected$ props in this stream, since  we will be duplicating
   // potentially huge amounts of data in the table. Rather, update the
   // `connected$ChangeCount` attribute with any stream change, thus triggering
   // changes for any callbacks/subscriptions to this stream. Use `getProps` to
   // access the combined props.
-  payload$: Payload$<State, Props>;
-  connected$Poller?: RepeatingTimer;
-  persistedState$Poller?: RepeatingTimer;
-  name: string;
-  isActive = false;
-  fullscreen: boolean;
-  callbackRegister = new CallbackRegister();
-  syncedPersistedState?: Persisted<State>;
-  beforeLoad?: BeforeLoad;
-  beforeEveryRender?: BeforeEveryRender;
-  afterPropsLoad?: AfterPropsLoad;
-  onSecondRender?: OnSecondRender;
-  connected$?: $Data extends AnyObj ? Connected$Opts<$Data> : never;
+  private payload$: Payload$<State, Props>;
+  private connected$Poller?: RepeatingTimer;
+  private persistedState$Poller?: RepeatingTimer;
+  private name: string;
+  private isActive = false;
+  private fullscreen: boolean;
+  private callbackRegister = new CallbackRegister();
+  private syncedPersistedState?: Persisted<State>;
+  private beforeLoad?: BeforeLoad;
+  private beforeEveryRender?: BeforeEveryRender;
+  private afterPropsLoad?: AfterPropsLoad;
+  private afterFirstRender?: AfterFirstRender;
+  private onSecondRender?: OnSecondRender;
+  private connected$?: $Data extends AnyObj ? Connected$Opts<$Data> : never;
   has: {
     state: boolean;
     props: boolean;
     runPrerenderCallbacks: boolean;
   };
-  renderCount: 'NONE' | 'ONCE' | 'MANY';
-  // Loaded when presenting table
-  defaultState?: State;
-  loadProps?: LoadProps<Props>;
-  getRows?: GetRows;
-  onDismiss?: OnDismiss;
-  onConnected$Update?: OnConnected$Update<$Data>;
+  private renderCount: RenderCount;
+  private defaultState?: State;
+  private loadProps?: LoadProps<Props>;
+  private getRows?: GetRows;
+  private onDismiss?: OnDismiss;
+  private onConnected$Update?: OnConnected$Update<$Data>;
 
   constructor({
     name,
@@ -177,6 +179,10 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     }
   }
 
+  isTableActive() {
+    return this.isActive;
+  }
+
   setState(partialState: Partial<State>) {
     const currState = this.payload$.getData().state;
     if (!currState) throw new Error('Setting state without initialized state');
@@ -192,6 +198,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     onDismiss,
     beforeLoad,
     afterPropsLoad,
+    afterFirstRender,
     onSecondRender,
     onConnected$Update,
   }: SetRenderOpts<State, Props, $Data>) {
@@ -203,6 +210,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     this.onDismiss = onDismiss;
     this.beforeLoad = beforeLoad;
     this.afterPropsLoad = afterPropsLoad;
+    this.afterFirstRender = afterFirstRender;
     this.onSecondRender = onSecondRender;
     this.onConnected$Update = onConnected$Update;
     this.isActive = false;
@@ -211,7 +219,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
   }
 
   /** Set init props immediately before render */
-  async initProps() {
+  private async initProps() {
     const ownProps = await this.loadProps?.();
     if (!ownProps) return;
     this.payload$.updateAttr('ownProps', ownProps, {
@@ -221,7 +229,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
   }
 
   /** Called only once per table session */
-  async beforeRender() {
+  private async beforeRender() {
     if (this.has.runPrerenderCallbacks) return;
     this.has.runPrerenderCallbacks = true;
     await this.beforeLoad?.();
@@ -239,18 +247,21 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     });
   }
 
-  async maybeTriggerOnSecondRender() {
+  private incrementRenderCount() {
     switch (this.renderCount) {
       case 'NONE':
         this.renderCount = 'ONCE';
         break;
       case 'ONCE':
         this.renderCount = 'MANY';
-        await this.onSecondRender?.();
     }
   }
 
-  async cleanup() {
+  private async runOnRenderCount(renderCount: RenderCount, fn?: NoParamFn) {
+    if (this.renderCount === renderCount) await fn?.();
+  }
+
+  private async cleanup() {
     this.isActive = false;
     await this.onDismiss?.();
     this.callbackRegister.cleanupAll();
@@ -265,9 +276,11 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     try {
       await this.beforeRender();
       await this.beforeEveryRender?.();
-      await this.maybeTriggerOnSecondRender();
+      await this.runOnRenderCount('ONCE', this.onSecondRender);
       if (!this.getRows) throw new Error('`beforeRender` must be called first');
       reloadTableRows(this.table, this.getRows().flat().filter(ExcludeFalsy));
+      await this.runOnRenderCount('NONE', this.afterFirstRender);
+      this.incrementRenderCount();
       if (!this.isActive) {
         this.isActive = true;
         this.callbackRegister.start('connected$Poller');

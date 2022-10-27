@@ -14,4 +14,4 @@ export const bgColorModeToColor: Record<BGColorMode, Color> = {
 
 export const DEFAULT_GRID_WIDTH = 12;
 export const DEFAULT_LEFT_GUTTER_WIDTH = 1;
-export const DEFAULT_RIGHT_GUTTER_WIDTH = 1;
+export const DEFAULT_RIGHT_GUTTER_WIDTH = 2;

@@ -115,7 +115,11 @@ export type BeforeEveryRender = NoParamFn;
 
 export type AfterPropsLoad = NoParamFn;
 
+export type AfterFirstRender = NoParamFn;
+
 export type OnSecondRender = NoParamFn;
+
+export type RenderCount = 'NONE' | 'ONCE' | 'MANY';
 
 export type GetRows = NoParamFn<ValidTableEl[]>;
 
@@ -143,6 +147,7 @@ export type SetRenderOpts<State, Props, $Data> = {
   onDismiss?: OnDismiss;
   beforeLoad?: BeforeLoad;
   afterPropsLoad?: AfterPropsLoad;
+  afterFirstRender?: AfterFirstRender;
   onSecondRender?: OnSecondRender;
   onConnected$Update?: OnConnected$Update<$Data>;
 };

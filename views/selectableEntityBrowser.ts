@@ -27,7 +27,7 @@ import entityFilter from './entityFilter';
 import { conditionalArr } from '../array';
 
 export type BulkAction<E> = {
-  icon?: SFSymbolKey;
+  icon: SFSymbolKey;
   label: string;
   onTap: MapFn<E[], any>;
   shouldHide?: MapFn<E[], boolean>;
