@@ -9,6 +9,8 @@ type Opts = { dim?: number; color?: Color; height?: number } & Pick<
   'padding'
 >;
 
+export const DEFAULT_HR_HEIGHT = 1;
+
 const noPadding: Pick<RowOpts, 'padding'> = {
   padding: { paddingTop: 0, paddingBottom: 0 },
 };
@@ -22,7 +24,7 @@ export default ({
     paddingTop: 0,
   },
   color = getColor('hr'),
-  height = 1,
+  height = DEFAULT_HR_HEIGHT,
 }: Opts = {}) =>
   conditionalArr([
     paddingTop && Row({ rowHeight: paddingTop, ...noPadding }),

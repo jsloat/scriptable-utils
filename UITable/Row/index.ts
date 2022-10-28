@@ -44,9 +44,15 @@ const parsePaddingOpts = (padding: RowOpts['padding']): ParsedPaddingOpts => {
   return { paddingTop, paddingBottom };
 };
 
+type HeightOpts = Pick<RowOpts, 'padding' | 'rowHeight'>;
+const parseHeightVals = ({ padding, rowHeight = 'sm' }: HeightOpts) => ({
+  padding: parsePaddingOpts(padding),
+  rowHeight: parseStringOrValue(rowHeight, rowHeightSizeToNumMap),
+});
+
 const parseRowOpts = ({
   bgColor = getColor('bg'),
-  rowHeight = 'sm',
+  rowHeight,
   padding,
   content = [],
   ...rest
@@ -54,8 +60,7 @@ const parseRowOpts = ({
   ...rest,
   content,
   bgColor: parseStringOrValue(bgColor, bgColorModeToColor),
-  rowHeight: parseStringOrValue(rowHeight, rowHeightSizeToNumMap),
-  padding: parsePaddingOpts(padding),
+  ...parseHeightVals({ padding, rowHeight }),
 });
 
 //
@@ -165,4 +170,9 @@ export default (opts: RowOpts = {}) => {
     padding.paddingBottom &&
       getPadding(padding.paddingBottom, parsedOpts, commonArgs),
   ]).flat();
+};
+
+export const getRowHeight = (opts: HeightOpts) => {
+  const { padding, rowHeight } = parseHeightVals(opts);
+  return rowHeight + padding.paddingBottom + padding.paddingTop;
 };

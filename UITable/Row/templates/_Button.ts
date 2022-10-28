@@ -2,10 +2,10 @@ import { conditionalArr, isLastArrIndex } from '../../../array';
 import { getColors, getDynamicColor } from '../../../colors';
 import { ExcludeFalsy, isString } from '../../../common';
 import { SFSymbolKey } from '../../../sfSymbols';
-import Row from '..';
+import Row, { getRowHeight } from '..';
 import { ContentAreaOpts, RowOpts, RowSize } from '../types';
 import { H1Consts } from './consts';
-import _HR from './_HR';
+import _HR, { DEFAULT_HR_HEIGHT } from './_HR';
 import _ThreeCol from './_ThreeCol';
 import _TwoCol from './_TwoCol';
 
@@ -58,8 +58,10 @@ const flavors = {
 // ts-unused-exports:disable-next-line
 export type FlavorOption = keyof typeof flavors;
 
-type SizeConfig = Pick<ContentAreaOpts, 'textSize'> &
-  Pick<RowOpts, 'rowHeight'> & { padding: RowSize };
+type SizeConfig = Pick<ContentAreaOpts, 'textSize'> & {
+  rowHeight: RowSize;
+  padding: RowSize;
+};
 
 const defaultSizeConfig: SizeConfig = {
   rowHeight: 'lg',
@@ -75,6 +77,30 @@ const largeSizeConfig: SizeConfig = {
   rowHeight: 'lg',
   textSize: 'lg',
   padding: 'lg',
+};
+
+type GetButtonHeightOpts = {
+  numBorders: 0 | 1 | 2;
+} & Pick<_ButtonOpts, 'isSmall' | 'isLarge'>;
+/** Used for UI layout purposes. */
+export const getButtonHeight = ({
+  isLarge,
+  isSmall,
+  numBorders,
+}: GetButtonHeightOpts) => {
+  const sizeConfig = isSmall
+    ? smallSizeConfig
+    : isLarge
+    ? largeSizeConfig
+    : defaultSizeConfig;
+  const rowWithPaddingHeight = getRowHeight({
+    padding: {
+      paddingTop: sizeConfig.padding,
+      paddingBottom: sizeConfig.padding,
+    },
+    rowHeight: sizeConfig.rowHeight,
+  });
+  return rowWithPaddingHeight + numBorders * DEFAULT_HR_HEIGHT;
 };
 
 type _ButtonOpts = FromRowOpts & {
