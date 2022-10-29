@@ -1,4 +1,5 @@
 import { Persisted } from '../io/persisted';
+import { RepeatingTimerOpts } from '../RepeatingTimer';
 import { Stream } from '../streams';
 
 /** Falsy values will be filtered out, arrays will be flattened.  */
@@ -38,13 +39,7 @@ type IfVoid<MaybeVoid, VoidVal, NotVoidVal = MaybeVoid> = MaybeVoid extends void
 //
 
 export type Connected$Opts<$Data extends AnyObj | void> = $Data extends AnyObj
-  ? {
-      $: Stream<$Data>;
-      // Null = no timeout, if not passed, uses RepeatingTimer default timeout
-      timeout?: number | null;
-      // Default 1 second
-      refreshInterval?: number;
-    }
+  ? { $: Stream<$Data> } & Pick<RepeatingTimerOpts, 'interval' | 'timeout'>
   : undefined;
 
 export type LoadProps<Props> = NoParamFn<MaybePromise<Props>>;

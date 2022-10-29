@@ -1,6 +1,5 @@
 import { mapFind } from '../array';
-import { isObject, isString } from '../common';
-import { ErrorWithPayload } from '../errorHandling';
+import { isObject, isString, ErrorWithPayload } from '../common';
 import { getUrlEncodedParams } from '../url';
 import { DEFAULT_DEBUG_OPTS, fetchDebug } from './debug';
 import { FetchOpts, ParsedFetchOpts } from './types';

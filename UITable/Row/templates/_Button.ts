@@ -204,9 +204,8 @@ const singleButtonGetter = (flavor: FlavorOption) => (opts: ButtonOpts) =>
 export const Button = ({
   flavor = 'default',
   ...restOpts
-}: Omit_<_ButtonOpts, 'isLast' | 'flavor'> & {
-  flavor?: FlavorOption | Flavor;
-}) => _Button({ flavor, isLast: true, ...restOpts });
+}: MakeSomeOptional<Omit_<_ButtonOpts, 'isLast'>, 'flavor'>) =>
+  _Button({ flavor, isLast: true, ...restOpts });
 // ts-unused-exports:disable-next-line
 export const ButtonNoBorder = singleButtonGetter('defaultNoBorder');
 // ts-unused-exports:disable-next-line
@@ -233,7 +232,11 @@ const singleCTAGetter = (flavor: FlavorOption) => (opts: CTAOpts) =>
   _CTA({ ...opts, flavor, isLast: true });
 
 // ts-unused-exports:disable-next-line
-export const CTA = singleCTAGetter('default');
+export const CTA = ({
+  flavor = 'default',
+  ...restOpts
+}: MakeSomeOptional<Omit_<_CTAOpts, 'isLast'>, 'flavor'>) =>
+  _CTA({ flavor, isLast: true, ...restOpts });
 // ts-unused-exports:disable-next-line
 export const HappyCTA = singleCTAGetter('happy');
 // ts-unused-exports:disable-next-line

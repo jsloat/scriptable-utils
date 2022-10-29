@@ -1,5 +1,4 @@
-import { ErrorWithPayload } from '../../errorHandling';
-import { isString } from '../../common';
+import { isString, ErrorWithPayload } from '../../common';
 import { force, shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 
@@ -13,7 +12,7 @@ const warnError = async (error: any, context: string) => {
     type: 'Error',
     context,
     error: JSON.stringify(error),
-    stacktrace: JSON.stringify(error.stack),
+    stacktrace: error.stack,
   });
   await prompt.present();
 };

@@ -140,6 +140,15 @@ export const getBookmarkedPath = (bookmarkName: string) => {
   return f.bookmarkedPath(bookmarkName);
 };
 
+export class ErrorWithPayload extends Error {
+  payload: AnyObj;
+
+  constructor(message: string, payload: AnyObj) {
+    super(message);
+    this.payload = payload;
+  }
+}
+
 export const safeArrLookup = <T extends NotUndefined<any>>(
   arr: T[],
   index: number,
@@ -149,7 +158,7 @@ export const safeArrLookup = <T extends NotUndefined<any>>(
   if (val === undefined) {
     const errorMsg = `Array lookup failed in "${callingFn}", no value at index ${index}`;
     console.error(errorMsg);
-    throw new Error(errorMsg);
+    throw new ErrorWithPayload(errorMsg, { arr });
   }
   return val;
 };
@@ -166,13 +175,13 @@ export const safeObjLookup = <
   if (!obj.hasOwnProperty(key)) {
     const errorMsg = `Object lookup failed in "${callingFn}", key "${key}" does not exist`;
     console.error(errorMsg);
-    throw new Error(errorMsg);
+    throw new ErrorWithPayload(errorMsg, { obj });
   }
   const val = obj[key];
   if (val === undefined) {
     const errorMsg = `Object lookup failed in "${callingFn}", value of key "${key}" is undefined.`;
     console.error(errorMsg);
-    throw new Error(errorMsg);
+    throw new ErrorWithPayload(errorMsg, { obj });
   }
   return val as NotUndefined<O[K]>;
 };

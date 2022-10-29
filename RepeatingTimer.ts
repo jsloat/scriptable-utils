@@ -6,7 +6,7 @@ const DEFAULT_TIMEOUT_MS = ONE_MINUTE * 30;
 /** Interval for timer refresh */
 const DEFAULT_INTERVAL_MS = ONE_SECOND;
 
-type RepeatingTimerOpts = {
+export type RepeatingTimerOpts = {
   onFire?: () => any; // Called every time the timer fires
   onStop?: () => any;
   interval?: number;

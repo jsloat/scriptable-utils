@@ -7,6 +7,7 @@ import {
   isNumber,
   isString,
   lighten,
+  ErrorWithPayload,
 } from '../../common';
 import { BaseCell, BaseRow } from './base';
 import {
@@ -23,7 +24,6 @@ import {
 } from './types';
 import { getColor } from '../../colors';
 import { compose, filter, map, toArray } from '../../arrayTransducers';
-import { ErrorWithPayload } from '../../errorHandling';
 
 /** For options which can be a string (e.g. Size) or another `ValueType`, this
  * returns the appropriate type (`ValueType`) */
