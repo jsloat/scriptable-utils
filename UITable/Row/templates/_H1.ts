@@ -21,19 +21,29 @@ export type H1Opts = {
   onTapIndicatorIcon?: SFSymbolKey;
 };
 
-export default ({
-  title,
-  subtitle,
-  onTap,
-  titleColor,
-  subtitleColor,
-  badgeNumber,
-  icon,
+type ParsedH1Opts = MakeSomeReqd<H1Opts, 'onTapIndicatorIcon'>;
+
+type InternalRowOpts = ParsedH1Opts & { showRightGutter: boolean };
+
+const parseOpts = ({
   onTapIndicatorIcon = 'ellipsis_circle',
-}: H1Opts) => {
+  ...rest
+}: H1Opts): ParsedH1Opts => ({ onTapIndicatorIcon, ...rest });
+
+//
+
+const TopRow = ({
+  icon,
+  title,
+  titleColor,
+  onTapIndicatorIcon,
+  onTap,
+  badgeNumber,
+  showRightGutter,
+  subtitle,
+}: InternalRowOpts) => {
   const { textSize, fontConstructor, paddingTop, paddingBottom } = H1Consts;
-  const showRightGutter = Boolean(onTap) || isNumber(badgeNumber);
-  const topRow = _ThreeCol({
+  return _ThreeCol({
     ...(icon && { gutterLeft: { iconKey: icon } }),
     main: {
       text: title,
@@ -51,23 +61,38 @@ export default ({
     onTap,
     padding: { paddingTop, paddingBottom: subtitle ? 0 : paddingBottom },
   });
+};
 
-  const bottomRow = !subtitle
-    ? null
-    : composeRowConstructor(
-        getThreeColReducer({
-          ...(icon && { gutterLeft: { isEmpty: true } }),
-          main: {
-            text: subtitle,
-            ...(subtitleColor && { color: subtitleColor }),
-          },
-          ...(showRightGutter && { gutterRight: { isEmpty: true } }),
-        }),
-        getFootnoteReducer()
-      );
+const BottomRow = ({
+  subtitle,
+  icon,
+  subtitleColor,
+  showRightGutter,
+  onTap,
+}: InternalRowOpts) => {
+  if (!subtitle) return null;
+  const { paddingBottom } = H1Consts;
+  const rowConstructor = composeRowConstructor(
+    getThreeColReducer({
+      ...(icon && { gutterLeft: { isEmpty: true } }),
+      main: {
+        text: subtitle,
+        ...(subtitleColor && { color: subtitleColor }),
+      },
+      ...(showRightGutter && { gutterRight: { isEmpty: true } }),
+    }),
+    getFootnoteReducer()
+  );
+  return rowConstructor({ onTap, padding: { paddingTop: 0, paddingBottom } });
+};
 
-  return conditionalArr([
-    topRow,
-    bottomRow?.({ onTap, padding: { paddingTop: 0, paddingBottom } }),
-  ]).flat();
+//
+
+export default (opts: H1Opts) => {
+  const { onTap, badgeNumber } = opts;
+  const rowOpts: InternalRowOpts = {
+    ...parseOpts(opts),
+    showRightGutter: Boolean(onTap) || isNumber(badgeNumber),
+  };
+  return conditionalArr([TopRow(rowOpts), BottomRow(rowOpts)]).flat();
 };

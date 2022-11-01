@@ -2,6 +2,7 @@ import { getType } from './common';
 import { force } from './flow';
 
 /** This supports the same types that `getType` outputs (`GetTypeTypes`) */
+// eslint-disable-next-line complexity
 const deepCopy = <T>(val: T): T => {
   const type = getType(val);
   switch (type) {

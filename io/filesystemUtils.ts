@@ -3,7 +3,7 @@ import { getBookmarkedPath } from '../common';
 import { confirm } from '../input/confirm';
 import { filterJoin } from '../object';
 import { lowerIncludes } from '../string';
-import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
+import { DOCUMENTS_SUB_DIRECTORY_NAMES, DocumentsDir, FileInfo } from './types';
 
 export const PROJECT_ARCHIVE_DIR_NAME = '*Archive';
 
@@ -75,7 +75,7 @@ export const getActiveFileProjectsInfo = () =>
 
 export const getArchivedProjectFilepath = (projName: string) =>
   `${getBookmarkedPath('Documents')}/${
-    DOCUMENTS_SUB_DIRECTORY_NAMES['project']
+    DOCUMENTS_SUB_DIRECTORY_NAMES.project
   }/${PROJECT_ARCHIVE_DIR_NAME}/${projName}`;
 
 type GetSafeFilePathOpts = {

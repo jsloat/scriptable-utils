@@ -3,7 +3,7 @@
 // I haven't dug too far into the code so it may be able to be improved. I found
 // settings that work pretty well through experimentation.
 
-import { clamp, ExcludeFalsy, isNumber } from '../common';
+import { ExcludeFalsy, clamp, isNumber } from '../common';
 
 /**
  * @param {Image} image The image from the SFSymbol
@@ -57,8 +57,14 @@ type Opts = {
   noWarnings: boolean;
 };
 
+const getSanitizeBoundsOptParsedVal = (val: boolean | Bounds) => {
+  if (!val) return false;
+  if (val === true) return {};
+  return val;
+};
+
 const sanitizeBoundsOpt = (val: boolean | Bounds) => {
-  const parsedVal = !val ? false : val === true ? {} : val;
+  const parsedVal = getSanitizeBoundsOptParsedVal(val);
   if (!parsedVal) return parsedVal;
   const { lower, upper } = parsedVal;
   return {

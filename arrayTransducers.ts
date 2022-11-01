@@ -206,14 +206,25 @@ export const toReduce = <Init, Final, ReduceResult>(
   reduceSeed: ReduceResult
 ) => sourceData.reduce(xform(joinReduce(reduce)), reduceSeed);
 
+type ToSortSortOpts<Final> = {
+  getCompareVal?: (entity: Final) => any;
+  sortOrder?: SortOrder;
+  sortFunction?: (a: Final, b: Final) => number;
+};
 /** This is really just shorthand for combining transducers and sorting. The
  * array will be traversed once for the transducer, then the result sorted. */
 export const toSort = <Init, Final>(
   sourceData: Init[],
   xform: Transducer<Init, Final>,
-  getCompareVal: (entity: Final) => any,
-  sortOrder?: SortOrder
-) => sortObjects(toArray(sourceData, xform), getCompareVal, sortOrder);
+  { getCompareVal, sortFunction, sortOrder }: ToSortSortOpts<Final>
+) => {
+  if (!(getCompareVal || sortFunction)) {
+    throw new Error('Must provide some sorting logic to `toSort`');
+  }
+  const xformedData = toArray(sourceData, xform);
+  if (getCompareVal) return sortObjects(xformedData, getCompareVal, sortOrder);
+  else return xformedData.sort(sortFunction!);
+};
 
 export const toSegmented = <Init, Final, RuleKey extends string>(
   sourceData: Init[],

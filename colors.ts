@@ -1,5 +1,6 @@
 import { countArrVal } from './array';
 import { isString, objectFromEntries } from './common';
+import conditionalValue from './conditionalValue';
 import { shortSwitch } from './flow';
 import { hasKey, objectKeys } from './object';
 
@@ -146,15 +147,12 @@ export const getEntityArrColor = <T>(
   getDomain: (entity: T) => Domain | null
 ) => {
   const domains = arr.map(getDomain);
-  const personal = countArrVal(domains, 'personal');
-  const work = countArrVal(domains, 'work');
-  const key: ColorKey | null =
-    personal && !work
-      ? 'domain_personal'
-      : work && !personal
-      ? 'domain_work'
-      : work || personal
-      ? 'domain_mix'
-      : null;
+  const hasPersonal = Boolean(countArrVal(domains, 'personal'));
+  const hasWork = Boolean(countArrVal(domains, 'work'));
+  const key = conditionalValue<ColorKey>([
+    [hasPersonal && !hasWork, 'domain_personal'],
+    [hasWork && !hasPersonal, 'domain_work'],
+    [hasWork || hasPersonal, 'domain_mix'],
+  ]);
   return key && getColor(key);
 };

@@ -237,12 +237,12 @@ declare type ArrCallback<T, R = unknown> = (
   array: T[]
 ) => R;
 
-declare type ReduceCallback<Final, Source> = (
+declare type ReduceCallback<SourceArrEl, Final, Return = Final> = (
   previousValue: Final,
-  currentValue: Source,
+  currentValue: SourceArrEl,
   currentIndex: number,
-  array: Source[]
-) => Final;
+  array: SourceArrEl[]
+) => Return;
 
 declare type StreamCallback = { remove: () => void };
 

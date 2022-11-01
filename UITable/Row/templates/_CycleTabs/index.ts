@@ -1,6 +1,6 @@
-import { cycle } from '../../../../flow';
 import Row from '../..';
-import { CycleTabsOpts } from './types';
+import { conditionalArr } from '../../../../array';
+import { cycle } from '../../../../flow';
 import {
   BackCyclingSpacer,
   getStyle,
@@ -9,7 +9,7 @@ import {
   Tab,
   UnderlineCell,
 } from './atoms';
-import { conditionalArr } from '../../../../array';
+import { CycleTabsOpts } from './types';
 import { getState, initState, lastIndex, setNewTabIndex } from './utils';
 
 export default <T extends string>({
@@ -26,16 +26,16 @@ export default <T extends string>({
   const { currFrame } = getState(name);
   const totalTabs = labels.length;
 
-  const cycleForward = async () => {
+  const cycleForward = () => {
     const nextTab = cycle(initValue, labels);
     onTabChange({ currTab: initValue, nextTab });
     setNewTabIndex(name, labels.indexOf(nextTab), totalTabs, maxPerPage);
     rerenderParent();
   };
 
-  const cycleBack = async () => {
+  const cycleBack = () => {
     const currIndex = labels.indexOf(initValue);
-    const newIndex = !currIndex ? labels.length - 1 : currIndex - 1;
+    const newIndex = currIndex ? currIndex - 1 : labels.length - 1;
     onTabChange({ currTab: initValue, nextTab: labels[newIndex]! });
     setNewTabIndex(name, newIndex, totalTabs, maxPerPage);
     rerenderParent();

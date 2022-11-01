@@ -117,7 +117,7 @@ export class StreamCache<StreamData, PersistedData> {
     return this.cache$.getData();
   }
 
-  async getPersistedData() {
+  getPersistedData() {
     return this.io.getData({ useCache: false });
   }
 

@@ -45,7 +45,7 @@ export const openCallbackUrl = async <ExpectedReturn = void>(
     if (val !== undefined) cb.addParameter(key, getValAsString(val));
   });
   try {
-    return await cb.open<ExpectedReturn>();
+    return cb.open<ExpectedReturn>();
   } catch (e) {
     const prompt = new Alert();
     prompt.title = `Error encountered opening callback URL`;
@@ -74,7 +74,7 @@ export const getGoogleSearchUrl = (query: string) =>
 export const getForumSearchUrl = (query: string) => {
   const siteSearchText = FORUMS.reduce(
     (acc, forum, i) =>
-      [acc, encodeURIComponent(!i ? ' site:' : ' OR site:'), forum].join(''),
+      [acc, encodeURIComponent(i ? ' OR site:' : ' site:'), forum].join(''),
     ''
   );
   return `${getGoogleSearchUrl(query)}${siteSearchText}`;

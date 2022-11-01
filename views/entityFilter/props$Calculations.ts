@@ -7,10 +7,10 @@ import { EntityId } from '../../views/selectableEntityBrowser';
 import {
   $Props,
   Filter,
-  State,
-  Props,
   FilterKeyToFilteredCount,
   FilterKeyToMatchingIDs,
+  Props,
+  State,
 } from './types';
 import { getAppliedFilters, getFilterKey } from './utils';
 

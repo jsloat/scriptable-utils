@@ -20,13 +20,13 @@ import {
 } from './reducers';
 import { $Props, FilterWithState, Opts, Props, State } from './types';
 import {
-  getInitFilterState,
-  getFilterButtonFlavor,
-  getFilterKey,
-  getFilterIcon,
-  enhanceFilterWithState,
   areFiltersApplied,
+  enhanceFilterWithState,
   getAppliedFilters,
+  getFilterButtonFlavor,
+  getFilterIcon,
+  getFilterKey,
+  getInitFilterState,
 } from './utils';
 
 export default async <E>(opts: Opts<E>) => {

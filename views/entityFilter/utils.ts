@@ -1,12 +1,12 @@
 import { SFSymbolKey } from '../../sfSymbols';
 import { FlavorOption } from '../../UITable/Row/templates';
 import {
-  FilterRecord,
-  Filter,
-  State,
-  FilterKey,
-  FilterWithState,
   AppliedFilterState,
+  Filter,
+  FilterKey,
+  FilterRecord,
+  FilterWithState,
+  State,
 } from './types';
 
 type AnyFilter = Filter<any> | FilterWithState<any>;

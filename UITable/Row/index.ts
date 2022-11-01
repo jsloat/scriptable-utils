@@ -1,13 +1,13 @@
 import { getSfSymbolImg } from '../../sfSymbols';
 import { conditionalArr } from '../../array';
 import {
-  darken,
+  ErrorWithPayload,
   ExcludeFalsy,
+  darken,
   fade,
   isNumber,
   isString,
   lighten,
-  ErrorWithPayload,
 } from '../../common';
 import { BaseCell, BaseRow } from './base';
 import {

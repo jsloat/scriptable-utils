@@ -38,6 +38,8 @@ export const invert =
   (...args: Args) =>
     !predicate(...args);
 
+export const not = (val: any) => !val;
+
 type ExpiringConstOpts<T> = {
   label: string;
   temporaryValue: T;

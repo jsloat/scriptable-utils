@@ -1,8 +1,11 @@
+import Row, { getRowHeight } from '..';
 import { conditionalArr, isLastArrIndex } from '../../../array';
 import { getColors, getDynamicColor } from '../../../colors';
 import { ExcludeFalsy, isString } from '../../../common';
+import conditionalValue, {
+  NO_CONDITIONAL_VALUE_MATCH,
+} from '../../../conditionalValue';
 import { SFSymbolKey } from '../../../sfSymbols';
-import Row, { getRowHeight } from '..';
 import { ContentAreaOpts, RowOpts, RowSize } from '../types';
 import { H1Consts } from './consts';
 import _HR, { DEFAULT_HR_HEIGHT } from './_HR';
@@ -19,7 +22,6 @@ type Flavor = Pick<RowOpts, 'bgColor' | 'fadeWith'> &
     noBorder?: boolean;
   };
 const flav: Identity<Flavor> = f => f;
-
 const {
   gray8,
   grayMinus1,
@@ -79,6 +81,16 @@ const largeSizeConfig: SizeConfig = {
   padding: 'lg',
 };
 
+const getSizeConfig = ({
+  isSmall = false,
+  isLarge = false,
+}: Pick<_ButtonOpts, 'isSmall' | 'isLarge'>) =>
+  conditionalValue([
+    [isSmall, smallSizeConfig],
+    [isLarge, largeSizeConfig],
+    defaultSizeConfig,
+  ]);
+
 type GetButtonHeightOpts = {
   numBorders: 0 | 1 | 2;
 } & Pick<_ButtonOpts, 'isSmall' | 'isLarge'>;
@@ -88,11 +100,7 @@ export const getButtonHeight = ({
   isSmall,
   numBorders,
 }: GetButtonHeightOpts) => {
-  const sizeConfig = isSmall
-    ? smallSizeConfig
-    : isLarge
-    ? largeSizeConfig
-    : defaultSizeConfig;
+  const sizeConfig = getSizeConfig({ isLarge, isSmall });
   const rowWithPaddingHeight = getRowHeight({
     padding: {
       paddingTop: sizeConfig.padding,
@@ -126,11 +134,7 @@ const parseOnTap = (onTap: NoParamFn | undefined, isDisabled: boolean) =>
 
 const getConfigOpts = ({ flavor, isSmall, isLarge }: _EntityOpts) => ({
   ...(isString(flavor) ? flavors[flavor] : flavor),
-  ...(isSmall
-    ? smallSizeConfig
-    : isLarge
-    ? largeSizeConfig
-    : defaultSizeConfig),
+  ...getSizeConfig({ isLarge, isSmall }),
 });
 
 /** Used to generate common row opts for both Buttons and CTAs. */
@@ -160,14 +164,13 @@ const getSharedOpts = (opts: _EntityOpts): RowOpts => {
 const _Button = (opts: _ButtonOpts) => {
   const { icon, image, text, metadata, isLast } = opts;
   const { color, textSize, noBorder, fontConstructor } = getConfigOpts(opts);
-  const gutterLeft: ContentAreaOpts = icon
-    ? { iconKey: icon, color }
-    : image
-    ? { image }
-    : { isEmpty: true };
   const sharedOpts = {
     ...getSharedOpts(opts),
-    gutterLeft,
+    gutterLeft: conditionalValue<ContentAreaOpts>([
+      () => (icon ? { iconKey: icon, color } : NO_CONDITIONAL_VALUE_MATCH),
+      () => (image ? { image } : NO_CONDITIONAL_VALUE_MATCH),
+      { isEmpty: true },
+    ]),
     main: { text, textSize, color, fontConstructor },
   };
   const mainRow = metadata

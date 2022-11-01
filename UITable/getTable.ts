@@ -1,13 +1,13 @@
 import {
+  CombineProps,
+  Connect,
+  ConnectPayload,
   Connected$Opts,
   GetTableOpts,
   Payload$,
-  TableAPI,
-  Connect,
   SetState,
+  TableAPI,
   UpdateState,
-  ConnectPayload,
-  CombineProps,
 } from './types';
 import { Table } from './TableClass';
 import { Stream } from '../streams';

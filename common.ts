@@ -142,7 +142,6 @@ export const getBookmarkedPath = (bookmarkName: string) => {
 
 export class ErrorWithPayload extends Error {
   payload: AnyObj;
-
   constructor(message: string, payload: AnyObj) {
     super(message);
     this.payload = payload;

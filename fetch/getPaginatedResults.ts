@@ -3,8 +3,8 @@ import { destructiveConfirm } from '../input/confirm';
 const MAX_LOOPS_BEFORE_WARNING = 5;
 
 type GetPaginatedResultsOptsShared<Response, Returns> = {
-  initRequest: () => Promise<Response>;
-  subsequentRequests: (prevResponse: Response) => Promise<Response>;
+  initRequest: () => MaybePromise<Response>;
+  subsequentRequests: (prevResponse: Response) => MaybePromise<Response>;
   /** Transforms raw response to the returned type */
   transformResponse?: (response: Response) => Returns;
   /** Used to combine return data type (stitching page results together) */

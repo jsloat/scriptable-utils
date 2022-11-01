@@ -5,6 +5,8 @@ const DEFAULT_CONFIRM_BUTTON_TEXT = 'OK';
 const DEFAULT_CANCEL_BUTTON_TEXT = 'Cancel';
 
 const dontShowAgainMap: Record<string, boolean> = {};
+const setDontShowAgain = (key: string, val: boolean) =>
+  (dontShowAgainMap[key] = val);
 
 type ConfirmOpts = {
   message?: string;
@@ -58,7 +60,7 @@ export const confirm = async (
   }
 
   if (tappedButtonText === DONT_SHOW_AGAIN_LABEL) {
-    dontShowAgainMap[dontShowAgainKey!] = true;
+    setDontShowAgain(dontShowAgainKey!, true);
   }
   await onConfirm?.();
   return true;
@@ -79,11 +81,10 @@ type DestructiveConfirmOpts = Pick<
   | 'presentAsSheet'
 >;
 
-export const destructiveConfirm = async (
+export const destructiveConfirm = (
   title: string,
   { confirmButtonTitle = 'Delete', ...restOpts }: DestructiveConfirmOpts = {}
-) =>
-  await confirm(title, { isSubmitRed: true, confirmButtonTitle, ...restOpts });
+) => confirm(title, { isSubmitRed: true, confirmButtonTitle, ...restOpts });
 
 //
 // OK

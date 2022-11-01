@@ -1,4 +1,5 @@
 import { isDate, isNullish, isNumber, isString } from './common';
+import conditionalValue from './conditionalValue';
 
 type Compare<T> = (
   a: T | null | undefined,
@@ -35,17 +36,17 @@ const compareString: Compare<string> = (a, b, sortOrder) => {
   const lowerB = b.toLowerCase();
   switch (sortOrder) {
     case 'ASC':
-      return (
-        (lowerA < lowerB && RAISE_A) ||
-        (lowerA > lowerB && RAISE_B) ||
-        NO_CHANGE
-      );
+      return conditionalValue([
+        [lowerA < lowerB, RAISE_A],
+        [lowerA > lowerB, RAISE_B],
+        NO_CHANGE,
+      ]);
     case 'DESC':
-      return (
-        (lowerA > lowerB && RAISE_A) ||
-        (lowerA < lowerB && RAISE_B) ||
-        NO_CHANGE
-      );
+      return conditionalValue([
+        [lowerA > lowerB, RAISE_A],
+        [lowerA < lowerB, RAISE_B],
+        NO_CHANGE,
+      ]);
   }
 };
 

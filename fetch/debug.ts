@@ -14,7 +14,7 @@ type FetchDebugOpts = {
   isVerbose?: boolean;
   parsedOpts: ParsedFetchOpts;
 };
-export const fetchDebug = async ({
+export const fetchDebug = ({
   message,
   isVerbose = false,
   parsedOpts: {

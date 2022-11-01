@@ -1,4 +1,4 @@
-import { isString, ErrorWithPayload } from '../../common';
+import { ErrorWithPayload, isString } from '../../common';
 import { force, shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 
@@ -115,7 +115,7 @@ const executeTapListener = (() => {
   let tapCount = 0;
   const clickTimer = new Timer();
   clickTimer.timeInterval = CLICK_INTERVAL;
-  return async (clickMap: ClickMap) => {
+  return (clickMap: ClickMap) => {
     const maxClicks = Math.max(
       ...Object.keys(clickMap).map(numStr => parseInt(numStr, 10))
     );

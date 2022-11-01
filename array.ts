@@ -152,6 +152,9 @@ export const conditionalArr: ConditionalArr = (
 
 export const isLengthOne = <T>(arr: T[]): arr is [T] => arr.length === 1;
 
+export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] =>
+  Boolean(arr.length);
+
 /** Combines mapping and finding into a single operation. If no find callback
  * provided, default to Boolean.  */
 export const mapFind = <T, U>(

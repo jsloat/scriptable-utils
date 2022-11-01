@@ -1,9 +1,9 @@
-import { range } from './object';
-import { pluralize } from './string';
-import { ExcludeFalsy } from './common';
-import { getDomainColor } from './colors';
-import { CALENDAR_TITLES } from './privateConfig';
 import { compose, filter, map, toArray } from './arrayTransducers';
+import { getDomainColor } from './colors';
+import { ExcludeFalsy } from './common';
+import { range } from './object';
+import { CALENDAR_TITLES } from './privateConfig';
+import { pluralize } from './string';
 
 // ts-unused-exports:disable-next-line
 export const ONE_MILLISECOND = 1;
@@ -66,95 +66,77 @@ export const isSameDay = (d1: Date, d2: Date) =>
   d1.getMonth() === d2.getMonth() &&
   d1.getDate() === d2.getDate();
 
-type DateFormat =
-  | 'YYYYMMDD'
-  | 'HHMM'
-  | 'HHMMSS'
-  | 'HHMMSSMMM'
-  // E.g. Sun, Jan 26
-  | 'DDDMMMDD'
-  // Jan 27
-  | 'MMMDD'
-  // 06/27
-  | 'MMDDNum'
-  // 12/3/86
-  | 'MMDDYY'
-  // 12/03/86
-  | 'MMDDYYWithPadding'
-  | 'shortMMDDYY'
-  | 'dayOfWeekNameFull'
-  | 'dayOfWeekNameShort';
-export const formatDate = (date: Date, format: DateFormat) => {
-  const HHMM = [
+const formatter: Identity<MapFn<Date, string>> = x => x;
+const HHMM = formatter(date =>
+  [
     String(date.getHours()).padStart(2, '0'),
     String(date.getMinutes()).padStart(2, '0'),
-  ].join(':');
-  switch (format) {
-    case 'YYYYMMDD':
-      return [
-        date.toLocaleDateString(undefined, { year: 'numeric' }),
-        date.toLocaleDateString(undefined, { month: '2-digit' }),
-        date.toLocaleDateString(undefined, { day: '2-digit' }),
-      ].join('-');
-
-    case 'HHMM':
-      return HHMM;
-
-    case 'HHMMSS':
-      return [HHMM, String(date.getSeconds()).padStart(2, '0')].join(':');
-
-    case 'HHMMSSMMM':
-      return [
-        HHMM,
-        String(date.getSeconds()).padStart(2, '0'),
-        String(date.getMilliseconds()).padStart(3, '0'),
-      ].join(':');
-
-    case 'DDDMMMDD':
-      return date.toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: '2-digit',
-      });
-
-    case 'MMMDD':
-      return date.toLocaleDateString(undefined, {
-        month: 'short',
-        day: '2-digit',
-      });
-
-    case 'MMDDNum':
-      return date.toLocaleDateString(undefined, {
-        month: '2-digit',
-        day: '2-digit',
-      });
-
-    case 'MMDDYY':
-      return `${date.getMonth() + 1}/${date.getDate()}/${String(
+  ].join(':')
+);
+const DATE_FORMATTER_MAP = {
+  YYYYMMDD: formatter(date =>
+    [
+      date.toLocaleDateString(undefined, { year: 'numeric' }),
+      date.toLocaleDateString(undefined, { month: '2-digit' }),
+      date.toLocaleDateString(undefined, { day: '2-digit' }),
+    ].join('-')
+  ),
+  HHMM,
+  HHMMSS: formatter(date =>
+    [HHMM(date), String(date.getSeconds()).padStart(2, '0')].join(':')
+  ),
+  HHMMSSMMM: formatter(date =>
+    [
+      HHMM,
+      String(date.getSeconds()).padStart(2, '0'),
+      String(date.getMilliseconds()).padStart(3, '0'),
+    ].join(':')
+  ),
+  DDDMMMDD: formatter(date =>
+    date.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: '2-digit',
+    })
+  ),
+  MMMDD: formatter(date =>
+    date.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
+  ),
+  MMDDNum: formatter(date =>
+    date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })
+  ),
+  MMDDYY: formatter(
+    date =>
+      `${date.getMonth() + 1}/${date.getDate()}/${String(
         date.getFullYear()
-      ).slice(2)}`;
-
-    case 'MMDDYYWithPadding':
-      return date.toLocaleDateString(undefined, {
-        month: '2-digit',
-        day: '2-digit',
-        year: '2-digit',
-      });
-
-    case 'shortMMDDYY':
-      return date.toLocaleDateString(undefined, {
-        year: '2-digit',
-        month: 'numeric',
-        day: 'numeric',
-      });
-
-    case 'dayOfWeekNameFull':
-      return date.toLocaleString('en-us', { weekday: 'long' });
-
-    case 'dayOfWeekNameShort':
-      return date.toLocaleString('en-us', { weekday: 'short' });
-  }
+      ).slice(2)}`
+  ),
+  MMDDYYWithPadding: formatter(date =>
+    date.toLocaleDateString(undefined, {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit',
+    })
+  ),
+  shortMMDDYY: formatter(date =>
+    date.toLocaleDateString(undefined, {
+      year: '2-digit',
+      month: 'numeric',
+      day: 'numeric',
+    })
+  ),
+  dayOfWeekNameFull: formatter(date =>
+    date.toLocaleString('en-us', { weekday: 'long' })
+  ),
+  dayOfWeekNameShort: formatter(date =>
+    date.toLocaleString('en-us', { weekday: 'short' })
+  ),
 };
+
+export const formatDate = (
+  date: Date,
+  format: keyof typeof DATE_FORMATTER_MAP
+) => DATE_FORMATTER_MAP[format](date);
 
 /** Only valid for year >= 2000 */
 export const isIsoDateStr = (str: string) => /^20[12]\d-\d{2}-\d{2}$/.test(str);
@@ -290,7 +272,7 @@ export const getEventDomain = (event: CalendarEvent): Domain => {
   return calTitle === CALENDAR_TITLES.PERSONAL ? 'personal' : 'work';
 };
 
-export const getAllEventCals = async () =>
+export const getAllEventCals = () =>
   Promise.all(
     toArray(
       Object.values(CALENDAR_TITLES),
@@ -304,12 +286,12 @@ export const getEventsInXDayRadius = async (x: number) => {
   const allCals = await getAllEventCals();
   const startDate = addToDate(NOW, { days: -1 * x });
   const endDate = addToDate(NOW, { days: x });
-  return await CalendarEvent.between(startDate, endDate, allCals);
+  return CalendarEvent.between(startDate, endDate, allCals);
 };
 
 export const getTodayEvents = async () => {
   const allCals = await getAllEventCals();
-  return await CalendarEvent.today(allCals);
+  return CalendarEvent.today(allCals);
 };
 
 // ts-unused-exports:disable-next-line
@@ -318,7 +300,7 @@ export const getEventsOnDate = async (date: Date) => {
   const start = stripTime(date);
   const dayAfterDateStart = addToDate(start, { days: 1 });
   const end = addToDate(dayAfterDateStart, { seconds: -1 });
-  return await CalendarEvent.between(start, end, allCals);
+  return CalendarEvent.between(start, end, allCals);
 };
 
 export type EventWithStatus = {
