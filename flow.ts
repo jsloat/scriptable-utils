@@ -277,3 +277,19 @@ export const force = <T>(val: any) => val as unknown as T;
 
 // ts-unused-exports:disable-next-line
 export const noop = () => {};
+
+export const asyncReducer = async <SourceArrEl, Final>(
+  sourceArr: SourceArrEl[],
+  reducer: ReduceCallback<SourceArrEl, Final, MaybePromise<Final>>,
+  seed: Final
+): Promise<Final> => {
+  let reducedValue = seed;
+  const setReducedValue = (val: Final) => (reducedValue = val);
+  await sequentialPromiseAll(
+    sourceArr.map((sourceArrEl, i, arr) => async () => {
+      const updatedValue = await reducer(reducedValue, sourceArrEl, i, arr);
+      setReducedValue(updatedValue);
+    })
+  );
+  return reducedValue;
+};
