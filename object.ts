@@ -121,31 +121,6 @@ export const chunkArray = <T>(arr: T[], maxLength: number) =>
       : [...previousChunks, mostRecentChunk.concat(val)];
   }, [] as T[][]);
 
-type SmooshReturn<T> = Record<keyof T, T[keyof T][]>;
-
-/**
- * E.g. [{a: 1}, {a: 2}] => {a: [1,2]}
- * Returns all values of all keys for each array item, even if it's
- * not present in an array item.
- */
-// ts-unused-exports:disable-next-line
-export const smoosh = <T extends AnyObj>(arrOfObjs: T[]): SmooshReturn<T> => {
-  const allKeys = arrOfObjs.reduce(
-    (keys, obj) => uniqueArray(keys, Object.keys(obj) as (keyof T)[]),
-    [] as (keyof T)[]
-  );
-  // @ts-ignore
-  const defaultReturnObj: SmooshReturn<T> = {};
-  return arrOfObjs.reduce((objWithAllVals, obj) => {
-    allKeys.forEach(key => {
-      const val = obj[key] || null;
-      // @ts-ignore
-      objWithAllVals[key] = [...(objWithAllVals[key] || []), val];
-    });
-    return objWithAllVals;
-  }, defaultReturnObj);
-};
-
 /** Given array of string or number, return obj with unique items as keys and counts as values */
 // ts-unused-exports:disable-next-line
 export const countArray = <T extends string | number>(

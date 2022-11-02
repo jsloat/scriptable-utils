@@ -49,8 +49,7 @@ const createIOObject = <T>({
         name: `persisted cache ${filename}`,
         defaultState: { data: defaultData },
       }),
-  // @ts-ignore
-  areEntitiesEqual,
+  areEntitiesEqual: areEntitiesEqual as any,
 });
 
 const _download = async <T>({ io, path }: IOObject<T>) => {
@@ -344,7 +343,7 @@ const persisted = <T>(opts: CreateIObjectOpts<T>): Persisted<T> => {
     filter: getFilter(ioObject as any),
 
     // Object-specific functions
-    hasKey: getHasKey(ioObject),
+    hasKey: getHasKey(ioObject as any),
     get: getGet(ioObject),
     set: getSet(ioObject),
     deleteObjKey: getObjKeyDelete(ioObject),

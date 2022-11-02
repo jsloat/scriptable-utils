@@ -52,6 +52,7 @@ class ThrottledBatchQueue<T> {
   }
 
   private debugLog(msg: any) {
+    // eslint-disable-next-line no-console
     if (this.debug) console.log(msg);
   }
 

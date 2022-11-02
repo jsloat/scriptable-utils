@@ -36,7 +36,6 @@ const makeContentAreaOpts = (
   opts: OwnContentAreaOpts,
   cellID: CellID,
   widthMap: WidthMap
-  // @ts-ignore
 ): ContentAreaOpts => ({
   ...opts,
   width: widthMap[cellID],

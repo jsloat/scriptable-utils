@@ -3,6 +3,7 @@ import { force, shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 
 const warnError = async (error: any, context: string) => {
+  // eslint-disable-next-line no-console
   console.warn(error);
   const prompt = new Alert();
   prompt.title = `Error in ${context} (see log)`;

@@ -70,6 +70,7 @@ export const cycle = <T>(
 ) => {
   const currIndex = cycleOptions.findIndex(opt => isEqual(opt, currentValue));
   if (currIndex === -1) {
+    // eslint-disable-next-line no-console
     console.warn(
       `Current value ${currentValue} not found in cycle options, returning first option`
     );
@@ -209,6 +210,7 @@ const getPerformanceMeasurers = ({
     }
     const duration = new Date().getTime() - startDate.getTime();
     if (duration < threshold && !logAllMeasurements) return;
+    // eslint-disable-next-line no-console
     console.warn(
       JSON.stringify(
         {

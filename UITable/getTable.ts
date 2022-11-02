@@ -52,7 +52,10 @@ const getTable = <
 
   const present: TableAPI<State, Props, $Data>['present'] = renderOpts => {
     table.setRenderOpts(renderOpts);
-    return table.renderTable();
+    // When this promise resolves, the table has been dismissed. At that point,
+    // `renderTable` will return State, even if its typing and structure are
+    // confusing.
+    return table.renderTable() as Promise<State>;
   };
 
   const getState = () => {
@@ -63,8 +66,7 @@ const getTable = <
 
   const getProps = () => {
     const { ownProps } = payload$.getData();
-    // @ts-ignore A casualty of dynamic opts based on typing...
-    const $: Connected$Opts<$Data> = tableOpts.connected$;
+    const $: Connected$Opts<$Data> = (tableOpts as AnyObj).connected$;
     const streamData = $?.$.getData();
     const combinedProps = { ...ownProps, ...streamData } as CombineProps<
       Props,
@@ -99,19 +101,17 @@ const getTable = <
         ...ownArgs
       );
 
-  const api: TableAPI<State, Props, $Data> = {
+  return {
     present,
     rerender,
     connect,
-    // @ts-ignore
     payload$,
     setState,
     updateState,
     getState,
     getProps,
     isTableActive: () => table.isTableActive(),
-  };
-  return api;
+  } as unknown as TableAPI<State, Props, $Data>;
 };
 
 export default getTable;

@@ -112,7 +112,6 @@ export default <EntityType>(
       'Error in sortObjects: Unsupported sort type, or inconsistent types'
     );
   } catch (e) {
-    console.warn(e);
     throw new Error(`Error in sortObjects: ${e}`);
   }
 };

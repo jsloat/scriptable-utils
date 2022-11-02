@@ -2,8 +2,16 @@ import { compose, filter, map, toArray } from './arrayTransducers';
 import { getDomainColor } from './colors';
 import { ExcludeFalsy } from './common';
 import { range } from './object';
-import { CALENDAR_TITLES } from './privateConfig';
 import { pluralize } from './string';
+
+type GetCalendarTitles = NoParamFn<Record<'PERSONAL' | 'WORK', string>>;
+let getCalendarTitles: GetCalendarTitles = () => {
+  throw new Error(
+    'You must register the `getCalendarTitles` in your implementation before using functions that depend on it.'
+  );
+};
+export const registerGetCalendarTitles = (fn: GetCalendarTitles) =>
+  (getCalendarTitles = fn);
 
 // ts-unused-exports:disable-next-line
 export const ONE_MILLISECOND = 1;
@@ -248,11 +256,11 @@ export const areDatesEqual = (d1: Date, d2: Date) =>
 // CALENDAR FUNCTIONS
 //
 
-const getCalDomain = (cal: Calendar): Domain | null => {
+export const getCalDomain = (cal: Calendar): Domain | null => {
   switch (cal.title) {
-    case CALENDAR_TITLES.PERSONAL:
+    case getCalendarTitles().PERSONAL:
       return 'personal';
-    case CALENDAR_TITLES.WORK:
+    case getCalendarTitles().WORK:
       return 'work';
     default:
       return null;
@@ -267,15 +275,15 @@ export const getPrimaryCalColor = (cal: Calendar): Color => {
 
 export const getEventDomain = (event: CalendarEvent): Domain => {
   const { title: calTitle } = event.calendar;
-  if (!Object.values(CALENDAR_TITLES).includes(calTitle))
+  if (!Object.values(getCalendarTitles()).includes(calTitle))
     throw new Error('Events in non-domain calendars have no domain!');
-  return calTitle === CALENDAR_TITLES.PERSONAL ? 'personal' : 'work';
+  return calTitle === getCalendarTitles().PERSONAL ? 'personal' : 'work';
 };
 
 export const getAllEventCals = () =>
   Promise.all(
     toArray(
-      Object.values(CALENDAR_TITLES),
+      Object.values(getCalendarTitles()),
       compose(filter(ExcludeFalsy), map(Calendar.forEventsByTitle))
     )
   );

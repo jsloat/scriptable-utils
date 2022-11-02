@@ -267,12 +267,12 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     this.callbackRegister.cleanupAll();
   }
 
-  // @ts-ignore - This function, on paper, does not always return
-  // `Promise<State>`. However it does actually always return this when the
-  // table is dismissed. This works because after the UITable instance is
-  // presented, and being awaited, we can still modify its rows and refresh it,
-  // effectively "rerendering" it. This concept is the key to a dynamic UITable.
-  async renderTable(): Promise<State> {
+  // This function, on paper, does not always return `Promise<State>`. However
+  // it does actually always return this when the table is dismissed. This works
+  // because after the UITable instance is presented, and being awaited, we can
+  // still modify its rows and refresh it, effectively "rerendering" it. This
+  // concept is the key to a dynamic UITable.
+  async renderTable() {
     try {
       await this.beforeRender();
       await this.beforeEveryRender?.();

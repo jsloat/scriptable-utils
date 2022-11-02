@@ -83,8 +83,7 @@ export class StreamCache<StreamData, PersistedData> {
       );
       this.cache$.setData({ data: cachedData });
       if (!persistedData) return;
-      // @ts-ignore
-      await this.io.write({ data: persistedData });
+      await this.io.write({ data: { data: persistedData } });
       // Restart the clock for the current repeat interval
       if (this.refreshTimer?.isRunning && resetTimer) {
         this.refreshTimer.resetCurrent();

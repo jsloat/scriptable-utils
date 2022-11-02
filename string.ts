@@ -17,7 +17,7 @@ export const truncate = (str: string, maxLength: number) => {
 
 // ts-unused-exports:disable-next-line
 export const letterToEmoji = (letter: string): string => {
-  const emojiMap = {
+  const emojiMap: Record<string, string> = {
     a: '🅐',
     b: '🅑',
     c: '🅒',
@@ -45,7 +45,6 @@ export const letterToEmoji = (letter: string): string => {
     y: '🅨',
     z: '🅩',
   };
-  // @ts-ignore
   const emoji = emojiMap[letter.toLowerCase()];
   return emoji || '?';
 };
@@ -147,6 +146,7 @@ export const splitByRegex = (str: string, regex: RegExp) => {
 };
 
 export const tidyLog = (message: any) =>
+  // eslint-disable-next-line no-console
   console.log(JSON.stringify(message, null, 2));
 
 // https://stackoverflow.com/questions/15458876/check-if-a-string-is-html-or-not/15458987
@@ -166,10 +166,9 @@ export const spliceInPlace = <T, U>(
   deleteCount: number,
   ...items: U[]
 ) => {
-  const shallowClone = [...arr];
-  // @ts-ignore
+  const shallowClone: (T | U)[] = [...arr];
   shallowClone.splice(startIndex, deleteCount, ...items);
-  return shallowClone as (T | U)[];
+  return shallowClone;
 };
 
 const countChar = (string: string, char: string) =>

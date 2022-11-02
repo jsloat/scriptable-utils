@@ -10,9 +10,7 @@ export const getTwoColReducer =
   rowOpts => ({
     ...rowOpts,
     content: [
-      // @ts-ignore
       { ...gutterLeft, width: DEFAULT_LEFT_GUTTER_WIDTH, align: 'center' },
-      // @ts-ignore
       {
         ...main,
         width: DEFAULT_GRID_WIDTH - DEFAULT_LEFT_GUTTER_WIDTH,

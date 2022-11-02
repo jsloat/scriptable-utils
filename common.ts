@@ -156,6 +156,7 @@ export const safeArrLookup = <T extends NotUndefined<any>>(
   const val = arr[index];
   if (val === undefined) {
     const errorMsg = `Array lookup failed in "${callingFn}", no value at index ${index}`;
+    // eslint-disable-next-line no-console
     console.error(errorMsg);
     throw new ErrorWithPayload(errorMsg, { arr });
   }
@@ -173,12 +174,14 @@ export const safeObjLookup = <
 ) => {
   if (!obj.hasOwnProperty(key)) {
     const errorMsg = `Object lookup failed in "${callingFn}", key "${key}" does not exist`;
+    // eslint-disable-next-line no-console
     console.error(errorMsg);
     throw new ErrorWithPayload(errorMsg, { obj });
   }
   const val = obj[key];
   if (val === undefined) {
     const errorMsg = `Object lookup failed in "${callingFn}", value of key "${key}" is undefined.`;
+    // eslint-disable-next-line no-console
     console.error(errorMsg);
     throw new ErrorWithPayload(errorMsg, { obj });
   }

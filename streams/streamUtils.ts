@@ -51,14 +51,14 @@ export class Stream<DataType extends AnyObj> {
     this.updateQueue = new ThrottledBatchQueue({
       interval: 0,
       maxEntitiesPerOperation: 1,
-      batchOperation: async ([{ reducer, suppressChangeTrigger }]) => {
+      batchOperation: ([{ reducer, suppressChangeTrigger }]) => {
         if (!this.data) {
           throw new Error('Attempting to update stream data with no data');
         }
         const oldData = { ...this.data };
         const newData = reducer(oldData);
         this.data = newData;
-        if (!suppressChangeTrigger) await this.runCallbacks(oldData, newData);
+        if (!suppressChangeTrigger) this.runCallbacks(oldData, newData);
       },
     });
   }
@@ -91,6 +91,7 @@ export class Stream<DataType extends AnyObj> {
   private runCallbacks(previousData: DataType, updatedData: DataType) {
     this.updateCallbacks.forEach(({ callback, id }) => {
       if (this.showStreamDataUpdateDebug)
+        // eslint-disable-next-line no-console
         console.log(
           `Running stream "${this.name}" update callback with ID "${id}"`
         );
@@ -139,8 +140,7 @@ export class Stream<DataType extends AnyObj> {
    * should only be used before exiting the script, or if you know that you
    * won't use this stream again before the script ends. */
   dangerouslyClearData() {
-    // @ts-ignore
-    this.data = {};
+    this.data = {} as DataType;
   }
 }
 

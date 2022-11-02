@@ -1,40 +1,61 @@
 {
-  "env": {
-      "browser": true
-  },
-  "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "plugins": [
-      "@typescript-eslint"
-  ],
-  "rules": {
-      "@typescript-eslint/camelcase": ["off"],
-      "@typescript-eslint/ban-ts-ignore": ["off"],
-      "@typescript-eslint/no-this-alias": ["off"],
-      "@typescript-eslint/no-empty-function": ["off"],
-      "@typescript-eslint/ban-ts-comment": ["off"],
-      "@typescript-eslint/explicit-module-boundary-types": ["off"],
-      "react/no-unescaped-entities": ["off"],
-      "import/no-cycle": ["off"], // for performance
-      "camelcase": ["off"],
-      "no-shadow": ["off"],
-      "no-async-promise-executor": ["off"],
-      "no-unused-expressions": ["off"],
-      "prefer-template": ["off"],
-      "no-else-return": ["off"],
-      "no-console": ["off"],
-      "no-empty": ["error", { "allowEmptyCatch": true }],
-      "no-redeclare": ["off"],
-      "no-useless-escape": ["off"],
-      "class-methods-use-this": ["off"],
-      "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true, "argsIgnorePattern": "^_" }],
-      "@typescript-eslint/no-explicit-any": ["off"],
-      "@typescript-eslint/no-namespace": ["off"],
-      "@typescript-eslint/no-non-null-assertion": ["off"],
-      "no-constant-condition": ["error", { "checkLoops": false }],
-      "no-prototype-builtins": ["off"]
-  }
+    "env": {
+        "browser": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "@typescript-eslint/no-this-alias": ["off"],
+        "@typescript-eslint/no-empty-function": ["off"],
+        "@typescript-eslint/ban-ts-comment": ["error"],
+        "@typescript-eslint/explicit-module-boundary-types": ["off"],
+        "react/no-unescaped-entities": ["off"],
+        "import/no-cycle": ["off"], // for performance
+        "camelcase": ["off"],
+        "no-shadow": ["off"],
+        "no-async-promise-executor": ["off"],
+        "no-unused-expressions": ["off"],
+        "prefer-template": ["off"],
+        "no-else-return": ["off"],
+        "no-console": ["error"],
+        "no-empty": ["error", { "allowEmptyCatch": true }],
+        "no-redeclare": ["off"],
+        "no-useless-escape": ["off"],
+        "class-methods-use-this": ["error"],
+        "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true, "argsIgnorePattern": "^_" }],
+        "@typescript-eslint/no-explicit-any": ["off"],
+        "@typescript-eslint/no-namespace": ["off"],
+        "@typescript-eslint/no-non-null-assertion": ["off"],
+        "no-constant-condition": ["error"],
+        "no-prototype-builtins": ["off"],
+        "no-debugger": ["error"],
+        "no-self-assign": ["error"],
+        "no-self-compare": ["error"],
+        "no-template-curly-in-string": ["error"],
+        "require-atomic-updates": ["error"],
+        "valid-typeof": ["error"],
+        "complexity": ["error", 10],
+        "dot-notation": ["error"],
+        "eqeqeq": ["error"],
+        "max-depth": ["error", 4],
+        "max-nested-callbacks": ["error", 2],
+        "no-bitwise": ["error"],
+        "no-extra-boolean-cast": ["error"],
+        "no-implicit-coercion": ["error"],
+        "no-lone-blocks": ["error"],
+        "no-lonely-if": ["error"],
+        "no-negated-condition": ["error"],
+        "no-nested-ternary": ["error"],
+        "no-param-reassign": ["error"],
+        "no-return-await": ["warn"],
+        "require-await": ["warn"],
+        "no-unneeded-ternary": ["error"],
+        "no-irregular-whitespace": ["error"]
+    }
 }

@@ -18,7 +18,6 @@ const multipartRequest: MultipartRequestFn = async ({
   const body = getMultipartBody({ requests, boundary });
   const response = await postString({
     ...restPostOpts,
-    // @ts-ignore untyped dynamic content type
     contentType: `multipart/mixed; boundary=${boundary}`,
     body,
   });
