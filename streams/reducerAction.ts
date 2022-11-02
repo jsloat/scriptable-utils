@@ -1,4 +1,6 @@
 import { combineReducers } from '../flow';
+import { Persisted } from '../io/persisted';
+import { Stream } from './streamUtils';
 
 type Payload = AnyObj | void;
 
@@ -71,3 +73,16 @@ export const getTableActionCreator =
     const reducer = await reducerGetter(...args);
     setState(reducer(currState));
   };
+
+export const getStreamActionCreator =
+  <T extends AnyObj>(stream: Stream<T>) =>
+  <A extends any[]>(reducerGetter: (...args: A) => MaybePromise<Identity<T>>) =>
+  async (...args: A) =>
+    stream.updateData(await reducerGetter(...args));
+
+/** Used with instances of the `Persisted` class */
+export const getIOActionCreator =
+  <T>(io: Persisted<T>) =>
+  <A extends any[]>(reducerGetter: (...args: A) => MaybePromise<Identity<T>>) =>
+  async (...args: A) =>
+    io.reduce(await reducerGetter(...args));

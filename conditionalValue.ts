@@ -1,5 +1,3 @@
-import { hasLength } from './array';
-import { compose, filter, map, toArray } from './arrayTransducers';
 import { isBoolean, isFunc } from './common';
 
 export const NO_CONDITIONAL_VALUE_MATCH = Symbol('NO_CONDITIONAL_VALUE_MATCH');
@@ -68,11 +66,8 @@ const isNotChangeSymbol = <T>(val: T | NoChangeSymbol): val is T =>
 const conditionalValue: ConditionalValue = <T>(
   conditionsArr: (ConditionRule<T> | ConditionFn<T> | T)[]
 ): T | null => {
-  const matches = toArray(
-    conditionsArr,
-    compose(map(getValue), filter(isNotChangeSymbol))
-  );
-  return hasLength(matches) ? matches[0] : null;
+  const matches = conditionsArr.map(getValue).filter(isNotChangeSymbol);
+  return matches.length ? matches[0]! : null;
 };
 
 export default conditionalValue;
