@@ -8,8 +8,8 @@ import { ExcludeFalsy } from '../common';
 import listChoose, { ListChooseOption } from '../input/listChoose';
 import { SFSymbolKey } from '../sfSymbols';
 import { Stream } from '../streams';
-import { getTableActionCreator } from '../streams/reducerAction';
-import { makeReducerGetter } from '../streams/streamUtils';
+import { getTableActionCreator } from '../reducerAction';
+import { getReducerCreator } from '../reducerAction';
 import getTable from '../UITable/getTable';
 import {
   ButtonStack,
@@ -155,7 +155,7 @@ export default async <E>({
     $Props<E>
   >({ name: ID, connected$: { $: props$ } });
 
-  const reducer = makeReducerGetter<State<E>>();
+  const reducer = getReducerCreator<State<E>>();
 
   const handleToggleEntitySelect = reducer((state, id: EntityId) => {
     const clone = new Set([...state.selectedEntityIds]);

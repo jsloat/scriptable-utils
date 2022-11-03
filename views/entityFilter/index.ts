@@ -1,9 +1,8 @@
 import { conditionalArr } from '../../array';
 import { ExcludeFalsy } from '../../common';
 import { isEqual } from '../../object';
-import { Stream } from '../../streams';
-import { getTableActionCreator } from '../../streams/reducerAction';
-import { subscribe } from '../../streams/streamUtils';
+import { Stream, subscribe } from '../../streams';
+import { getTableActionCreator } from '../../reducerAction';
 import getTable from '../../UITable/getTable';
 import {
   ButtonStack,

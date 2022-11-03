@@ -1,2 +1,4 @@
-export { getConnect } from './connect';
-export { Stream } from './streamUtils';
+export { default as Stream } from './Stream';
+export * from './connect';
+export * from './StreamCache';
+export * from './utils';
