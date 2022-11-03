@@ -6,7 +6,7 @@ import { Stream } from './streams';
 // REDUCER CREATOR
 //
 
-type MakeReducerGetterOpts<S> = {
+type GetReducerCreatorOpts<S> = {
   // Reducers run every time, before reducer arg
   preReducers?: Identity<S>[];
   // Run after reducer arg
@@ -16,7 +16,7 @@ type MakeReducerGetterOpts<S> = {
  * reducer-getter generator can then be used to create functions that take some
  * arguments and return a reducer for the given entity type. */
 export const getReducerCreator =
-  <T>({ preReducers = [], postReducers = [] }: MakeReducerGetterOpts<T> = {}) =>
+  <T>({ preReducers = [], postReducers = [] }: GetReducerCreatorOpts<T> = {}) =>
   <A extends any[]>(getReducer: (currVal: T, ...args: A) => T) =>
   (...args: A): Identity<T> =>
     combineReducers(

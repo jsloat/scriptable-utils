@@ -1,6 +1,6 @@
 import { isString } from '../common';
 import { isEqual, objectKeys } from '../object';
-import { Stream } from '../streams';
+import Stream from '../streams/Stream';
 import { SCRIPTABLE_STORE_PATH } from './consts';
 
 type CreateIObjectOpts<T> = {

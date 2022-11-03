@@ -1,7 +1,7 @@
-import { Stream } from '.';
 import { alertAndLogError } from '../errorHandling';
 import persisted, { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
+import Stream from './Stream';
 
 type NestedDataShape<T = any> = { data: T | null };
 
