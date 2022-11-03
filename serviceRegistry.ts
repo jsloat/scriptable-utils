@@ -19,9 +19,11 @@ const registry: Registry = {
   getCalendarTitles: getPlaceholderImplementation('getCalendarTitles'),
 };
 
-export const getService = (name: keyof Registry) => registry[name];
-
 export const registerService = <N extends keyof Registry>(
   name: N,
   val: Registry[N]
 ) => (registry[name] = val);
+
+//
+
+export const getCalendarTitles = () => registry.getCalendarTitles();

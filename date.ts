@@ -2,9 +2,8 @@ import { compose, filter, map, toArray } from './arrayTransducers';
 import { getDomainColor } from './colors';
 import { ExcludeFalsy } from './common';
 import { range } from './object';
-import { getService } from './serviceRegistry';
+import { getCalendarTitles } from './serviceRegistry';
 import { pluralize } from './string';
-const getCalendarTitles = getService('getCalendarTitles');
 
 // ts-unused-exports:disable-next-line
 export const ONE_MILLISECOND = 1;
