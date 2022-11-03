@@ -2,16 +2,9 @@ import { compose, filter, map, toArray } from './arrayTransducers';
 import { getDomainColor } from './colors';
 import { ExcludeFalsy } from './common';
 import { range } from './object';
+import { getService } from './serviceRegistry';
 import { pluralize } from './string';
-
-type GetCalendarTitles = NoParamFn<Record<'PERSONAL' | 'WORK', string>>;
-let getCalendarTitles: GetCalendarTitles = () => {
-  throw new Error(
-    'You must register the `getCalendarTitles` in your implementation before using functions that depend on it.'
-  );
-};
-export const registerGetCalendarTitles = (fn: GetCalendarTitles) =>
-  (getCalendarTitles = fn);
+const getCalendarTitles = getService('getCalendarTitles');
 
 // ts-unused-exports:disable-next-line
 export const ONE_MILLISECOND = 1;
