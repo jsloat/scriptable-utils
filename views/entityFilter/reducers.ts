@@ -1,10 +1,10 @@
 import { toggleArrayItem } from '../../array';
 import { cycle } from '../../flow';
-import { getTableReducerCreator } from '../../streams/reducerAction';
+import { makeReducerGetter } from '../../streams/streamUtils';
 import { AppliedFilterState, FilterWithState, State } from './types';
 import { getFilterKey } from './utils';
 
-const reducer = getTableReducerCreator<State>();
+const reducer = makeReducerGetter<State>();
 
 export const handleCycleFilterState = reducer(
   (state, targetFilter: FilterWithState<any>) => {

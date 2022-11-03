@@ -3,12 +3,14 @@
  * bulk selection & performing actions on them, and a single-tap action.
  */
 
+import { conditionalArr } from '../array';
 import { ExcludeFalsy } from '../common';
-import {
-  getTableActionCreator,
-  getTableReducerCreator,
-} from '../streams/reducerAction';
+import listChoose, { ListChooseOption } from '../input/listChoose';
 import { SFSymbolKey } from '../sfSymbols';
+import { Stream } from '../streams';
+import { getTableActionCreator } from '../streams/reducerAction';
+import { makeReducerGetter } from '../streams/streamUtils';
+import getTable from '../UITable/getTable';
 import {
   ButtonStack,
   ButtonStackOpt,
@@ -17,14 +19,10 @@ import {
   Spacer,
 } from '../UITable/Row/templates';
 import { H1Opts } from '../UITable/Row/templates/_H1';
-import getTable from '../UITable/getTable';
 import { ValidTableEl } from '../UITable/types';
-import listChoose, { ListChooseOption } from '../input/listChoose';
-import { Stream } from '../streams';
+import entityFilter from './entityFilter';
 import { FilterRecord, FilterWithState } from './entityFilter/types';
 import { getAppliedFiltersPredicate } from './entityFilter/utils';
-import entityFilter from './entityFilter';
-import { conditionalArr } from '../array';
 
 export type BulkAction<E> = {
   icon: SFSymbolKey;
@@ -157,7 +155,7 @@ export default async <E>({
     $Props<E>
   >({ name: ID, connected$: { $: props$ } });
 
-  const reducer = getTableReducerCreator<State<E>>();
+  const reducer = makeReducerGetter<State<E>>();
 
   const handleToggleEntitySelect = reducer((state, id: EntityId) => {
     const clone = new Set([...state.selectedEntityIds]);
