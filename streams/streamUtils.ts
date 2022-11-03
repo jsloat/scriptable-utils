@@ -1,3 +1,4 @@
+import { combineReducers } from '../flow';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
 
 type UpdateCallback<D extends AnyObj> = (
@@ -258,12 +259,21 @@ export const combineStreams: CombineStreams = ({
   return combined$;
 };
 
+type MakeReducerGetterOpts<S> = {
+  // Reducers run every time, before reducer arg
+  preReducers?: Identity<S>[];
+  // Run after reducer arg
+  postReducers?: Identity<S>[];
+};
 /** Call this to create a reducer-getter generator for the given type. The
  * reducer-getter generator can then be used to create functions that take some
  * arguments and return a reducer for the given entity type. */
 export const makeReducerGetter =
-  <T>() =>
-  <A extends any[]>(getUpdatedVal: (currVal: T, ...args: A) => T) =>
+  <T>({ preReducers = [], postReducers = [] }: MakeReducerGetterOpts<T> = {}) =>
+  <A extends any[]>(getReducer: (currVal: T, ...args: A) => T) =>
   (...args: A): Identity<T> =>
-  currVal =>
-    getUpdatedVal(currVal, ...args);
+    combineReducers(
+      ...preReducers,
+      currVal => getReducer(currVal, ...args),
+      ...postReducers
+    );
