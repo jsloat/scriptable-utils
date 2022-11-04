@@ -5,9 +5,22 @@
  * using this file before they need to use the functions that depend on them.
  */
 
+export namespace ScreenHeightMeasurements {
+  export type Mode = 'fullscreen' | 'notFullscreen';
+  export type Orientation = 'portrait' | 'landscape';
+  export type Record = {
+    [deviceKey: string]: {
+      [mode in Mode]: { [orientation in Orientation]: number };
+    };
+  };
+}
+
 export type Registry = {
   getCalendarTitles: NoParamFn<Record<'PERSONAL' | 'WORK', string>>;
+  getScreenHeightMeasurements?: NoParamFn<ScreenHeightMeasurements.Record>;
 };
+
+//
 
 const getPlaceholderImplementation = (fnName: string) => () => {
   throw new Error(
@@ -26,4 +39,5 @@ export const registerService = <N extends keyof Registry>(
 
 //
 
-export const getCalendarTitles = () => registry.getCalendarTitles();
+export const getCalendarTitles = registry.getCalendarTitles;
+export const getScreenHeightMeasurements = registry.getScreenHeightMeasurements;

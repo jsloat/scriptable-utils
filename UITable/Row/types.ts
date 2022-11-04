@@ -1,20 +1,20 @@
+import { ScreenHeightMeasurements } from '../../serviceRegistry';
 import { SFSymbolKey } from '../../sfSymbols';
 
 export type RowSize = 'sm' | 'md' | 'lg';
 
+export type Percent = `${number}%`;
+
 export type BGColorMode = 'selected' | 'callout';
 
-/** For user-selected options */
-type Custom<T> = T;
-
-type SizeOrCustomType = RowSize | Custom<number>;
+type SizeOrCustomType = RowSize | number;
 
 type PaddingOpts = {
   paddingTop?: SizeOrCustomType;
   paddingBottom?: SizeOrCustomType;
 };
 
-export type SizeMap = Record<RowSize, number>;
+export type SizeMap = Record<RowSize, number | Percent>;
 
 export type ContentAreaOpts =
   // Only one will be evaluated
@@ -33,7 +33,7 @@ export type ContentAreaOpts =
     }>;
 
 export type RowOpts = {
-  rowHeight?: SizeOrCustomType;
+  rowHeight?: SizeOrCustomType | Percent;
   /** NB: There is default padding. */
   padding?: PaddingOpts;
   bgColor?: Color | BGColorMode;
@@ -48,21 +48,24 @@ export type RowOpts = {
   onTripleTap?: NoParamFn;
   dismissOnTap?: boolean;
   content?: ContentAreaOpts[];
+  /** Optional, used to determine whether the table is in fullscreen or not,
+   * which is useful if using percentages as screen height. */
+  mode?: ScreenHeightMeasurements.Mode;
 };
 
-type WithoutSize<T> = Exclude<T, RowSize>;
+type OnlyNumber<T> = Exclude<T, RowSize | Percent>;
 
 export type ParsedPaddingOpts = Required<{
-  [key in keyof PaddingOpts]: WithoutSize<PaddingOpts[key]>;
+  [key in keyof PaddingOpts]: OnlyNumber<PaddingOpts[key]>;
 }>;
 
 /** Attributes of a row that is valid (unlike RowOpts, which will have fallbacks assigned) */
 export type ParsedRowOpts = MakeSomeReqd<
   RowOpts,
   'content',
-  'rowHeight' | 'padding' | 'bgColor'
+  'padding' | 'bgColor'
 > & {
-  rowHeight: WithoutSize<Required<RowOpts>['rowHeight']>;
+  rowHeight: OnlyNumber<Required<RowOpts>['rowHeight']>;
   padding: ParsedPaddingOpts;
   bgColor: Color;
 };

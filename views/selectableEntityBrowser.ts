@@ -6,10 +6,9 @@
 import { conditionalArr } from '../array';
 import { ExcludeFalsy } from '../common';
 import listChoose, { ListChooseOption } from '../input/listChoose';
+import { getReducerCreator, getTableActionCreator } from '../reducerAction';
 import { SFSymbolKey } from '../sfSymbols';
 import { Stream } from '../streams';
-import { getTableActionCreator } from '../reducerAction';
-import { getReducerCreator } from '../reducerAction';
 import getTable from '../UITable/getTable';
 import {
   ButtonStack,
@@ -228,7 +227,6 @@ export default async <E>({
     ]).map<ButtonStackOpt>(opt => ({
       ...opt,
       flavor: 'transparentWithBorder',
-      isLarge: true,
     }));
     return stackOpts.length && ButtonStack(stackOpts);
   });

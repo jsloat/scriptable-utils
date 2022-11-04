@@ -1,14 +1,18 @@
-import { getSfSymbolImg } from '../../sfSymbols';
 import { conditionalArr } from '../../array';
+import { compose, filter, map, toArray } from '../../arrayTransducers';
+import { getColor } from '../../colors';
 import {
+  darken,
   ErrorWithPayload,
   ExcludeFalsy,
-  darken,
   fade,
   isNumber,
   isString,
   lighten,
 } from '../../common';
+import { ScreenHeightMeasurements } from '../../serviceRegistry';
+import { getSfSymbolImg } from '../../sfSymbols';
+import { getMaxScreenHeight } from '../utils';
 import { BaseCell, BaseRow } from './base';
 import {
   bgColorModeToColor,
@@ -17,50 +21,82 @@ import {
   textSizeToNumMap,
 } from './consts';
 import {
+  BGColorMode,
   ContentAreaOpts,
   ParsedPaddingOpts,
   ParsedRowOpts,
+  Percent,
   RowOpts,
+  RowSize,
+  SizeMap,
 } from './types';
-import { getColor } from '../../colors';
-import { compose, filter, map, toArray } from '../../arrayTransducers';
 
-/** For options which can be a string (e.g. Size) or another `ValueType`, this
- * returns the appropriate type (`ValueType`) */
-const parseStringOrValue = <StringType extends string, ValueType>(
-  stringOrValue: StringType | ValueType,
-  lookupMap: Record<StringType, ValueType>
-) => (isString(stringOrValue) ? lookupMap[stringOrValue] : stringOrValue);
+const isPercent = (val: any): val is Percent =>
+  isString(val) && val.includes('%');
+
+const isRowSize = (val: any): val is RowSize =>
+  isString(val) && (['lg', 'md', 'sm'] as RowSize[]).includes(val as RowSize);
+
+const heightPercentToNumber = (
+  percent: Percent,
+  mode: ScreenHeightMeasurements.Mode = 'notFullscreen'
+) => {
+  const numberStr = percent.split('%')[0];
+  if (!numberStr) {
+    throw new Error(`Incorrectly formatted percent value: ${percent}`);
+  }
+  const number = parseInt(numberStr, 10);
+  if (number < 1 || number > 100) {
+    throw new Error(`Percent value must be between 1-100: ${percent}`);
+  }
+  const fraction = number / 100;
+  return Math.floor(fraction * getMaxScreenHeight(mode));
+};
+
+const parseSizeValue = (
+  value: number | RowSize | Percent,
+  lookupMap: SizeMap,
+  mode?: ScreenHeightMeasurements.Mode
+): number => {
+  const mappedValue = isRowSize(value) ? lookupMap[value] : value;
+  return isPercent(mappedValue)
+    ? heightPercentToNumber(mappedValue, mode)
+    : mappedValue;
+};
 
 const parsePaddingOpts = (padding: RowOpts['padding']): ParsedPaddingOpts => {
-  const paddingTop = parseStringOrValue(
+  const paddingTop = parseSizeValue(
     padding?.paddingTop ?? 'sm',
     paddingSizeToNumMap
   );
-  const paddingBottom = parseStringOrValue(
+  const paddingBottom = parseSizeValue(
     padding?.paddingBottom ?? 'sm',
     paddingSizeToNumMap
   );
   return { paddingTop, paddingBottom };
 };
 
-type HeightOpts = Pick<RowOpts, 'padding' | 'rowHeight'>;
-const parseHeightVals = ({ padding, rowHeight = 'sm' }: HeightOpts) => ({
+type HeightOpts = Pick<RowOpts, 'padding' | 'rowHeight' | 'mode'>;
+const parseHeightVals = ({ padding, rowHeight = 'sm', mode }: HeightOpts) => ({
   padding: parsePaddingOpts(padding),
-  rowHeight: parseStringOrValue(rowHeight, rowHeightSizeToNumMap),
+  rowHeight: parseSizeValue(rowHeight, rowHeightSizeToNumMap, mode),
 });
+
+const parseBgColorValue = (bgColor: Color | BGColorMode) =>
+  isString(bgColor) ? bgColorModeToColor[bgColor] : bgColor;
 
 const parseRowOpts = ({
   bgColor = getColor('bg'),
   rowHeight,
   padding,
+  mode,
   content = [],
   ...rest
 }: RowOpts): ParsedRowOpts => ({
   ...rest,
   content,
-  bgColor: parseStringOrValue(bgColor, bgColorModeToColor),
-  ...parseHeightVals({ padding, rowHeight }),
+  bgColor: parseBgColorValue(bgColor),
+  ...parseHeightVals({ padding, rowHeight, mode }),
 });
 
 //
@@ -103,7 +139,7 @@ const getCell = (
       type: 'text',
       value: isNumber(text) || isString(text) ? String(text) : '',
       color: parsedColor,
-      font: fontConstructor(parseStringOrValue(textSize, textSizeToNumMap)),
+      font: fontConstructor(parseSizeValue(textSize, textSizeToNumMap)),
       ...commonArgs,
     });
   }

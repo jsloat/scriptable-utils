@@ -1,8 +1,8 @@
 import { conditionalArr } from '../../array';
 import { ExcludeFalsy } from '../../common';
 import { isEqual } from '../../object';
-import { Stream, subscribe } from '../../streams';
 import { getTableActionCreator } from '../../reducerAction';
+import { Stream, subscribe } from '../../streams';
 import getTable from '../../UITable/getTable';
 import {
   ButtonStack,
@@ -102,7 +102,7 @@ export default async <E>(opts: Opts<E>) => {
           isDisabled: !areFiltersApplied(state),
         },
       ],
-      { flavor: 'transparentWithBorder', isLarge: true }
+      { flavor: 'transparentWithBorder' }
     )
   );
 
