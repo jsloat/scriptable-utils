@@ -210,13 +210,22 @@ export const objSpreadWithoutUndefined: ObjSpreadWithoutUndefined = (
 
 /** Map values of an obj, maintaining its keys */
 // ts-unused-exports:disable-next-line
-export const objValMap = <K extends string | number | symbol, V1, V2>(
-  obj: Record<K, V1>,
-  callback: (origVal: V1, key: K) => V2
+export const objValMap = <
+  Original extends AnyObj,
+  Target extends Record<keyof Original, any>
+>(
+  object: Original,
+  updateValue: <K extends keyof Original>(
+    key: K,
+    originalValue: Original[K]
+  ) => Target[K]
 ) =>
   objectFromEntries(
-    objectEntries(obj).map(([key, origVal]) => [key, callback(origVal, key)])
-  );
+    objectEntries(object).map(([key, originalValue]) => [
+      key,
+      updateValue(key, originalValue),
+    ])
+  ) as Target;
 
 /** Filter key-value pairs in an obj, similar to Array.filter */
 // ts-unused-exports:disable-next-line

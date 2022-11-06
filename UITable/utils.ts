@@ -22,15 +22,13 @@ export const catchTableError = async (error: any, tableName: string) => {
 };
 
 export const getMaxScreenHeight = (mode: ScreenHeightMeasurements.Mode) => {
-  const deviceScreenHeight = Device.screenSize().height;
-  if (!getScreenHeightMeasurements) return deviceScreenHeight;
   const device = Device.model();
   const orientation: ScreenHeightMeasurements.Orientation =
     Device.isInPortrait() ? 'portrait' : 'landscape';
   const deviceSettings = getScreenHeightMeasurements()[device];
   if (!deviceSettings) {
     notifyNow(`No screen height settings for ${device}`);
-    return deviceScreenHeight;
+    return Device.screenSize().height;
   }
   return deviceSettings[mode][orientation];
 };

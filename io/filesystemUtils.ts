@@ -2,8 +2,8 @@ import { map, toSegmented } from '../arrayTransducers';
 import { getBookmarkedPath } from '../common';
 import { confirm } from '../input/confirm';
 import { filterJoin } from '../object';
-import { lowerIncludes } from '../string';
-import { DOCUMENTS_SUB_DIRECTORY_NAMES, DocumentsDir, FileInfo } from './types';
+import { lowerEquals, lowerIncludes } from '../string';
+import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
 
 export const PROJECT_ARCHIVE_DIR_NAME = '*Archive';
 
@@ -64,14 +64,22 @@ export const getDirContents = (filePath: string) =>
     .listContents(filePath)
     .map(childName => getFileInfo(`${filePath}/${childName}`));
 
-export const getProjectDirContents = (projName: string) =>
-  getDirContents(getProjectPath(projName));
-
 export const getActiveFileProjectsInfo = () =>
   getDirContents(getProjectsRootPath()).filter(
     ({ isDirectory, filenameNoExtension }) =>
       isDirectory && filenameNoExtension !== PROJECT_ARCHIVE_DIR_NAME
   );
+
+export const getProjectDirContents = (projName: string) => {
+  const allProjectFolders = getActiveFileProjectsInfo();
+  const match = allProjectFolders.find(({ filenameNoExtension }) =>
+    lowerEquals(filenameNoExtension, projName)
+  );
+  if (!match) {
+    throw new Error(`Project ${projName} not found in projects folder`);
+  }
+  return getDirContents(getProjectPath(match.filenameNoExtension));
+};
 
 export const getArchivedProjectFilepath = (projName: string) =>
   `${getBookmarkedPath('Documents')}/${

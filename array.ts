@@ -26,8 +26,14 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
 export const exactlyOne = <T>(arr: T[], predicate: MapFn<T, any> = Boolean) =>
   toCount(arr, compose(map(predicate)));
 
-export const isHomogeneous = <T extends number | string | boolean>(arr: T[]) =>
-  arr.length < 2 || arr.slice(1).every(val => val === arr[0]);
+export const isHomogeneous = <T>(
+  arr: T[],
+  isEqual: ObjComparison<T> = (a, b) => a === b
+) => {
+  if (!hasLength(arr)) return true;
+  if (arr.length === 1) return true;
+  return arr.slice(1).every(val => isEqual(val, arr[0]));
+};
 
 export const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
 

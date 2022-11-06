@@ -71,12 +71,9 @@ export class StreamCache<StreamData, PersistedData> {
   }
 
   protected async loadAllData({ resetTimer }: { resetTimer: boolean }) {
-    if (
-      this.maxLoadDataErrors &&
-      this.loadFailureCount >= this.maxLoadDataErrors
-    ) {
-      return;
-    }
+    const isOverLimit =
+      this.maxLoadDataErrors && this.loadFailureCount >= this.maxLoadDataErrors;
+    if (isOverLimit) return;
     try {
       const { cachedData, persistedData } = await this.loadData(
         this.cache$.getData().data

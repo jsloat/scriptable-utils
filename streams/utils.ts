@@ -49,7 +49,7 @@ export const subscribe = <
         updatedSourceState
       );
       // If the reducer returns null, no update should occur
-      if (reducedData) await dependent$.setData(reducedData);
+      if (reducedData) dependent$.setData(reducedData);
     },
   });
   return { unsubscribe: () => source$.unregisterUpdateCallback(callbackId) };

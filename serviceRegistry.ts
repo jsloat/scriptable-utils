@@ -17,7 +17,7 @@ export namespace ScreenHeightMeasurements {
 
 export type Registry = {
   getCalendarTitles: NoParamFn<Record<'PERSONAL' | 'WORK', string>>;
-  getScreenHeightMeasurements?: NoParamFn<ScreenHeightMeasurements.Record>;
+  getScreenHeightMeasurements: NoParamFn<ScreenHeightMeasurements.Record>;
 };
 
 //
@@ -30,6 +30,18 @@ const getPlaceholderImplementation = (fnName: string) => () => {
 
 const registry: Registry = {
   getCalendarTitles: getPlaceholderImplementation('getCalendarTitles'),
+  getScreenHeightMeasurements: () => ({
+    [Device.model()]: {
+      fullscreen: {
+        landscape: Device.screenSize().height,
+        portrait: Device.screenSize().height,
+      },
+      notFullscreen: {
+        landscape: Device.screenSize().height,
+        portrait: Device.screenSize().height,
+      },
+    },
+  }),
 };
 
 export const registerService = <N extends keyof Registry>(
@@ -39,5 +51,9 @@ export const registerService = <N extends keyof Registry>(
 
 //
 
-export const getCalendarTitles = registry.getCalendarTitles;
-export const getScreenHeightMeasurements = registry.getScreenHeightMeasurements;
+// NB! Must export a function that fetches the current registry value, else
+// won't get latest. I.e. this will not work:
+// `getCalendarTitles = registry.getCalendarTitles`
+export const getCalendarTitles = () => registry.getCalendarTitles();
+export const getScreenHeightMeasurements = () =>
+  registry.getScreenHeightMeasurements();

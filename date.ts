@@ -175,7 +175,7 @@ export const getSubsequentDayOfWeek = (
 /** Input startDate & num days in range, get back an array of dates in YYYYMMDD format */
 // ts-unused-exports:disable-next-line
 export const getIsoDateRange = (startDate: Date, numDays: number) =>
-  range(0, numDays).map(daysToAdd =>
+  range(0, numDays - 1).map(daysToAdd =>
     formatDate(addToDate(startDate, { days: daysToAdd }), 'YYYYMMDD')
   );
 
@@ -319,4 +319,20 @@ export const enhanceCalEventsWithStatus = () => {
       isFuture: event.startDate > NOW,
     })
   );
+};
+
+/** Using this function avoids timezone issues that happen with `new Date(YYYY-MM-DD)` */
+export const YYYYMMDDToDate = (dateString: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    throw new Error(
+      `Passed date string ${dateString}, which is not correctly formatted`
+    );
+  }
+  const atoms = dateString.split('-');
+  const year = parseInt(atoms[0]!);
+  const month = parseInt(atoms[1]!);
+  const day = parseInt(atoms[2]!);
+  const date = new Date();
+  date.setFullYear(year, month - 1, day);
+  return stripTime(date);
 };
