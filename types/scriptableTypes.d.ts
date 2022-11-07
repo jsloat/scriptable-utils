@@ -173,6 +173,13 @@ declare const Device: {
   isPhone: () => boolean;
   isPad: () => boolean;
   screenBrightness: () => number; // 0-1
+  /** The value is measured in pixels. The value does not take the rotation of
+   * the deviec into account. */
+  screenResolution: () => Size;
+  /** Standard resolution displays have a scale of 1.0 where one point on the
+   * screen equals one pixel. Retina displays will have a scale factor of 2.0 or
+   * 3.0 where one point on the screen is four or nine pixels, respectively. */
+  screenScale: () => number;
   batteryLevel: () => number;
   isDischarging: () => boolean;
   isCharging: () => boolean;
@@ -182,6 +189,11 @@ declare const Device: {
   setScreenBrightness: (percentage: number) => void; // 0-1
   screenSize: () => Size;
   isInPortrait: () => boolean;
+  isInPortraitUpsideDown: () => boolean;
+  isInLandscapeLeft: () => boolean;
+  isInLandscapeRight: () => boolean;
+  isFaceUp: () => boolean;
+  isFaceDown: () => boolean;
 };
 
 declare const args: {
