@@ -6,6 +6,7 @@
 import { conditionalArr } from '../array';
 import { ExcludeFalsy } from '../common';
 import listChoose, { ListChooseOption } from '../input/listChoose';
+import textInput from '../input/textInput';
 import { getReducerCreator, getTableActionCreator } from '../reducerAction';
 import { SFSymbolKey } from '../sfSymbols';
 import { Stream } from '../streams';
@@ -33,27 +34,30 @@ export type BulkAction<E> = {
 export type EntityId = string | number;
 
 /** Opts passed to consumer from this view when generating an entity row. */
-type EntityRowCallbackOpts<E> = {
+export type EntityRowCallbackOpts<E> = {
   entity: E;
-  onTap: NoParamFn<any>;
-  onDoubleTap?: NoParamFn<any>;
+  onTap: NoParamFn;
+  onDoubleTap?: NoParamFn;
   isSelected: boolean;
 };
-
-type EntityMap<E> = Map<EntityId, E>;
 
 type State<E> = {
   selectedEntityIds: Set<EntityId>;
   appliedFilters: FilterWithState<E>[];
+  filterBySearchQuery: string | null;
 };
 
 type $Props<E> = {
-  entityMap: EntityMap<E>;
+  entityMap: Map<EntityId, E>;
   allEntityIds: EntityId[];
   allEntitiesCount: number;
 };
 
-type CustomCTACallbackOpts<E> = $Props<E> & { rerender: NoParamFn<any> };
+type CustomCTACallbackOpts<E> = $Props<E> & {
+  rerender: NoParamFn;
+};
+
+type OpenEntityCallbackOpts<E> = CustomCTACallbackOpts<E> & { entity: E };
 
 export type SelectableEntityBrowserOpts<Entity> = {
   /** Optionally run this code before launching the table */
@@ -62,7 +66,7 @@ export type SelectableEntityBrowserOpts<Entity> = {
   getEntities: NoParamFn<MaybePromise<Entity[]>>;
   getEntityRow: MapFn<EntityRowCallbackOpts<Entity>, ValidTableEl>;
   /** This action occurs when single tapping an entity. */
-  openEntity: MapFn<Entity, any>;
+  openEntity: MapFn<OpenEntityCallbackOpts<Entity>, any>;
   /** Available actions when bulk selecting entities. If not provided,
    * multiselect is not permitted. */
   bulkActions?: BulkAction<Entity>[];
@@ -73,8 +77,10 @@ export type SelectableEntityBrowserOpts<Entity> = {
     Omit_<ButtonStackOpt, 'flavor'>[]
   >;
   /** Used to toggle selection status, etc. */
-  getUniqueEntityId: MapFn<Entity, EntityId>;
+  getEntityId: MapFn<Entity, EntityId>;
   filters?: FilterRecord<Entity>;
+  /** If present, ability to apply a search filter to the entities. */
+  getSearchMatchPredicate?: (query: string) => Predicate<Entity>;
 };
 
 //
@@ -103,20 +109,38 @@ const getDefaultProps$State = <E>(): $Props<E> => ({
 
 const generateProps = <E>(
   entities: E[],
-  getUniqueEntityId: SelectableEntityBrowserOpts<E>['getUniqueEntityId']
+  getEntityId: SelectableEntityBrowserOpts<E>['getEntityId']
 ) =>
   entities.reduce((acc, entity) => {
-    const id = getUniqueEntityId(entity);
+    const id = getEntityId(entity);
     acc.entityMap.set(id, entity);
     acc.allEntityIds.push(id);
     acc.allEntitiesCount++;
     return acc;
   }, getDefaultProps$State<E>());
 
-const getFilteredEntities = async <E>(
-  getEntities: SelectableEntityBrowserOpts<E>['getEntities'],
-  appliedFilters: FilterWithState<E>[]
-) => (await getEntities()).filter(getAppliedFiltersPredicate(appliedFilters));
+type GetFilteredEntitiesOpts<E> = Pick<
+  State<E>,
+  'appliedFilters' | 'filterBySearchQuery'
+> &
+  Pick<
+    SelectableEntityBrowserOpts<E>,
+    'getEntities' | 'getSearchMatchPredicate'
+  >;
+const getFilteredEntities = async <E>({
+  getEntities,
+  appliedFilters,
+  getSearchMatchPredicate,
+  filterBySearchQuery,
+}: GetFilteredEntitiesOpts<E>) => {
+  const isShownWithCurrentFilters = getAppliedFiltersPredicate(appliedFilters);
+  return (await getEntities()).filter(entity => {
+    if (!isShownWithCurrentFilters(entity)) return false;
+    return getSearchMatchPredicate && filterBySearchQuery
+      ? getSearchMatchPredicate(filterBySearchQuery)(entity)
+      : true;
+  });
+};
 
 //
 
@@ -127,10 +151,11 @@ export default async <E>({
   getEntityRow,
   openEntity,
   bulkActions,
-  getUniqueEntityId,
+  getEntityId,
   getCustomCTAs,
   headerOpts,
   filters,
+  getSearchMatchPredicate,
 }: SelectableEntityBrowserOpts<E>) => {
   await beforeLoad?.();
 
@@ -140,13 +165,19 @@ export default async <E>({
     defaultState: getDefaultProps$State(),
     name: ID,
   });
-  const reloadEntities = async ({ appliedFilters }: State<E>) =>
-    props$.setData(
-      generateProps(
-        await getFilteredEntities(getEntities, appliedFilters),
-        getUniqueEntityId
-      )
-    );
+  const reloadEntities = async ({
+    appliedFilters,
+    filterBySearchQuery,
+  }: State<E>) => {
+    const filteredEntities = await getFilteredEntities({
+      appliedFilters,
+      filterBySearchQuery,
+      getEntities,
+      getSearchMatchPredicate,
+    });
+    const newProps = generateProps(filteredEntities, getEntityId);
+    props$.setData(newProps);
+  };
 
   const { present, connect, getProps, getState, setState } = getTable<
     State<E>,
@@ -172,14 +203,46 @@ export default async <E>({
     selectedEntityIds: new Set(ids),
   }));
 
+  const handleSetSearchQuery = reducer((state, query: string) => ({
+    ...state,
+    filterBySearchQuery: query,
+  }));
+
+  const handleClearSearchQuery = reducer(state => ({
+    ...state,
+    filterBySearchQuery: null,
+  }));
+
   const action = getTableActionCreator(getState, setState);
   const toggleEntitySelect = action(handleToggleEntitySelect);
   const deselectAll = action(handleDeselectAll);
   const setSelectedIds = action(handleSetSelectedIds);
+  const setSearchQuery = action(handleSetSearchQuery);
+  const clearSearchQuery = action(handleClearSearchQuery);
 
   //
 
   const Header = connect(() => H1(headerOpts || { title: 'Entity browser' }));
+
+  const SearchCTAOpts = (): ButtonStackOpt | null => {
+    if (!getSearchMatchPredicate) return null;
+    const { filterBySearchQuery: query } = getState();
+    return {
+      text: query ? `"${query}" (tap to clear)` : 'Search',
+      isFaded: !query,
+      icon: 'search',
+      onTap: async () => {
+        if (query) {
+          await clearSearchQuery();
+        } else {
+          const newQuery = await textInput('Enter search query');
+          if (!newQuery) return;
+          await setSearchQuery(newQuery);
+        }
+        reloadEntities(getState());
+      },
+    };
+  };
 
   const FilterCTAOpts = (): ButtonStackOpt | null => {
     if (!filters) return null;
@@ -192,7 +255,7 @@ export default async <E>({
         const newFilters = await entityFilter({
           getEntities,
           filters,
-          getUniqueEntityId,
+          getEntityId: getEntityId,
           initAppliedFilters: appliedFilters,
         });
         setState({ appliedFilters: newFilters });
@@ -217,6 +280,7 @@ export default async <E>({
   const CTAs = connect(({ state }) => {
     const stackOpts = conditionalArr([
       FilterCTAOpts(),
+      SearchCTAOpts(),
       SelectionCTAOpts(),
       ...(getCustomCTAs
         ? getCustomCTAs({
@@ -231,19 +295,25 @@ export default async <E>({
     return stackOpts.length && ButtonStack(stackOpts);
   });
 
-  const EntityRow = connect(({ state }, id: EntityId) => {
+  const EntityRow = connect(({ state, rerender }, id: EntityId) => {
     const { selectedEntityIds } = state;
-    const { entityMap } = getProps();
+    const props = getProps();
+    const { entityMap } = props;
     const numSelected = selectedEntityIds.size;
     const isSelected = selectedEntityIds.has(id);
     const entity = entityMap.get(id)!;
+    const openEntityOpts: OpenEntityCallbackOpts<E> = {
+      ...props,
+      rerender,
+      entity,
+    };
     return [
       getEntityRow({
         entity,
         isSelected,
         onTap: async () => {
           if (numSelected) return toggleEntitySelect(id);
-          await openEntity(entity);
+          await openEntity(openEntityOpts);
           reloadEntities(state);
         },
         onDoubleTap: async () => {
@@ -254,7 +324,7 @@ export default async <E>({
               id => entityMap.get(id)!
             );
             await selectBulkAction(selectedEntities, bulkActions);
-          } else await openEntity(entity);
+          } else await openEntity(openEntityOpts);
           deselectAll();
           reloadEntities(state);
         },
@@ -277,6 +347,7 @@ export default async <E>({
   const defaultState: State<E> = {
     selectedEntityIds: new Set(),
     appliedFilters: [],
+    filterBySearchQuery: null,
   };
 
   await present({

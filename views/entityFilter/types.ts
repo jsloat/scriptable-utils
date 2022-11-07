@@ -44,7 +44,7 @@ export type Opts<E> = {
   filters: FilterRecord<E>;
   initAppliedFilters?: FilterWithState<E>[];
 } & Pick<RenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'> &
-  Pick<SelectableEntityBrowserOpts<E>, 'getUniqueEntityId' | 'getEntities'>;
+  Pick<SelectableEntityBrowserOpts<E>, 'getEntityId' | 'getEntities'>;
 
 export type State = {
   filterState: Map<FilterKey, AppliedFilterState>;

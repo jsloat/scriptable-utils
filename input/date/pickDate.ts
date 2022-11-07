@@ -10,7 +10,7 @@ type DatePickerOpts = {
   onCancel?: () => any;
 };
 
-export const PickDate = async ({
+export const pickDate = async ({
   description,
   initialDate,
   useMinimumDate = DEFAULT_USE_MINIMUM_DATE,

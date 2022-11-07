@@ -28,7 +28,7 @@ const addFilterMatchData = <E>(
   filterMatchData: FilterMatchData,
   filter: Filter<E>,
   entities: E[],
-  { getUniqueEntityId }: Props<E>
+  { getEntityId: getUniqueEntityId }: Props<E>
 ): FilterMatchData => {
   const matchingEntityIDs = new Set<EntityId>();
   entities.forEach(entity => {

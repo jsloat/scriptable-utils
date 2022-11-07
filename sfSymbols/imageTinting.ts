@@ -23,6 +23,9 @@ const tintAndCacheImage = async (
 
 const getUntintedImage = (key: SFSymbolKey) => {
   const symbol = SFSymbol.named(symbolsMap[key]);
+  if (!symbol) {
+    throw new Error(`Invalid SFSymbol key: ${key}`);
+  }
   /** Make it a bit bigger so it's high-def enough to scale up. */
   symbol.applyFont(Font.systemFont(53));
   symbol.applyThinWeight();
