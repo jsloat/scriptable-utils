@@ -1,7 +1,5 @@
 import { ExcludeFalsy } from '../common';
-import { ONE_MINUTE } from '../date';
 import { Persisted } from '../io/persisted';
-import { isEqual } from '../object';
 import RepeatingTimer from '../RepeatingTimer';
 import {
   AfterFirstRender,
@@ -44,7 +42,11 @@ const getConnected$Poller = <$Data extends AnyObj>(
 
 //
 
-type CallbackKey = 'connected$Poller' | 'payload$' | 'persistedState$Poller';
+type CallbackKey =
+  | 'connected$Poller'
+  | 'payload$'
+  | 'persistedState$Poller'
+  | 'syncedPersistedState';
 type RegisteredCallback = Record<'start' | 'cleanup', NoParamFn>;
 
 /** Entities like streams & timers are registered to ensure that they are
@@ -54,6 +56,7 @@ class CallbackRegister {
     connected$Poller: {},
     payload$: {},
     persistedState$Poller: {},
+    syncedPersistedState: {},
   };
   set(key: CallbackKey, start: NoParamFn, cleanup: NoParamFn) {
     this.register[key].start = start;
@@ -78,8 +81,8 @@ export class Table<State, Props, $Data extends AnyObj | void> {
   // access the combined props.
   private payload$: Payload$<State, Props>;
   private connected$Poller?: RepeatingTimer;
-  private persistedState$Poller?: RepeatingTimer;
   private name: string;
+  private callbackID: string;
   private isActive = false;
   private fullscreen: boolean;
   private callbackRegister = new CallbackRegister();
@@ -126,8 +129,8 @@ export class Table<State, Props, $Data extends AnyObj | void> {
       runPrerenderCallbacks: false,
     };
     this.renderCount = 'NONE';
+    this.callbackID = `Table: ${name}`;
 
-    const callbackId = `Table: ${name}`;
     if (connected$) {
       const connected$Poller = getConnected$Poller(connected$, () => {
         const updated$Data = connected$.$.getData();
@@ -147,36 +150,33 @@ export class Table<State, Props, $Data extends AnyObj | void> {
         }
       );
     }
+
     this.callbackRegister.set(
       'payload$',
       () =>
         this.payload$.registerUpdateCallback({
           callback: () => this.renderTable(),
-          callbackId,
+          callbackId: this.callbackID,
         }),
       () => {
-        this.payload$.unregisterUpdateCallback(callbackId);
+        this.payload$.unregisterUpdateCallback(this.callbackID);
         this.payload$.setData({}, { suppressChangeTrigger: true });
       }
     );
-    if (this.syncedPersistedState) {
-      this.persistedState$Poller = new RepeatingTimer({
-        onFire: async () => {
-          const currentState = this.payload$.getData().state;
-          const latestState = await this.syncedPersistedState!.getData();
-          if (!isEqual(currentState, latestState)) {
-            this.payload$.updateAttr('state', latestState);
-          }
-        },
-        interval: ONE_MINUTE,
-        timeout: null,
-      });
-      this.callbackRegister.set(
-        'persistedState$Poller',
-        () => this.persistedState$Poller!.start(),
-        () => this.persistedState$Poller!.stop()
-      );
-    }
+
+    this.callbackRegister.set(
+      'syncedPersistedState',
+      () =>
+        this.syncedPersistedState?.cache$.registerUpdateCallback({
+          callbackId: this.callbackID,
+          callback: updatedData =>
+            this.payload$.updateAttr('state', updatedData.data),
+        }),
+      () =>
+        this.syncedPersistedState?.cache$.unregisterUpdateCallback(
+          this.callbackID
+        )
+    );
   }
 
   isTableActive() {

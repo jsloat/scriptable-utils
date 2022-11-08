@@ -15,7 +15,7 @@ export namespace ScreenHeightMeasurements {
   };
 }
 
-export type Registry = {
+type Registry = {
   getCalendarTitles: NoParamFn<Record<'PERSONAL' | 'WORK', string>>;
   getScreenHeightMeasurements: NoParamFn<ScreenHeightMeasurements.Record>;
 };

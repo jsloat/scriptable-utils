@@ -303,7 +303,7 @@ export const getEventsOnDate = async (date: Date) => {
   return CalendarEvent.between(start, end, allCals);
 };
 
-export type EventWithStatus = {
+type EventWithStatus = {
   event: CalendarEvent;
   isCompleted: boolean;
   isOngoing: boolean;

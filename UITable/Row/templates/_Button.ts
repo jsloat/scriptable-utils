@@ -24,7 +24,7 @@ type Flavor = Pick<RowOpts, 'bgColor' | 'fadeWith'> &
 const flav: Identity<Flavor> = f => f;
 const {
   gray8,
-  grayMinus1,
+  gray0,
   green,
   green_l4,
   yellow_d2,
@@ -34,6 +34,7 @@ const {
   deep_blue,
   gray2,
   gray4,
+  primaryTextColor,
 } = getColors();
 
 const h1FlavorOpts = { fontConstructor: H1Consts.fontConstructor };
@@ -42,9 +43,12 @@ const serene = flav({ bgColor: deep_blue, color: gray2, fadeWith: gray4 });
 const transparent = flav({ noBorder: true });
 
 const flavors = {
-  default: flav({ bgColor: getDynamicColor(grayMinus1, gray8) }),
+  default: flav({
+    bgColor: getDynamicColor(gray0, gray8),
+    color: primaryTextColor,
+  }),
   defaultNoBorder: flav({
-    bgColor: getDynamicColor(grayMinus1, gray8),
+    bgColor: getDynamicColor(gray0, gray8),
     noBorder: true,
   }),
   happy: flav({ bgColor: green_l4, color: green, fadeWith: 'lighten' }),

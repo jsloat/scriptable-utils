@@ -55,25 +55,6 @@ export const subscribe = <
   return { unsubscribe: () => source$.unregisterUpdateCallback(callbackId) };
 };
 
-/** Use this function to get subscribe & unsubscribe functions for easy cleanup. */
-export const getSubscribers = <
-  DependentState extends AnyObj,
-  SourceState extends AnyObj
->(
-  subscriptionName: string,
-  dependent$: Stream<DependentState>,
-  source$: Stream<SourceState>,
-  stateReducer: (
-    latestDependentState: DependentState,
-    latestSourceState: SourceState
-  ) => DependentState | null = state => state
-) => ({
-  subscribe: () => {
-    subscribe(subscriptionName, dependent$, source$, stateReducer);
-  },
-  unsubscribe: () => source$.unregisterUpdateCallback(subscriptionName),
-});
-
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
   opts: {
     streamDict: StreamDict;
