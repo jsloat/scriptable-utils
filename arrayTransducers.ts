@@ -88,6 +88,7 @@ export const map =
   (result, input, i) =>
     joinData(result, mapFn(input, i), i);
 
+// ts-unused-exports:disable-next-line
 export const flatten =
   <UnflattenedAtom>(): Transducer<
     (UnflattenedAtom | UnflattenedAtom[])[],
@@ -118,12 +119,6 @@ export const tap =
     callback(input, i);
     return joinData(result, input, i);
   };
-
-export const identity =
-  <T>(): Transducer<T> =>
-  () =>
-  result =>
-    result;
 
 /** Returns only the first `take` elements of the transformed array. This is
  * suboptimal, since it should break early if the limit is reached. */
@@ -190,6 +185,7 @@ export const toUniqueArray = <Init, Final, CompareVal extends PrimitiveType>(
 ) => sourceData.reduce(xform(joinUnique(getCompareVal)), []);
 
 /** Returns sum of transformed array */
+// ts-unused-exports:disable-next-line
 export const toSum = <T>(sourceData: T[], xform: Transducer<T, number>) =>
   sourceData.reduce(xform(joinSum()), 0);
 
@@ -252,6 +248,7 @@ export const toPromiseAll = <Init, Final extends Promise<any>>(
   xform: Transducer<Init, Final>
 ) => Promise.all(sourceData.reduce(xform(joinConcat()), []));
 
+// ts-unused-exports:disable-next-line
 export const toFlat = <Init, Final extends any[]>(
   sourceData: Init[],
   xform: Transducer<Init, Final>

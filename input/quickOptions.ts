@@ -29,7 +29,8 @@ const quickOptions: QuickOptions = async (
     title = 'Select option',
     onOptionSelect,
     onCancel,
-    ...alertOpts
+    presentAsSheet = true,
+    ...otherAlertOpts
   }: SharedOpts<any> = {}
 ): Promise<any> => {
   const validListOptions = listOptions.filter(ExcludeFalsy);
@@ -40,7 +41,8 @@ const quickOptions: QuickOptions = async (
   if (!optionButtonEntries.length) return null;
   const { tappedButtonText } = await alert({
     title,
-    ...alertOpts,
+    presentAsSheet,
+    ...otherAlertOpts,
     buttons: {
       ...objectFromEntries(optionButtonEntries),
       [CANCEL_BUTTON_TEXT]: { isCancel: true },
@@ -66,3 +68,28 @@ const quickOptions: QuickOptions = async (
 };
 
 export default quickOptions;
+
+//
+//
+//
+
+type QuickActionsOpts = Omit_<SharedOpts<any>, 'onOptionSelect'>;
+type QuickActionsListOption<Returns> = {
+  label: string;
+  onTap: NoParamFn<Returns>;
+};
+
+/** An interface for `quickOptions` that only accepts functions as listOption
+ * values. The return value is whatever the actions return. */
+export const quickActions = async <Returns>(
+  listOptions: (QuickActionsListOption<Returns> | Falsy)[],
+  opts: QuickActionsOpts = {}
+) => {
+  const choice = await quickOptions(
+    listOptions
+      .filter(ExcludeFalsy)
+      .map(({ label, onTap }) => ({ label, value: onTap })),
+    opts
+  );
+  return choice ? choice() : null;
+};

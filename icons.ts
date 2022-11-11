@@ -2,6 +2,7 @@ export const ICONS = {
   ARROW_DOWN: '↓',
   ARROW_RIGHT: '→',
   BLOCK: '█',
+  CHECKMARK_GREEN: '✅',
   CHEVRON_LEFT: '‹',
   CHEVRON_RIGHT: '›',
   ELLIPSIS: '…',

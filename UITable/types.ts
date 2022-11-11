@@ -13,23 +13,6 @@ export type CombineProps<Props, $Data> = Props extends void
   ? Props
   : Props & $Data;
 
-type CombineStateAndProps<
-  State,
-  Props,
-  $Data,
-  _CProps = CombineProps<Props, $Data>
-> = State extends void
-  ? _CProps extends void
-    ? void
-    : _CProps
-  : _CProps extends void
-  ? State
-  : State & _CProps;
-
-type IfVoid<MaybeVoid, VoidVal, NotVoidVal = MaybeVoid> = MaybeVoid extends void
-  ? VoidVal
-  : NotVoidVal;
-
 //
 //
 //
@@ -63,19 +46,12 @@ export type GetTableOpts<State, Props, $Data extends AnyObj | void> = Pick<
   TableOpts<State, Props, $Data>,
   // Always present
   'name' | 'showSeparators' | 'fullscreen' | 'beforeEveryRender'
-> &
-  WithoutNever<{
-    syncedPersistedState?: IfVoid<
-      State,
-      never,
-      Required<TableOpts<State, Props, $Data>>['syncedPersistedState']
-    >;
-    connected$: IfVoid<
-      $Data,
-      never,
-      Required<TableOpts<State, Props, $Data>>['connected$']
-    >;
-  }>;
+> & {
+  syncedPersistedState?: Required<
+    TableOpts<State, Props, $Data>
+  >['syncedPersistedState'];
+  connected$?: Required<TableOpts<State, Props, $Data>>['connected$'];
+};
 
 //
 //
@@ -120,13 +96,13 @@ export type GetRows = NoParamFn<ValidTableEl[]>;
 
 //
 
-export type ConnectPayload<State, Props, $Data> = WithoutNever<{
-  state: IfVoid<State, never>;
-  getProps: IfVoid<CombineProps<Props, $Data>, never, GetProps<Props, $Data>>;
-  setState: IfVoid<State, never, SetState<State>>;
-  updateState: IfVoid<State, never, UpdateState<State>>;
+export type ConnectPayload<State, Props, $Data> = {
+  state: State;
+  getProps: GetProps<Props, $Data>;
+  setState: SetState<State>;
+  updateState: UpdateState<State>;
   rerender: Rerender;
-}>;
+};
 
 export type Connect<State, Props, $Data> = <A extends any[]>(
   getTableEl: (
@@ -136,56 +112,28 @@ export type Connect<State, Props, $Data> = <A extends any[]>(
 ) => (...ownArgs: A) => ValidTableEl;
 
 export type SetRenderOpts<State, Props, $Data> = {
+  render: GetRows;
   defaultState?: State;
   loadProps?: LoadProps<Props>;
-  render: GetRows;
   onDismiss?: OnDismiss;
   beforeLoad?: BeforeLoad;
   afterPropsLoad?: AfterPropsLoad;
   afterFirstRender?: AfterFirstRender;
   onSecondRender?: OnSecondRender;
   onConnected$Update?: OnConnected$Update<$Data>;
+  /** If true, the table will automatically refresh as its preload-icon list
+   * gets loaded. */
+  shouldPreloadIcons?: boolean;
 };
 
-export type RenderOpts<State, Props, $Data> = WithoutNever<{
-  defaultState?: IfVoid<
-    State,
-    never,
-    Required<SetRenderOpts<State, Props, $Data>>['defaultState']
-  >;
-  loadProps: IfVoid<
-    Props,
-    never,
-    Required<SetRenderOpts<State, Props, $Data>>['loadProps']
-  >;
-  afterPropsLoad?: IfVoid<
-    Props,
-    never,
-    Required<SetRenderOpts<State, Props, $Data>>['afterPropsLoad']
-  >;
-  onConnected$Update?: IfVoid<
-    $Data,
-    never,
-    Required<SetRenderOpts<State, Props, $Data>>['onConnected$Update']
-  >;
-}> &
-  Omit_<
-    SetRenderOpts<State, Props, $Data>,
-    'defaultState' | 'loadProps' | 'afterPropsLoad' | 'onConnected$Update'
-  >;
-
-export type TableAPI<State, Props, $Data> = WithoutNever<{
-  present: MapFn<RenderOpts<State, Props, $Data>, Promise<State>>;
+export type TableAPI<State, Props, $Data> = {
+  present: MapFn<SetRenderOpts<State, Props, $Data>, Promise<State>>;
   rerender: Rerender;
   connect: Connect<State, Props, $Data>;
-  payload$: IfVoid<
-    CombineStateAndProps<State, Props, $Data>,
-    never,
-    Payload$<State, Props>
-  >;
-  setState: IfVoid<State, never, SetState<State>>;
-  updateState: IfVoid<State, never, UpdateState<State>>;
-  getState: IfVoid<State, never, GetState<State>>;
-  getProps: IfVoid<CombineProps<Props, $Data>, never, GetProps<Props, $Data>>;
+  payload$: Payload$<State, Props>;
+  setState: SetState<State>;
+  updateState: UpdateState<State>;
+  getState: GetState<State>;
+  getProps: GetProps<Props, $Data>;
   isTableActive: IsTableActive;
-}>;
+};

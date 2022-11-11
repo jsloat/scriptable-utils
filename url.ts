@@ -80,8 +80,5 @@ export const getForumSearchUrl = (query: string) => {
   return `${getGoogleSearchUrl(query)}${siteSearchText}`;
 };
 
-export const searchForums = (query: string) =>
-  Safari.open(getForumSearchUrl(query));
-
 export const isGmailLink = (link: string) =>
   link.toLowerCase().includes('mail.google.com');

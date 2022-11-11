@@ -1,6 +1,5 @@
 import { filter, toReduce } from './arrayTransducers';
-import { getType, isObject, objectFromEntries, safeArrLookup } from './common';
-import sortObjects from './sortObjects';
+import { getType, objectFromEntries } from './common';
 
 /**
  * NB: doesn't take into account order of elements in an array
@@ -52,13 +51,6 @@ export const pick = <T extends AnyObj, K extends keyof T>(
     objectEntries(object).filter(([key]) => includeKeysArray.includes(key as K))
   ) as unknown as Pick<T, K>;
 
-const replacer = (key: any, value: any) => {
-  const stringified = JSON.stringify(value);
-  if (!stringified && value.toString) return value.toString();
-  return stringified;
-};
-export const stringify = (input: any) => JSON.stringify(input, replacer);
-
 export const uniqueArray = <T>(...arrays: T[][]) => [...new Set(arrays.flat())];
 
 export const uniqueBy = <T, CompareVal extends PrimitiveType>(
@@ -90,57 +82,6 @@ export const range = (start: number, end: number) =>
 export const filterJoin = (arr: any[], joinChar = '') =>
   arr.filter(Boolean).join(joinChar);
 
-// ts-unused-exports:disable-next-line
-export const arrPadStart = <T, U>(
-  arr: T[],
-  targetLength: number,
-  padValue: U | null = null
-): (T | U)[] =>
-  arr.length >= targetLength
-    ? arr
-    : [...new Array(targetLength - arr.length).fill(padValue), ...arr];
-
-export const arrPadEnd = <T, U>(
-  arr: T[],
-  targetLength: number,
-  padValue: U | null = null
-): (T | U)[] =>
-  arr.length >= targetLength
-    ? arr
-    : [...arr, ...new Array(targetLength - arr.length).fill(padValue)];
-
-/** Breaks up arr into arrays of size maxLength, maintaining order */
-export const chunkArray = <T>(arr: T[], maxLength: number) =>
-  arr.reduce((acc, val) => {
-    if (!acc.length) return [[val]];
-    const mostRecentChunk = safeArrLookup(acc, acc.length - 1, 'chunkArray');
-    const previousChunks = acc.slice(0, acc.length - 1);
-    const isMostRecentFull = mostRecentChunk.length === maxLength;
-    return isMostRecentFull
-      ? [...acc, [val]]
-      : [...previousChunks, mostRecentChunk.concat(val)];
-  }, [] as T[][]);
-
-/** Given array of string or number, return obj with unique items as keys and counts as values */
-// ts-unused-exports:disable-next-line
-export const countArray = <T extends string | number>(
-  arr: T[],
-  sort?: SortOrder
-) => {
-  const unsorted = arr.reduce(
-    (acc, val) => ({
-      ...acc,
-      [val]: acc[val] ? acc[val] + 1 : 1,
-    }),
-    {} as Record<T, number>
-  );
-  if (!sort) return unsorted;
-  return objectFromEntries(
-    sortObjects(objectEntries(unsorted), ([_, count]) => count, sort)
-  );
-};
-
-// ts-unused-exports:disable-next-line
 export const objectEntries = <T extends AnyObj>(
   obj: T
 ): { [K in keyof T]: [K, T[K]] }[keyof T][] => Object.entries(obj) as any;
@@ -148,120 +89,11 @@ export const objectEntries = <T extends AnyObj>(
 export const objectKeys = <T extends Record<string, any>>(obj: T) =>
   Object.keys(obj) as (keyof T)[];
 
-export const objectValues = <T extends Record<string, unknown>>(obj: T) =>
-  Object.values(obj) as T[keyof T][];
-
-// ts-unused-exports:disable-next-line
-export type UnresolvedPromiseObject<R> = { [K in keyof R]: Promise<R[K]> };
-/** Applied Promise.all to the promise values of an object, returning the same
- * object with resolved promises */
-export const objectPromiseAll = async <ResolvedObject extends AnyObj>(
-  objWithPromises: UnresolvedPromiseObject<ResolvedObject>
-) =>
-  (
-    await Promise.all(
-      objectEntries(objWithPromises).map(async ([key, promise]) => ({
-        key,
-        data: await promise,
-      }))
-    )
-  ).reduce(
-    (acc, { key, data }) => ({ ...acc, [key]: data }),
-    {} as ResolvedObject
-  );
-
-//
-
-type TypeofObj<K, O extends AnyObj> = K extends keyof O ? O[K] : never;
-type TypeofObjNotUndefined<K, O extends AnyObj> = K extends keyof O
-  ? NotUndefined<O[K]>
-  : never;
-type ObjSpreadWithoutUndefined = {
-  /** Must provide at least 2 object parameters! */
-  (o1: AnyObj): unknown;
-  <A extends AnyObj, B extends AnyObj>(o1: A, o2: B): {
-    [key in keyof (A & B)]: TypeofObj<key, A> | TypeofObjNotUndefined<key, B>;
-  };
-  <A extends AnyObj, B extends AnyObj, C extends AnyObj>(o1: A, o2: B, o3: C): {
-    [key in keyof (A & B & C)]:
-      | TypeofObj<key, A>
-      | TypeofObjNotUndefined<key, B>
-      | TypeofObjNotUndefined<key, C>;
-  };
-  /** Add support for 3+ objects typing! */
-  (...objs: AnyObj[]): unknown;
-};
-/**
- * This addresses the following issue:
- * { ...{ a: 1 }, ...{ a: undefined } } returns { a: undefined }
- * Intuitively, I expect it to return { a: 1 }
- */
-export const objSpreadWithoutUndefined: ObjSpreadWithoutUndefined = (
-  ...objs: AnyObj[]
-) =>
-  objs.slice(1).reduce<any>((acc, obj) => {
-    Object.entries(obj).forEach(
-      ([key, val]) => val !== undefined && (acc[key] = val)
-    );
-    return acc;
-  }, objs[0]);
-
-//
-
-/** Map values of an obj, maintaining its keys */
-// ts-unused-exports:disable-next-line
-export const objValMap = <
-  Original extends AnyObj,
-  Target extends Record<keyof Original, any>
->(
-  object: Original,
-  updateValue: <K extends keyof Original>(
-    key: K,
-    originalValue: Original[K]
-  ) => Target[K]
-) =>
-  objectFromEntries(
-    objectEntries(object).map(([key, originalValue]) => [
-      key,
-      updateValue(key, originalValue),
-    ])
-  ) as Target;
-
-/** Filter key-value pairs in an obj, similar to Array.filter */
-// ts-unused-exports:disable-next-line
-export const objFilter = <K extends string | number, V>(
-  obj: Record<K, V>,
-  callback: Predicate<[key: K, val: V]>
-) => objectFromEntries(objectEntries(obj).filter(callback));
-
 /** Given input array and mapping function, create an object from the arr. */
 export const arrToObjMap = <T, O extends AnyObj>(
   arr: T[],
   arrayItemToAttr: (item: T) => [key: keyof O, value: O[keyof O]]
 ) => objectFromEntries(arr.map(arrayItemToAttr));
-
-/**
- * Rudimentary setIn function that allows setting a value at any level within an
- * object. If a level in the path doesn't yet exist,it is created. NB: there is
- * no type safety here, use with caution.
- */
-export const setIn = <T extends AnyObj>(
-  obj: T,
-  path: [keyof T, ...ObjKey[]],
-  value: any
-): T => {
-  const [currPath, ...restPath] = path;
-  if (restPath.length) {
-    obj[currPath] = setIn(
-      (isObject(obj[currPath]) ? obj[currPath] : {}) as T[keyof T],
-      restPath as [T[keyof T], ...ObjKey[]],
-      value
-    );
-  } else {
-    obj[currPath] = value;
-  }
-  return obj;
-};
 
 export const hasKey = <O extends AnyObj>(obj: O, key: any): key is keyof O =>
   key in obj;

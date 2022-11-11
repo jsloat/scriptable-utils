@@ -24,7 +24,6 @@ export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
  *
  * Returns an object that allows you to unsubscribe.
  */
-// ts-unused-exports:disable-next-line
 export const subscribe = <
   DependentState extends AnyObj,
   SourceState extends AnyObj

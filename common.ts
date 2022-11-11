@@ -17,7 +17,7 @@ export const isString = (val: any): val is string =>
 export const isNullish = (val: any): val is null | undefined =>
   val === undefined || val === null;
 
-export const isRegExp = (val: any): val is RegExp =>
+const isRegExp = (val: any): val is RegExp =>
   val instanceof RegExp ||
   Object.prototype.toString.call(val) === '[object RegExp]';
 
@@ -33,8 +33,6 @@ export const isFunc = (val: any): val is (...args: any[]) => any =>
 
 export const isBoolean = (val: any): val is boolean => typeof val === 'boolean';
 
-export const isSymbol = (val: any): val is symbol => typeof val === 'symbol';
-
 //
 //
 //
@@ -43,21 +41,7 @@ const ty = (val: any) => typeof val;
 type NativeTypes = ReturnType<typeof ty>;
 /** Custom types returned in getType */
 type GranularTypes = 'array' | 'date' | 'regexp' | 'map' | 'set' | 'null';
-export type GetTypeTypes = NativeTypes | GranularTypes;
-// Types to be used in conjunction with getType
-type CompositeTypeLabel =
-  | Extract<GetTypeTypes, 'object' | 'function'>
-  | Extract<GranularTypes, 'array' | 'date' | 'regexp' | 'map' | 'set'>;
-type PrimitiveTypeLabel = Exclude<GetTypeTypes, CompositeTypeLabel>;
-const primitiveTypes: PrimitiveTypeLabel[] = [
-  'bigint',
-  'boolean',
-  'null',
-  'number',
-  'string',
-  'symbol',
-  'undefined',
-];
+type GetTypeTypes = NativeTypes | GranularTypes;
 
 /** Extended, more granular version of typeof */
 export const getType = (el: any): GetTypeTypes => {
@@ -70,10 +54,6 @@ export const getType = (el: any): GetTypeTypes => {
   if (el instanceof Set) return 'set';
   return typeof el;
 };
-export const isPrimitiveType = (val: any): val is PrimitiveType =>
-  primitiveTypes.includes(getType(val) as PrimitiveTypeLabel);
-// const isCompositeType = (val: any): val is CompositeType =>
-//   compositeTypes.includes(getType(val) as CompositeTypeLabel);
 
 export const isObject = (val: any): val is AnyObj => getType(val) === 'object';
 
@@ -188,7 +168,6 @@ export const safeObjLookup = <
   return val as NotUndefined<O[K]>;
 };
 
-// ts-unused-exports:disable-next-line
 export const objectFromEntries = <K extends string | number | symbol, V>(
   entries: [key: K, val: V][]
 ) => Object.fromEntries(entries) as Record<K, V>;

@@ -1,13 +1,13 @@
 import { isNotUndefined } from './common';
 import { objectKeys } from './object';
 
-export type NotificationAction = {
+type NotificationAction = {
   title: string;
   url: string;
   destructive?: boolean;
 };
 
-export type GetNotificationOpts = Exclude<
+type GetNotificationOpts = Exclude<
   {
     [key in SettableKeys<Notification>]?: Notification[key];
   },
@@ -15,7 +15,7 @@ export type GetNotificationOpts = Exclude<
 > &
   Pick<Notification, 'title'>;
 
-export const createNotification = (
+const createNotification = (
   opts: GetNotificationOpts,
   actions: NotificationAction[] = []
 ) => {

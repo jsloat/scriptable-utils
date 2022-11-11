@@ -1,6 +1,7 @@
 import { ExcludeFalsy } from '../common';
 import { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
+import { getIconPreloadHelpers } from '../sfSymbols';
 import {
   AfterFirstRender,
   AfterPropsLoad,
@@ -46,7 +47,8 @@ type CallbackKey =
   | 'connected$Poller'
   | 'payload$'
   | 'persistedState$Poller'
-  | 'syncedPersistedState';
+  | 'syncedPersistedState'
+  | 'iconPreloading';
 type RegisteredCallback = Record<'start' | 'cleanup', NoParamFn>;
 
 /** Entities like streams & timers are registered to ensure that they are
@@ -57,6 +59,7 @@ class CallbackRegister {
     payload$: {},
     persistedState$Poller: {},
     syncedPersistedState: {},
+    iconPreloading: {},
   };
   set(key: CallbackKey, start: NoParamFn, cleanup: NoParamFn) {
     this.register[key].start = start;
@@ -177,6 +180,11 @@ export class Table<State, Props, $Data extends AnyObj | void> {
           this.callbackID
         )
     );
+
+    const { preloadIcons, haltIconPreload } = getIconPreloadHelpers(
+      () => this.isActive && this.renderTable()
+    );
+    this.callbackRegister.set('iconPreloading', preloadIcons, haltIconPreload);
   }
 
   isTableActive() {
@@ -201,6 +209,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     afterFirstRender,
     onSecondRender,
     onConnected$Update,
+    shouldPreloadIcons,
   }: SetRenderOpts<State, Props, $Data>) {
     this.has.state = this.has.state || Boolean(defaultState);
     this.has.props = Boolean(loadProps || this.connected$);
@@ -216,6 +225,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
     this.isActive = false;
     this.has.runPrerenderCallbacks = false;
     this.renderCount = 'NONE';
+    if (shouldPreloadIcons) this.callbackRegister.start('iconPreloading');
   }
 
   /** Set init props immediately before render */

@@ -1,3 +1,4 @@
+import { without } from '../array';
 import { composeIdentities } from '../flow';
 import persisted from '../io/persisted';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
@@ -45,7 +46,7 @@ const getAddKeyReducer = (key: TintRequestKey): Reducer => {
 const removeExistingKeys = (keys: TintRequestKey[], data: Data) => {
   const { script, mode } = getDataPath();
   const currVals = data[script]?.[mode] ?? [];
-  return keys.filter(k => !currVals.includes(k));
+  return without(keys, ...currVals);
 };
 
 const addRequestKeyQueue = new ThrottledBatchQueue<TintRequestKey>({

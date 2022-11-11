@@ -1,84 +1,12 @@
-import { filterJoin } from './object';
 import { isString } from './common';
 import { ICONS } from './icons';
 
 export const capitalize = (str: string) =>
   str.slice(0, 1).toUpperCase() + str.slice(1).toLowerCase();
 
-const isCapitalized = (str: string) => str.toLowerCase() !== str;
-
-export const isFirstLetterCapitalized = (str: string) =>
-  isCapitalized(str.slice(0, 1));
-
 export const truncate = (str: string, maxLength: number) => {
   const isTruncated = str.length > maxLength;
   return isTruncated ? str.slice(0, maxLength) + ICONS.ELLIPSIS : str;
-};
-
-// ts-unused-exports:disable-next-line
-export const letterToEmoji = (letter: string): string => {
-  const emojiMap: Record<string, string> = {
-    a: '🅐',
-    b: '🅑',
-    c: '🅒',
-    d: '🅓',
-    e: '🅔',
-    f: '🅕',
-    g: '🅖',
-    h: '🅗',
-    i: '🅘',
-    j: '🅙',
-    k: '🅚',
-    l: '🅛',
-    m: '🅜',
-    n: '🅝',
-    o: '🅞',
-    p: '🅟',
-    q: '🅠',
-    r: '🅡',
-    s: '🅢',
-    t: '🅣',
-    u: '🅤',
-    v: '🅥',
-    w: '🅦',
-    x: '🅧',
-    y: '🅨',
-    z: '🅩',
-  };
-  const emoji = emojiMap[letter.toLowerCase()];
-  return emoji || '?';
-};
-
-export const numberToEmoji = (
-  num: number,
-  emojiKey: 'circle' | 'square' = 'circle'
-) => {
-  const emojiMaps = {
-    square: ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'],
-    circle: ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'],
-  };
-  const emojiMap = emojiMaps[emojiKey];
-  const isNegative = num < 0;
-  const parsedNum = Math.abs(Math.round(num));
-
-  const ones = parsedNum % 10;
-  const tens = ((parsedNum - ones) / 10) % 10;
-  const hundreds = ((parsedNum - 10 * tens - ones) / 100) % 10;
-  return filterJoin([
-    isNegative ? '-' : null,
-    hundreds ? emojiMap[hundreds] : null,
-    tens || hundreds ? emojiMap[tens] : null,
-    emojiMap[ones],
-  ]);
-};
-
-/**
- * For use mainly with Bear parsing -- indent level is calculated as number of
- * tabs at start of line.
- */
-export const getIndentLevel = (line: string) => {
-  const match = line.match(/^(\t*)/);
-  return match ? match[1]?.length ?? 0 : 0;
 };
 
 type TrimLinesOpts = { onlyTop?: boolean; onlyBottom?: boolean };
@@ -119,9 +47,6 @@ export const camelCase = (sentence: string) =>
       ''
     );
 
-// ts-unused-exports:disable-next-line
-export const lispCase = (str: string) => str.toLowerCase().replace(/ /g, '-');
-
 /** Very simplistic algorithm */
 export const pluralize = (singularWord: string, count: number) =>
   `${singularWord}${count === 1 ? '' : 's'}`;
@@ -148,10 +73,6 @@ export const splitByRegex = (str: string, regex: RegExp) => {
 export const tidyLog = (message: any) =>
   // eslint-disable-next-line no-console
   console.log(JSON.stringify(message, null, 2));
-
-// https://stackoverflow.com/questions/15458876/check-if-a-string-is-html-or-not/15458987
-// ts-unused-exports:disable-next-line
-export const isProbablyHtml = (str: string) => /<\/?[a-z][\s\S]*>/i.test(str);
 
 export const extractLinks = (text: string) => {
   const matches = text.match(/[a-z-]+:\/\/\S*/gim);

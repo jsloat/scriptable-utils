@@ -134,8 +134,3 @@ export const setNewTabIndex = (
     ),
   });
 };
-
-/** Useful if using a default init tab that should reset with every table
- * render, for example. */
-export const clearCycleTabsState = (stateKey: string) =>
-  stateRegister.delete(stateKey);

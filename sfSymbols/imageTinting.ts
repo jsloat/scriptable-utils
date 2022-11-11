@@ -32,17 +32,20 @@ const getUntintedImage = (key: SFSymbolKey) => {
   return symbol.image;
 };
 
-const preloadIconQueue = new ThrottledBatchQueue<TintRequestKey>({
-  maxEntitiesPerOperation: 20,
-  batchOperation: keys =>
-    toArray(
-      keys,
-      compose(
-        map(parseTintRequestKey),
-        tap(({ iconKey, color }) => getSfSymbolImg(iconKey, color))
-      )
-    ),
-});
+const getPreloadIconQueue = (onBatchOperationDone?: NoParamFn) =>
+  new ThrottledBatchQueue<TintRequestKey>({
+    maxEntitiesPerOperation: 20,
+    batchOperation: keys => {
+      toArray(
+        keys,
+        compose(
+          map(parseTintRequestKey),
+          tap(({ iconKey, color }) => getSfSymbolImg(iconKey, color))
+        )
+      );
+      onBatchOperationDone?.();
+    },
+  });
 
 //
 
@@ -62,7 +65,13 @@ export const getSfSymbolImg = (
   return untintedImg;
 };
 
-export const preloadIcons = async () =>
-  preloadIconQueue.push(...(await getCurrScriptPreloadIconKeys()));
-
-export const haltIconPreload = () => preloadIconQueue.pause();
+/** Because this creates a new queue every time it's called, it should be user
+ * sparingly */
+export const getIconPreloadHelpers = (onBatchOperationDone?: NoParamFn) => {
+  const queue = getPreloadIconQueue(onBatchOperationDone);
+  return {
+    preloadIcons: async () =>
+      queue.push(...(await getCurrScriptPreloadIconKeys())),
+    haltIconPreload: () => queue.pause(),
+  };
+};

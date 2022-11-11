@@ -1,7 +1,7 @@
 import { conditionalArr } from '../../../array';
 import { getColor } from '../../../colors';
 import { SFSymbolKey } from '../../../sfSymbols';
-import { numberToEmoji } from '../../../string';
+import { RowOpts } from '../types';
 import { H1Consts } from './consts';
 import { composeRowConstructor } from './utils';
 import { getFootnoteReducer } from './_Footnote';
@@ -10,13 +10,12 @@ import _ThreeCol, { getThreeColReducer } from './_ThreeCol';
 export type H1Opts = {
   title: string;
   subtitle?: string;
-  onTap?: () => any;
   titleColor?: Color;
   subtitleColor?: Color;
   /** Shown in place of action indicator icon */
   badgeNumber?: number;
   icon?: SFSymbolKey;
-};
+} & Pick<RowOpts, 'onTap' | 'isFaded'>;
 
 //
 
@@ -27,6 +26,7 @@ const TopRow = ({
   onTap,
   badgeNumber,
   subtitle,
+  isFaded,
 }: H1Opts) => {
   const { textSize, fontConstructor, paddingTop, paddingBottom } = H1Consts;
   return _ThreeCol({
@@ -39,11 +39,12 @@ const TopRow = ({
     },
     ...(badgeNumber && {
       gutterRight: {
-        text: numberToEmoji(badgeNumber!),
+        text: badgeNumber,
         color: getColor('danger'),
       },
     }),
     onTap,
+    isFaded,
     padding: { paddingTop, paddingBottom: subtitle ? 0 : paddingBottom },
     rowHeight: 'lg',
   });
@@ -55,6 +56,7 @@ const BottomRow = ({
   subtitleColor,
   badgeNumber,
   onTap,
+  isFaded,
 }: H1Opts) => {
   if (!subtitle) return null;
   const { paddingBottom } = H1Consts;
@@ -69,7 +71,11 @@ const BottomRow = ({
     }),
     getFootnoteReducer()
   );
-  return rowConstructor({ onTap, padding: { paddingTop: 0, paddingBottom } });
+  return rowConstructor({
+    onTap,
+    padding: { paddingTop: 0, paddingBottom },
+    isFaded,
+  });
 };
 
 //

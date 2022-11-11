@@ -38,38 +38,40 @@ export const cleanupTemporaryFiles = () => {
 
 //
 
+export type RobustCleanupStatus = 'READY' | 'CLEANING' | 'FAIL' | 'SUCCESS';
+
 type RobustCleanup$Data = {
   numRemainingTmpFiles: number;
   numRemoved: number;
   numFailures: number;
   numDownloaded: number;
-  isRunning: boolean;
+  status: RobustCleanupStatus;
 };
 
 /** Used for views to plug into status of running function. */
 export const robustCleanup$ = new Stream<RobustCleanup$Data>({
   name: 'robustCleanup$',
   defaultState: {
-    isRunning: false,
+    status: 'READY',
     numFailures: 0,
     numRemainingTmpFiles: 0,
     numDownloaded: 0,
     numRemoved: 0,
   },
 });
-const set$ = (data: Partial<RobustCleanup$Data>) =>
-  robustCleanup$.setData({ ...robustCleanup$.getData(), ...data });
-const inc$ = (key: Exclude<keyof RobustCleanup$Data, 'isRunning'>, inc = 1) =>
-  set$({ [key]: robustCleanup$.getData()[key] + inc });
+
+const update$Attrs = (
+  updater: MapFn<RobustCleanup$Data, Partial<RobustCleanup$Data>>
+) => robustCleanup$.updateData(data => ({ ...data, ...updater(data) }));
 
 const robustCleanupRecur = async (i = 0) => {
   if (i > 30) {
-    set$({ isRunning: false });
+    update$Attrs(() => ({ status: 'FAIL' }));
     return;
   }
   const filePathsToDelete = getTmpFilePaths();
   if (!filePathsToDelete.length) {
-    set$({ isRunning: false, numRemainingTmpFiles: 0 });
+    update$Attrs(() => ({ status: 'SUCCESS', numRemainingTmpFiles: 0 }));
     return;
   }
   const firstPath = filePathsToDelete[0]!.filepath;
@@ -77,17 +79,19 @@ const robustCleanupRecur = async (i = 0) => {
     const io = FileManager.iCloud();
     if (!io.isFileDownloaded(firstPath)) {
       await io.downloadFileFromiCloud(firstPath);
-      inc$('numDownloaded');
+      update$Attrs(({ numDownloaded }) => ({
+        numDownloaded: numDownloaded + 1,
+      }));
     }
     io.remove(firstPath);
-    inc$('numRemoved');
-    inc$('numRemainingTmpFiles', -1);
+    update$Attrs(({ numRemoved, numRemainingTmpFiles }) => ({
+      numRemoved: numRemoved + 1,
+      numRemainingTmpFiles: numRemainingTmpFiles - 1,
+    }));
   } catch {
-    inc$('numFailures');
+    update$Attrs(({ numFailures }) => ({ numFailures: numFailures + 1 }));
   } finally {
-    const t = new Timer();
-    t.timeInterval = 300;
-    t.schedule(() => robustCleanupRecur(i + 1));
+    robustCleanupRecur(i + 1);
   }
 };
 
@@ -97,8 +101,8 @@ const robustCleanupRecur = async (i = 0) => {
 export const robustCleanupTemporaryFiles = () => {
   const numRemainingTmpFiles = getTmpFilePaths().length;
   const willRun = Boolean(numRemainingTmpFiles);
-  set$({
-    isRunning: willRun,
+  robustCleanup$.setData({
+    status: willRun ? 'CLEANING' : 'SUCCESS',
     numDownloaded: 0,
     numFailures: 0,
     numRemainingTmpFiles,

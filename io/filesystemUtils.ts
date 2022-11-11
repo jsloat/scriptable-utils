@@ -64,7 +64,7 @@ export const getDirContents = (filePath: string) =>
     .listContents(filePath)
     .map(childName => getFileInfo(`${filePath}/${childName}`));
 
-export const getActiveFileProjectsInfo = () =>
+const getActiveFileProjectsInfo = () =>
   getDirContents(getProjectsRootPath()).filter(
     ({ isDirectory, filenameNoExtension }) =>
       isDirectory && filenameNoExtension !== PROJECT_ARCHIVE_DIR_NAME
@@ -194,22 +194,6 @@ export const getOpenFileUrl = (filePath: string) =>
 // https://www.macstories.net/ios/fs-bookmarks-a-shortcut-to-reopen-files-and-folders-directly-in-the-files-app/
 export const openFileInFiles = (filePath: string) =>
   Safari.open(getOpenFileUrl(filePath));
-
-/** E.g. "com~apple~CloudDocs" becomes "CloudDocs" */
-const cleanICloudDirName = (name: string) => {
-  // Tilde used as special word separator in iCloud
-  const atoms = name.split('~');
-  return name.split('~')[atoms.length - 1];
-};
-
-/** Used for display purposes to trim long paths */
-export const trimPathStart = (path: string, levelsShown = 2) => {
-  const components = path.split('/');
-  return components
-    .slice(Math.max(0, components.length - levelsShown))
-    .map(cleanICloudDirName)
-    .join('/');
-};
 
 type RecursiveSearchOpts = {
   includeDirectories?: boolean;

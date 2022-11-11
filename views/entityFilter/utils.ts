@@ -1,5 +1,5 @@
 import { SFSymbolKey } from '../../sfSymbols';
-import { FlavorOption } from '../../UITable/Row/templates';
+import { FlavorOption } from '../../UITable/Row/flavors';
 import {
   AppliedFilterState,
   Filter,

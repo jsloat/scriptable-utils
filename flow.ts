@@ -1,7 +1,6 @@
 import { safeArrLookup } from './common';
 import { notifyNow } from './notifications';
 
-// ts-unused-exports:disable-next-line
 export const sequentialPromiseAll = async <T>(fns: (() => Promise<T>)[]) => {
   const result: T[] = [];
   for (const fn of fns) {
@@ -21,17 +20,6 @@ export const composeIdentities =
 
 export const combineReducers = composeIdentities;
 
-export const combineAsyncReducers =
-  <T>(...reducers: MapFn<T, MaybePromise<T>>[]): MapFn<T, MaybePromise<T>> =>
-  async initData => {
-    let updatedData = initData;
-    for (const index in reducers) {
-      const reducer = reducers[index];
-      updatedData = reducer ? await reducer(updatedData) : updatedData;
-    }
-    return updatedData;
-  };
-
 /** HOF to invert a predicate function */
 export const invert =
   <Args extends any[]>(predicate: (...args: Args) => boolean) =>
@@ -39,28 +27,6 @@ export const invert =
     !predicate(...args);
 
 export const not = (val: any) => !val;
-
-type ExpiringConstOpts<T> = {
-  label: string;
-  temporaryValue: T;
-  fallbackValue: T;
-  expiryDate: Date;
-};
-/** Get a const value with a lifespan. When const expires, alert with a notification and use fallback value */
-// ts-unused-exports:disable-next-line
-export const getExpiringConstIIFE =
-  <T>({
-    label,
-    temporaryValue,
-    fallbackValue,
-    expiryDate,
-  }: ExpiringConstOpts<T>) =>
-  () => {
-    const isExpired = new Date() > expiryDate;
-    if (!isExpired) return temporaryValue;
-    notifyNow(`Expired const "${label}" should be cleaned up`);
-    return fallbackValue;
-  };
 
 /** Given current value & cycle options, return the next option in the cycle */
 export const cycle = <T>(
@@ -101,40 +67,6 @@ export const curry: Curry = (fn: (...args: any[]) => any) => {
   throw new Error(`Attempting to use curry with unsupported arity ${arity}`);
 };
 
-export const curryKinda =
-  <A, B extends any[], R>(fn: (arg1: A, ...restArgs: B) => R) =>
-  (arg1: A) =>
-  (...restArgs: B) =>
-    fn(arg1, ...restArgs);
-
-// Routing
-
-type RouteAction<T, R> = (input: T) => R;
-type TypeRouteRule<T, R> = [typeguard: Typeguard<T>, action: RouteAction<T, R>];
-
-export const typeRouteRule = <T, R>(
-  typeguard: Typeguard<T>,
-  action: RouteAction<T, R>
-): TypeRouteRule<T, R> => [typeguard, action];
-
-/** Route an input value according to its type, determined by typeguard rules */
-export const typeRoute = <R = void>(
-  input: unknown,
-  rules: TypeRouteRule<any, R>[],
-  fallbackAction?: RouteAction<any, R>
-) => {
-  const firstMatchingRule = rules.find(([typeguard]) => typeguard(input));
-  if (!firstMatchingRule) {
-    if (fallbackAction) return fallbackAction(input);
-    throw new Error(
-      'No matching type route for input, and no fallback provided.'
-    );
-  }
-  return firstMatchingRule[1](input);
-};
-
-//
-
 /** More succinct version of writing out an immediately-executing switch block */
 export const shortSwitch = <Input extends string, Return = Input>(
   input: Input,
@@ -146,32 +78,6 @@ export const shortSwitch = <Input extends string, Return = Input>(
   return matchingReturn as Return;
 };
 
-type RunOnceResponse<R> = R extends Promise<any>
-  ? Promise<
-      | { response: UnwrapPromise<R>; didRun: true }
-      | { response: void; didRun: false }
-    >
-  : { response: R; didRun: true } | { response: undefined; didRun: false };
-type RunOnce = {
-  <R>(fn: (args: void) => R): (args: void) => RunOnceResponse<R>;
-  <A, R>(fn: (singleArg?: A) => R): (singleArg?: A) => RunOnceResponse<R>;
-  <A, R>(fn: (singleArg: A) => R): (singleArg: A) => RunOnceResponse<R>;
-};
-/** Run the passed function only the first time. Returns object containing
- * response & whether or not the function ran. */
-// ts-unused-exports:disable-next-line
-export const runOnce: RunOnce = (fn: (...args: any) => any): any => {
-  let hasRun = false;
-  return async (...args: any) => {
-    if (hasRun) return { response: undefined, didRun: false };
-    hasRun = true;
-    return { response: await fn(...args), didRun: true };
-  };
-};
-
-//
-
-// ts-unused-exports:disable-next-line
 export const wait = (ms: number, callback?: () => any) => {
   const t = new Timer();
   t.timeInterval = ms;
@@ -277,7 +183,6 @@ export const throttle = <Args extends any[], R>(
 
 export const force = <T>(val: any) => val as unknown as T;
 
-// ts-unused-exports:disable-next-line
 export const noop = () => {};
 
 export const asyncReducer = async <SourceArrEl, Final>(
@@ -295,3 +200,9 @@ export const asyncReducer = async <SourceArrEl, Final>(
   );
   return reducedValue;
 };
+
+export const isIn = <T>(
+  element: T,
+  arr: T[],
+  isEqual: ObjComparison<T> = (a, b) => a === b
+) => arr.some(arrEl => isEqual(element, arrEl));

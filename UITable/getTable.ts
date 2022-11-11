@@ -1,16 +1,16 @@
+import { Stream } from '../streams';
+import { Table } from './TableClass';
 import {
   CombineProps,
   Connect,
-  ConnectPayload,
   Connected$Opts,
+  ConnectPayload,
   GetTableOpts,
   Payload$,
   SetState,
   TableAPI,
   UpdateState,
 } from './types';
-import { Table } from './TableClass';
-import { Stream } from '../streams';
 
 /*
 

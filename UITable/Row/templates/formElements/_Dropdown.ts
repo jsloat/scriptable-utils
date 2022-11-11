@@ -1,9 +1,9 @@
 import TextInput from '../../../../input/textInput';
 import { notifyNow } from '../../../../notifications';
 import { RowOpts } from '../../types';
+import { Button } from '../_Button';
 import _H3 from '../_H3';
 import _HR from '../_HR';
-import { Button } from '../_Button';
 import _TwoCol from '../_TwoCol';
 
 type Opts<T extends string = string> = {

@@ -1,6 +1,6 @@
+import Row from '..';
 import { getDynamicColor } from '../../../colors';
 import { SFSymbolKey } from '../../../sfSymbols';
-import Row from '..';
 import { ContentAreaOpts, RowOpts } from '../types';
 import _HR from './_HR';
 import _TwoCol from './_TwoCol';

@@ -1,13 +1,10 @@
-import { compose, map, toCount, toFind } from './arrayTransducers';
+import { map, toFind } from './arrayTransducers';
 import { ExcludeFalsy, isString } from './common';
-import { objectEntries, objectKeys } from './object';
-import sortObjects from './sortObjects';
+import { objectKeys } from './object';
 
-// ts-unused-exports:disable-next-line
 export const isLastArrIndex = (index: number, arr: any[]) =>
   index === arr.length - 1;
 
-// ts-unused-exports:disable-next-line
 export const last = <T>(arr: T[]) => arr[arr.length - 1];
 
 /**
@@ -21,10 +18,7 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
         isLastArrIndex(i, arr) ? item : [item, between]
       );
 
-/** Exactly one el in arr matches predicate. Default predicate is Boolean. */
-// ts-unused-exports:disable-next-line
-export const exactlyOne = <T>(arr: T[], predicate: MapFn<T, any> = Boolean) =>
-  toCount(arr, compose(map(predicate)));
+const hasLength = <T>(arr: T[]): arr is [T, ...T[]] => Boolean(arr.length);
 
 export const isHomogeneous = <T>(
   arr: T[],
@@ -37,7 +31,6 @@ export const isHomogeneous = <T>(
 
 export const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
 
-// ts-unused-exports:disable-next-line
 export const avg = (arr: number[]) => sum(arr) / arr.length;
 
 export const uniqueWith = <T>(arr: T[], areEqual: (a: T, b: T) => boolean) =>
@@ -45,52 +38,6 @@ export const uniqueWith = <T>(arr: T[], areEqual: (a: T, b: T) => boolean) =>
     (currentEl, i) =>
       !arr.slice(i + 1).some(subsequentEl => areEqual(currentEl, subsequentEl))
   );
-
-export const chopEnd = <T>(arr: T[], numToChop = 1) => {
-  if (numToChop > arr.length) return [];
-  return arr.slice(0, arr.length - numToChop);
-};
-
-const wrap = <T extends any[], J>(arr: T, wrapper: J) => [
-  wrapper,
-  ...arr,
-  wrapper,
-];
-
-type JoinSandwich = {
-  <T extends string>(arr: T[], joiner: string, convertToString?: true): string;
-  <T extends string, J extends string>(
-    arr: T[],
-    joiner: J,
-    convertToString?: false
-  ): (T | J)[];
-};
-/** Just like join, but also adds join string to either end of joined string */
-// ts-unused-exports:disable-next-line
-export const joinSandwich: JoinSandwich = (
-  arr: any[],
-  joiner: string,
-  convertToString = true
-): any => {
-  if (convertToString) return wrap([arr.join(joiner)], joiner).join('');
-  else return wrap(insertBetween(arr, joiner), joiner);
-};
-
-type UniqueWithCountOpts = { sort?: boolean; sortOrder?: SortOrder };
-export const uniqueWithCount = <T extends string | number>(
-  arr: T[],
-  { sort = false, sortOrder = 'DESC' }: UniqueWithCountOpts = {}
-) => {
-  const unsorted = objectEntries(
-    arr.reduce(
-      (acc, val) => ({ ...acc, [val]: (acc[val] || 0) + 1 }),
-      {} as Record<T, number>
-    )
-  ).map(([value, count]) => ({ value, count }));
-  return sort
-    ? sortObjects(unsorted, ({ count }) => count, sortOrder)
-    : unsorted;
-};
 
 // Attempt at an efficient intersection algorithm. Inspired by:
 // https://stackoverflow.com/questions/497338/efficient-list-intersection-algorithm
@@ -110,14 +57,11 @@ export const inANotB = <T, U>(
   isEqual: (a: T | U, b: T | U) => boolean = (a, b) => a === b
 ) => a.filter(aEl => !b.some(bEl => isEqual(aEl, bEl)));
 
-/** Returns first non-nullish value */
-export const coalesce = <T>(arr: (T | Falsy)[]) => arr.filter(ExcludeFalsy)[0];
-
 const removeFromArr = <T extends PrimitiveType>(arr: T[], item: T) =>
   arr.filter(i => i !== item);
 
 /** If item is present return arr without it, else return arr with it added. */
-// ts-unused-exports:disable-next-line
+
 export const toggleArrayItem = <T extends PrimitiveType>(
   arr: T[],
   item: T,
@@ -130,9 +74,6 @@ export const toggleArrayItem = <T extends PrimitiveType>(
   if (hasItem) return removeFromArr(arr, item);
   else return arr.concat(item);
 };
-
-export const countArrVal = <T>(arr: T[], countVal: T) =>
-  arr.filter(val => val === countVal).length;
 
 /** Used in cases where you want an array of all possible values in a
  * string-like type. Using this ensures that TS will complain if it is missing
@@ -158,9 +99,6 @@ export const conditionalArr: ConditionalArr = (
 
 export const isLengthOne = <T>(arr: T[]): arr is [T] => arr.length === 1;
 
-export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] =>
-  Boolean(arr.length);
-
 /** Combines mapping and finding into a single operation. If no find callback
  * provided, default to Boolean.  */
 export const mapFind = <T, U>(
@@ -172,11 +110,3 @@ export const mapFind = <T, U>(
 /** Shorthand for filtering primitive values out of an array. */
 export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>
   arr.filter(el => !exclude.includes(el));
-
-export const isNotInArr = <T>(
-  el: T,
-  exclude: T[],
-  isEqual: (a: T, b: T) => boolean = (a, b) => a === b
-) => !exclude.some(x => isEqual(el, x));
-
-export const isOneOf = <T>(val: T, oneOf: T[]) => oneOf.includes(val);

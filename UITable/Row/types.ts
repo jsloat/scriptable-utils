@@ -69,3 +69,8 @@ export type ParsedRowOpts = MakeSomeReqd<
   padding: ParsedPaddingOpts;
   bgColor: Color;
 };
+
+export type Flavor = Pick<RowOpts, 'bgColor' | 'fadeWith'> &
+  Pick<ContentAreaOpts, 'color' | 'fontConstructor'> & {
+    noBorder?: boolean;
+  };

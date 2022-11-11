@@ -1,5 +1,5 @@
 import { SFSymbolKey } from '../../sfSymbols';
-import { RenderOpts } from '../../UITable/types';
+import { SetRenderOpts } from '../../UITable/types';
 import {
   EntityId,
   SelectableEntityBrowserOpts,
@@ -43,7 +43,7 @@ export type Opts<E> = {
   title?: string;
   filters: FilterRecord<E>;
   initAppliedFilters?: FilterWithState<E>[];
-} & Pick<RenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'> &
+} & Pick<SetRenderOpts<any, any, any>, 'beforeLoad' | 'onDismiss'> &
   Pick<SelectableEntityBrowserOpts<E>, 'getEntityId' | 'getEntities'>;
 
 export type State = {
