@@ -46,7 +46,7 @@ const flavors = {
   sereneH1: flav({ ...serene, ...h1FlavorOpts, noBorder: true }),
 };
 
-export const parseFlavor = (f: Flavor | FlavorOption) =>
+export const parseFlavor = (f: Flavor | FlavorOption = 'default') =>
   isString(f) ? flavors[f] : f;
 
 export type FlavorOption = keyof typeof flavors;

@@ -146,6 +146,7 @@ export default {
   stop_sign: 'octagon',
   stop_with_x: 'xmark.octagon',
   stop: 'hand.raised',
+  stream: 'water.waves',
   subtask: 'arrow.turn.down.right',
   sun: 'sun.max',
   tag: 'tag',
