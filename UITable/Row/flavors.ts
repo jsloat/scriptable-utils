@@ -8,18 +8,20 @@ import { Flavor } from './types';
 const flav: Identity<Flavor> = f => f;
 
 const {
-  gray8,
-  gray0,
-  green,
-  green_l4,
-  yellow_d2,
-  yellow_l3,
-  red_d1,
-  red_l4,
   deep_blue,
+  domain_personal,
+  domain_work,
+  gray0,
   gray2,
   gray4,
+  gray8,
+  green_l4,
+  green,
   primaryTextColor,
+  red_d1,
+  red_l4,
+  yellow_d2,
+  yellow_l3,
 } = getColors();
 
 const serene = flav({ bgColor: deep_blue, color: gray2, fadeWith: gray4 });
@@ -44,6 +46,8 @@ const flavors = {
   transparentWithBorder: flav({}),
   serene,
   sereneH1: flav({ ...serene, ...h1FlavorOpts, noBorder: true }),
+  domainPersonal: flav({ color: domain_personal }),
+  domainWork: flav({ color: domain_work }),
 };
 
 export const parseFlavor = (f: Flavor | FlavorOption = 'default') =>
@@ -63,6 +67,8 @@ const flavorBoldnessDesc = getTypesafeArrOfType<FlavorOption>({
   happy: null,
   warning: null,
   default: null,
+  domainWork: null,
+  domainPersonal: null,
   transparentWithBorder: null,
   defaultNoBorder: null,
   transparent: null,

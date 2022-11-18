@@ -52,23 +52,8 @@ export const lookup = <K extends string, V>(
   lookupKey: K
 ): V | undefined => dict[lookupKey];
 
-type Curry = {
-  /** Unsupported arity, error! */
-  <A, Z>(fn: (a: A) => Z): unknown;
-  <A, B, Z>(fn: (a: A, b: B) => Z): (a: A) => (b: B) => Z;
-  <A, B, C, Z>(fn: (a: A, b: B, c: C) => Z): (a: A) => (b: B) => (c: C) => Z;
-  /** Unsupported arity, error! */
-  (fn: (...args: any[]) => any): unknown;
-};
-export const curry: Curry = (fn: (...args: any[]) => any) => {
-  const arity = fn.length;
-  if (arity === 2) return (a: any) => (b: any) => fn(a, b);
-  if (arity === 3) return (a: any) => (b: any) => (c: any) => fn(a, b, c);
-  throw new Error(`Attempting to use curry with unsupported arity ${arity}`);
-};
-
 /** More succinct version of writing out an immediately-executing switch block */
-export const shortSwitch = <Input extends string, Return = Input>(
+export const shortSwitch = <Input extends string | number, Return = Input>(
   input: Input,
   returnMap: Record<Input, Return | undefined>
 ) => {

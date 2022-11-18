@@ -70,7 +70,8 @@ export type ParsedRowOpts = MakeSomeReqd<
   bgColor: Color;
 };
 
-export type Flavor = Pick<RowOpts, 'bgColor' | 'fadeWith'> &
+export type Flavor = Pick<RowOpts, 'fadeWith'> &
   Pick<ContentAreaOpts, 'color' | 'fontConstructor'> & {
     noBorder?: boolean;
+    bgColor?: Color;
   };

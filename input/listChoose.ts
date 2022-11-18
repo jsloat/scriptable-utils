@@ -1,191 +1,133 @@
+import { ExcludeFalsy, isString } from '../common';
+import { noop } from '../flow';
 import { SFSymbolKey } from '../sfSymbols';
-import { Button, H1, HR, IconRow, Spacer } from '../UITable/Row/templates';
-import { isString } from '../common';
+import { FlavorOption } from '../UITable/Row/flavors';
+import fullscreenOpts, { FullscreenOptNode } from './fullscreenOpts';
 import textInput from './textInput';
-import { compose, filter, map, toArray } from '../arrayTransducers';
-import getTable from '../UITable/getTable';
 
-export type ListChooseOption<
-  Value = unknown,
-  Label extends string = Value extends string ? Value : string
-> = {
-  label?: Label;
-  icon?: SFSymbolKey;
-  /** CTA options behave like any other, but have a more prominent appearance. */
-  isCTA?: boolean;
-  color?: Color;
-} & RequireOnlyOne<{
-  value: Value;
-  getValueOnTap: () => MaybePromise<Value | null>;
-}>;
-
-type ParsedOption = MakeSomeReqd<ListChooseOption, 'icon' | 'label'>;
-
-type ListChooseOpts<Returns = any> = {
-  title?: string;
-  message?: string;
-  onOptionSelect?: (result: Returns) => any;
-  onCancel?: () => any;
-  /** NB: custom responses will be cast as the expected return type (which
-   * extends string), but will not be bound to anything beyond being
-   * string-type. Use with caution. */
-  allowCustom?: boolean;
-  onCustomResponseCreation?: (customResponse: string) => any;
-  /** If provided, use this icon as the default, unless an icon is provided in a
-   * ListChooseOption */
+type Opts<V> = {
+  onOptionSelect?: MapFn<V>;
+  onCancel?: NoParamFn;
+  /** If provided, use this icon as the default */
   fallbackIcon?: SFSymbolKey;
 };
 
-type ListChooseOptsWithCustom<Returns = any> = ListChooseOpts<Returns> & {
-  allowCustom: true;
+export type ListChooseOptionObj<L extends string, V> = {
+  label: L;
+  value: V;
+  icon?: SFSymbolKey;
+  flavor?: FlavorOption;
 };
+
+type AllOptionTypes<L extends string = string, V = string> =
+  | ListChooseOptionObj<L, V>
+  | string
+  | Falsy;
 
 type ListChoose = {
-  /** Non-string value, with option for custom response (string) */
-  <Value, Label extends string = string>(
-    listOptions: ListChooseOption<Value, Label>[],
-    opts: ListChooseOptsWithCustom<Value>
-    // Custom responses are returned as string values
-  ): Promise<Value extends infer U ? U | string | null : Value | string | null>;
-
   /** Non-string value */
-  <Value, Label extends string = string>(
-    listOptions: ListChooseOption<Value, Label>[],
-    opts?: ListChooseOpts<Value>
-  ): Promise<Value extends infer U ? U | null : Value | null>;
-
-  /** String value, with option for custom response (string) */
-  <Value extends string = string, Label extends string = Value>(
-    listOptions: Label[],
-    opts: ListChooseOptsWithCustom<Label>
-  ): Promise<Label | string | null>;
+  <L extends string, V>(
+    options: (ListChooseOptionObj<L, V> | Falsy)[],
+    config?: Opts<V>
+  ): Promise<V | null>;
 
   /** String value */
-  <Value extends string = string, Label extends string = Value>(
-    listOptions: Label[],
-    opts?: ListChooseOpts<Label>
-  ): Promise<Label | null>;
+  <L extends string>(
+    options: (L | Falsy)[],
+    config?: Opts<L>
+  ): Promise<L | null>;
 };
-
-type TableState = RequireOnlyOne<{
-  selectedOption: any;
-  getCustomResponse: boolean;
-  getValueOnTap: () => MaybePromise<any>;
-}>;
 
 //
 
-const isOption = (
-  option: string | ListChooseOption
-): option is ListChooseOption => !isString(option);
-
-const optionToParsedOption = (
-  option: ListChooseOption,
-  fallbackIcon?: SFSymbolKey
-): ParsedOption => ({
-  ...option,
-  icon: option.icon || fallbackIcon || 'chevron_right',
-  label: option.label || String(option.value),
-});
-
-const listChoose: ListChoose = async (
-  listOptions: (string | ListChooseOption)[],
-  {
-    title = 'Choose option',
-    message,
-    onOptionSelect,
-    onCancel,
-    allowCustom,
-    onCustomResponseCreation,
-    fallbackIcon,
-  }: ListChooseOpts = {}
+const findResultValue = <V>(
+  resultLabel: string,
+  options: AllOptionTypes<string, V>[]
 ) => {
-  const { present, connect } = getTable<TableState>({ name: 'list choose' });
+  const match = options
+    .filter(ExcludeFalsy)
+    .find(option =>
+      isString(option) ? option === resultLabel : option.label === resultLabel
+    );
+  if (!match) {
+    throw new Error(
+      `Expected to find selected label ${resultLabel} in listChoose options.`
+    );
+  }
+  return isString(match) ? match : match.value;
+};
 
-  const ctaOptions = toArray(
-    listOptions,
-    compose(
-      filter(isOption),
-      filter(option => option.isCTA),
-      map(option => optionToParsedOption(option, fallbackIcon))
-    )
-  );
-
-  const parsedNonCtaOptions = toArray(
-    listOptions,
-    compose(
-      map(
-        (option): ListChooseOption =>
-          isString(option) ? { label: option, value: option } : option
-      ),
-      filter(option => !option.isCTA),
-      map(option => optionToParsedOption(option, fallbackIcon))
-    )
-  );
-
-  //
-
-  const AddCustomCTA = connect(
-    ({ setState }) =>
-      allowCustom &&
-      Button({
-        text: 'Custom response',
-        icon: 'add',
-        dismissOnTap: true,
-        onTap: () => setState({ getCustomResponse: true }),
-      })
-  );
-
-  const Divider = () => HR({ dim: 0.4 });
-
-  const OptionRow = connect(
-    (
-      { setState },
-      { isCTA, label, icon, value, getValueOnTap, color }: ParsedOption
-    ) => {
-      const onTap = () =>
-        setState(getValueOnTap ? { getValueOnTap } : { selectedOption: value });
-      const sharedProps = {
+const listChoose: ListChoose = async <V>(
+  options: AllOptionTypes<string, V>[],
+  { fallbackIcon = 'dot_in_circle', onCancel, onOptionSelect }: Opts<V> = {}
+) => {
+  const tappedLabel = await fullscreenOpts(
+    options.filter(ExcludeFalsy).map<FullscreenOptNode>(option => {
+      if (isString(option)) {
+        return {
+          label: option,
+          icon: fallbackIcon,
+          action: noop,
+        };
+      }
+      const { label, flavor, icon } = option;
+      return {
         label,
-        text: label,
-        dismissOnTap: true,
-        onTap,
-        accentColor: color,
+        flavor,
+        icon: icon ?? fallbackIcon,
+        action: noop,
       };
-      return [
-        isCTA
-          ? Button({ icon, ...sharedProps })
-          : IconRow({ icon, ...sharedProps }),
-        !isCTA && [Spacer(), Divider(), Spacer()].flat(),
-      ].flat();
-    }
+    })
   );
 
-  //
+  if (tappedLabel === null) {
+    await onCancel?.();
+    return null;
+  }
 
-  const { selectedOption, getCustomResponse, getValueOnTap } = await present({
-    defaultState: {} as TableState,
-    render: () => [
-      H1({ title, ...(message && { subtitle: message }) }),
-      AddCustomCTA(),
-      ...ctaOptions.map(OptionRow),
-      Spacer(),
-      Divider(),
-      Spacer(),
-      ...parsedNonCtaOptions.map(OptionRow),
-    ],
-  });
-
-  let result;
-  if (selectedOption) result = selectedOption;
-  else if (getCustomResponse) {
-    const customResponse = await textInput('Custom response?');
-    if (customResponse) await onCustomResponseCreation?.(customResponse);
-    result = customResponse || null;
-  } else if (getValueOnTap) result = await getValueOnTap();
-
-  await (result ? onOptionSelect?.(result) : onCancel?.());
-  return result;
+  const selectedValue = findResultValue(tappedLabel, options);
+  await onOptionSelect?.(selectedValue as any);
+  return selectedValue;
 };
 
 export default listChoose;
+
+//
+//
+//
+
+const CUSTOM_OPTION_LABEL = 'Custom';
+
+/** Just like `listChoose`, but with ability to add custom response. */
+export const listChooseWithCustom = async (
+  options: AllOptionTypes[],
+  { onOptionSelect, onCancel, ...restConfig }: Opts<string> = {}
+): Promise<string | null> => {
+  const optionsWithCustom: AllOptionTypes[] = [
+    {
+      label: CUSTOM_OPTION_LABEL,
+      value: CUSTOM_OPTION_LABEL,
+      icon: 'add',
+      flavor: 'serene',
+    },
+    ...options,
+  ];
+  const result = await listChoose<string>(
+    optionsWithCustom as any[],
+    restConfig
+  );
+
+  if (!result) {
+    onCancel?.();
+    return null;
+  }
+  if (result !== CUSTOM_OPTION_LABEL) {
+    await onOptionSelect?.(result as any);
+    return result;
+  }
+
+  const customResponse = await textInput('Custom response');
+  if (customResponse) await onOptionSelect?.(customResponse);
+  else await onCancel?.();
+  return customResponse ? customResponse : null;
+};

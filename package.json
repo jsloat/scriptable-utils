@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "git push",
+    "deploy": "source ./scripts.sh; tests && git push",
     "tsc": "clear; tsc",
     "lint": "source ./scripts.sh; lint",
     "tests": "source ./scripts.sh; tests"

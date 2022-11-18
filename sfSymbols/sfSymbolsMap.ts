@@ -79,6 +79,7 @@ export default {
   inbox: 'tray.and.arrow.down',
   info: 'info.circle',
   ipad: 'ipad',
+  iphone: 'iphone',
   kg: 'k.circle',
   laptop: 'laptopcomputer',
   lightbulb: 'lightbulb',

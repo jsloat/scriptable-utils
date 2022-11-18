@@ -18,7 +18,8 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
         isLastArrIndex(i, arr) ? item : [item, between]
       );
 
-const hasLength = <T>(arr: T[]): arr is [T, ...T[]] => Boolean(arr.length);
+export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] =>
+  Boolean(arr.length);
 
 export const isHomogeneous = <T>(
   arr: T[],

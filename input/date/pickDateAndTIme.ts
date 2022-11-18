@@ -1,8 +1,9 @@
-export default (initDate = new Date()) => {
+export default async (initDate = new Date()) => {
   try {
     const dp = new DatePicker();
     dp.initialDate = initDate;
-    return dp.pickDateAndTime();
+    const result = await dp.pickDateAndTime();
+    return result;
   } catch (e) {
     return null;
   }

@@ -1,7 +1,9 @@
 export const ICONS = {
+  ADD: '⨁',
   ARROW_DOWN: '↓',
   ARROW_RIGHT: '→',
   BLOCK: '█',
+  CANCEL: 'ⓧ',
   CHECKMARK_GREEN: '✅',
   CHEVRON_LEFT: '‹',
   CHEVRON_RIGHT: '›',
@@ -15,6 +17,3 @@ export const ICONS = {
   STAR: '✭',
   VERTICAL_ELLIPSIS: '⋮',
 };
-
-export const isIconKey = (key: any): key is keyof typeof ICONS =>
-  Object.keys(ICONS).some(k => k === key);

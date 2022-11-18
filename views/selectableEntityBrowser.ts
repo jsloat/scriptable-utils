@@ -5,7 +5,7 @@
 
 import { conditionalArr } from '../array';
 import { ExcludeFalsy } from '../common';
-import listChoose, { ListChooseOption } from '../input/listChoose';
+import listChoose, { ListChooseOptionObj } from '../input/listChoose';
 import textInput from '../input/textInput';
 import { getReducerCreator, getTableActionCreator } from '../reducerAction';
 import { SFSymbolKey } from '../sfSymbols';
@@ -59,6 +59,8 @@ type CustomCTACallbackOpts<E> = $Props<E> & {
 
 type OpenEntityCallbackOpts<E> = CustomCTACallbackOpts<E> & { entity: E };
 
+export type SearchMatchPredicate<T> = (query: string) => Predicate<T>;
+
 export type SelectableEntityBrowserOpts<Entity> = {
   /** Optionally run this code before launching the table */
   beforeLoad?: NoParamFn<any>;
@@ -80,7 +82,7 @@ export type SelectableEntityBrowserOpts<Entity> = {
   getEntityId: MapFn<Entity, EntityId>;
   filters?: FilterRecord<Entity>;
   /** If present, ability to apply a search filter to the entities. */
-  getSearchMatchPredicate?: (query: string) => Predicate<Entity>;
+  getSearchMatchPredicate?: SearchMatchPredicate<Entity>;
 };
 
 //
@@ -92,12 +94,14 @@ const selectBulkAction = async <E>(
   if (!bulkActions) return;
   await listChoose(
     bulkActions
-      .map<ListChooseOption | null>(({ label, onTap, shouldHide, icon }) =>
-        shouldHide?.(entities)
-          ? null
-          : { label, icon, getValueOnTap: () => onTap(entities) }
+      .map<ListChooseOptionObj<string, NoParamFn> | null>(
+        ({ label, onTap, shouldHide, icon }) =>
+          shouldHide?.(entities)
+            ? null
+            : { label, icon, value: () => onTap(entities) }
       )
-      .filter(ExcludeFalsy)
+      .filter(ExcludeFalsy),
+    { onOptionSelect: fn => fn() }
   );
 };
 

@@ -1,4 +1,3 @@
-export { default as getDropdown } from './formElements/_Dropdown';
 export * from './_Button';
 export { default as CycleTabs } from './_CycleTabs';
 export { default as H1 } from './_H1';

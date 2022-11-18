@@ -270,7 +270,7 @@ declare class Color {
   red: number;
   green: number;
   blue: number;
-  alpha: number;
+  readonly alpha: number;
   static black: () => Color;
   static red: () => Color;
   static yellow: () => Color;

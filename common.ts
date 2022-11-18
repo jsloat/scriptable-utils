@@ -108,9 +108,6 @@ export const lighten = (colorObj: Color, change = 0.4) => {
 export const fade = (color: Color, change = 0.4) =>
   (Device.isUsingDarkAppearance() ? darken : lighten)(color, change);
 
-export const brighten = (color: Color, change = 0.4) =>
-  (Device.isUsingDarkAppearance() ? lighten : darken)(color, change);
-
 export const getBookmarkedPath = (bookmarkName: string) => {
   const f = FileManager.iCloud();
   if (!f.bookmarkExists(bookmarkName))
@@ -270,7 +267,7 @@ export const groupBy: GroupBy = <ArrVal, GroupedVal>(
     const mappedAcc = acc.map(accVal => {
       if (accVal.key !== key) return accVal;
       wasAlreadyInAcc = true;
-      return { key, val: accVal.val.concat(val) };
+      return { key, val: [...accVal.val, val] };
     });
     if (!wasAlreadyInAcc) mappedAcc.push({ key, val: [val] });
     return mappedAcc;
