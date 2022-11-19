@@ -51,7 +51,6 @@
         "no-lone-blocks": ["error"],
         "no-lonely-if": ["error"],
         "no-negated-condition": ["error"],
-        "no-nested-ternary": ["error"],
         "no-param-reassign": ["error"],
         "no-return-await": ["warn"],
         "require-await": ["warn"],

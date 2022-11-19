@@ -1,7 +1,7 @@
 import { getTypesafeArrOfType } from '../../array';
 import { getColors, getDynamicColor } from '../../colors';
 import { isString } from '../../common';
-import { getSimpleSorter } from '../../sortObjects';
+import { sortByPredicates } from '../../sort';
 import { H1Consts } from './templates/consts';
 import { Flavor } from './types';
 
@@ -74,7 +74,7 @@ const flavorBoldnessDesc = getTypesafeArrOfType<FlavorOption>({
   transparent: null,
 });
 
-const sortByBoldnessDesc = getSimpleSorter(
+const sortByBoldnessDesc = sortByPredicates(
   ...flavorBoldnessDesc.map(
     sortedKey => (keyToSort: FlavorOption) => keyToSort === sortedKey
   )
