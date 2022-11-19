@@ -1,6 +1,7 @@
 // Full-screen, no-distraction buttons
 
 import { getColor, getDynamicColor } from '../colors';
+import { isFunc } from '../common';
 import { isOdd } from '../numbers';
 import { getSfSymbolImg, SFSymbolKey } from '../sfSymbols';
 import getTable from '../UITable/getTable';
@@ -12,9 +13,13 @@ export type FullscreenOptNode = {
   label: string;
   icon: SFSymbolKey;
   flavor?: FlavorOption;
-  // Requires action or children, though typing doesn't enforce it.
+  /** Action or children are required, though typing doesn't enforce it. */
   action?: NoParamFn;
-  children?: FullscreenOptNode[];
+  /** Action or children are required, though typing doesn't enforce it.
+   * Children can be either an array or an array getter function, useful for
+   * cases when children may be computationally complex to generate and should
+   * be delayed as long as possible for better performance. */
+  children?: FullscreenOptNode[] | NoParamFn<MaybePromise<FullscreenOptNode[]>>;
 };
 
 type State = { nodes: FullscreenOptNode[]; selectedActionLabel: string | null };
@@ -60,9 +65,12 @@ export default async (initNodes: FullscreenOptNode[]) => {
         bgColor: flavor ? parseFlavor(flavor).bgColor : defaultBgColor,
         dismissTableOnTap: !children,
         height: getOptionHeight(totalNodesShown),
-        onTap: () => {
+        onTap: async () => {
           if (children) {
-            setState({ nodes: children });
+            const childrenNodes = isFunc(children)
+              ? await children()
+              : children;
+            setState({ nodes: childrenNodes });
           } else if (action) {
             setState({ selectedActionLabel: label });
             action();
