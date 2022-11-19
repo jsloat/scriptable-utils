@@ -634,9 +634,18 @@ declare class Image {
 /** A linear gradient to be used in a widget. */
 declare class LinearGradient {
   constructor();
+  /** The array of colors should include the same amount of elements as the gradients `locations` property. */
   colors: Color[];
   /** Each location should be a value in the range of 0 to 1 and indicates the location of each color in the gradients colors array. */
   locations: number[];
+  /** The normalized starting point of the gradient. The `endPoint` and `startPoint`
+   * together controls the direction of the gradient. The X and Y component
+   * should each range from 0 to 1. Defaults to (0, 1). */
+  startPoint: Point;
+  /** The normalized ending point of the gradient. The `endPoint` and `startPoint`
+   * together controls the direction of the gradient. The X and Y component
+   * should each range from 0 to 1. Defaults to (0, 1). */
+  endPoint: Point;
 }
 
 declare class Font {
@@ -692,6 +701,16 @@ declare class WidgetText {
   textOpacity: number;
   /** Maximum number of lines to display. The limit is disabled when the value is 0 or less. Defaults to 0. */
   lineLimit: number;
+  /**
+   * Minimum amount the text scales down to.
+   *
+   * Sets the minimum amount that text scales down to fit in the available
+   * space. For example, a text with a minimum scale factor of 0.5 allows the
+   * widget to draw the text in a font size half the size of the actual font.
+   * The scale factor should be a fraction between 0 and 1, both inclusive.
+   * Defaults to 1.
+   */
+  minimumScaleFactor: number;
   /** Default */
   leftAlignText: () => void;
   centerAlignText: () => void;
@@ -737,6 +756,15 @@ declare class WidgetDate {
   font: Font;
   textOpacity: number;
   lineLimit: number;
+  /**
+   * Minimum amount the text scales down to.
+   *
+   * Sets the minimum amount that text scales down to fit in the available
+   * space. For example, a text with a minimum scale factor of 0.5 allows the
+   * widget to draw the text in a font size half the size of the actual font.
+   * The scale factor should be a fraction between 0 and 1, both inclusive.
+   * Defaults to 1.
+   */
   minimumScaleFactor: number;
   shadowColor: Color;
   shadowRadius: number;
@@ -879,6 +907,21 @@ declare class ListWidget {
    * Widgets on the Home screen are updated periodically so while working on your widget you may want to preview it in the app.
    */
   presentLarge: () => Promise<void>;
+
+  //
+  // Lockscreen-widget-specific attributes and methods below
+  //
+
+  /**
+   * Whether to use an accessory widget background.
+   *
+   * Enable to add an adaptive background that provides a standard appearance
+   * based on the widget's environment. Defaults to false.
+   */
+  addAccessoryWidgetBackground: boolean;
+  presentAccessoryCircular: NoParamFn<Promise<void>>;
+  presentAccessoryInline: NoParamFn<Promise<void>>;
+  presentAccessoryRectangular: NoParamFn<Promise<void>>;
 }
 
 //
