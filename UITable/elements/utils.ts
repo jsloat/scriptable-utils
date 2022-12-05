@@ -1,11 +1,11 @@
 import { sum } from '../../array';
 import { getColor } from '../../colors';
 import { isNumber } from '../../common';
+import { getMaxScreenHeight } from '../../device';
 import { ScreenHeightMeasurements } from '../../serviceRegistry';
 import { BaseRow, BaseRowOpts } from '../Row/base';
-import { getMaxScreenHeight } from '../utils';
 import { FALLBACK_CELL_WIDTH_PERCENT, FALLBACK_ROW_HEIGHT } from './consts';
-import { AnyElement, CellShape, ContainerStyle } from './shapes';
+import { ContainerStyle } from './shapes';
 import {
   Border,
   CascadingRowStyle,
@@ -168,6 +168,3 @@ export const getContainerSurroundingRows = (
     borderBottomRow,
   };
 };
-
-export const isCellShape = (child: AnyElement): child is CellShape =>
-  child instanceof CellShape;

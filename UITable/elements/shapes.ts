@@ -13,7 +13,6 @@ import {
 import {
   fillInCellWidthBlanks,
   getContainerSurroundingRows,
-  isCellShape,
   normalizeCellWidthPercentages,
   parseColor,
   parsePercent,
@@ -97,6 +96,9 @@ export abstract class CellShape extends Element<
     return this.parent.getCellWidthPercent(this.siblingIndex);
   }
 }
+
+export const isCellShape = (child: AnyElement): child is CellShape =>
+  child instanceof CellShape;
 
 //
 //

@@ -2,12 +2,12 @@
 
 import { getColor, getDynamicColor } from '../colors';
 import { isFunc } from '../common';
+import { getMaxScreenHeight } from '../device';
 import { isOdd } from '../numbers';
 import { getSfSymbolImg, SFSymbolKey } from '../sfSymbols';
 import getTable from '../UITable/getTable';
 import { BaseCell, BaseRow } from '../UITable/Row/base';
 import { FlavorOption, parseFlavor } from '../UITable/Row/flavors';
-import { getMaxScreenHeight } from '../UITable/utils';
 
 export type FullscreenOptNode = {
   label: string;

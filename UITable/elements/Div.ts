@@ -5,10 +5,11 @@ import {
   CellContainerShape,
   ContainerShape,
   ContainerStyle,
+  isCellShape,
   Row,
 } from './shapes';
 import { TapProps } from './types';
-import { getContainerSurroundingRows, isCellShape, parseColor } from './utils';
+import { getContainerSurroundingRows, parseColor } from './utils';
 
 class Div extends ContainerShape {
   constructor(

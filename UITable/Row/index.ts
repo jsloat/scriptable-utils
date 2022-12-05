@@ -7,9 +7,9 @@ import {
   isNumber,
   isString,
 } from '../../common';
+import { getMaxScreenHeight } from '../../device';
 import { ScreenHeightMeasurements } from '../../serviceRegistry';
 import { getSfSymbolImg } from '../../sfSymbols';
-import { getMaxScreenHeight } from '../utils';
 import { BaseCell, BaseRow } from './base';
 import {
   bgColorModeToColor,
