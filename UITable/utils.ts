@@ -4,10 +4,19 @@ import {
   getScreenHeightMeasurements,
   ScreenHeightMeasurements,
 } from '../serviceRegistry';
+import { CellContainerShape } from './elements/shapes';
 
-export const reloadTableRows = (table: UITable, rows: UITableRow[]) => {
+export const reloadTableRows = (
+  table: UITable,
+  rows: (UITableRow | CellContainerShape)[]
+) => {
   table.removeAllRows();
-  rows.forEach(row => table.addRow(row));
+  rows.forEach(row => {
+    const parsedRows = [
+      row instanceof CellContainerShape ? row.render() : row,
+    ].flat();
+    parsedRows.forEach(parsedRow => table.addRow(parsedRow));
+  });
   table.reload();
 };
 

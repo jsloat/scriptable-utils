@@ -38,11 +38,6 @@ export type RowOpts = {
   padding?: PaddingOpts;
   bgColor?: Color | BGColorMode;
   isFaded?: boolean;
-  /** Optionally indicate whether the row's bg is light or dark; this is used to
-   * determine whether "faded" means becoming lighter or darker. Generally only
-   * used when you have a constant bgColor that doesn't change in dark/light
-   * modes. */
-  fadeWith?: 'darken' | 'lighten' | Color;
   onTap?: NoParamFn;
   onDoubleTap?: NoParamFn;
   onTripleTap?: NoParamFn;
@@ -70,8 +65,7 @@ export type ParsedRowOpts = MakeSomeReqd<
   bgColor: Color;
 };
 
-export type Flavor = Pick<RowOpts, 'fadeWith'> &
-  Pick<ContentAreaOpts, 'color' | 'fontConstructor'> & {
-    noBorder?: boolean;
-    bgColor?: Color;
-  };
+export type Flavor = Pick<ContentAreaOpts, 'color' | 'fontConstructor'> & {
+  noBorder?: boolean;
+  bgColor?: Color;
+};

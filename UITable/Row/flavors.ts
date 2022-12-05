@@ -13,7 +13,6 @@ const {
   domain_work,
   gray0,
   gray2,
-  gray4,
   gray8,
   green_l4,
   green,
@@ -24,7 +23,7 @@ const {
   yellow_l3,
 } = getColors();
 
-const serene = flav({ bgColor: deep_blue, color: gray2, fadeWith: gray4 });
+const serene = flav({ bgColor: deep_blue, color: gray2 });
 const transparent = flav({ noBorder: true });
 
 const h1FlavorOpts = { fontConstructor: H1Consts.fontConstructor };
@@ -38,9 +37,9 @@ const flavors = {
     bgColor: getDynamicColor(gray0, gray8),
     noBorder: true,
   }),
-  happy: flav({ bgColor: green_l4, color: green, fadeWith: 'lighten' }),
-  warning: flav({ bgColor: yellow_l3, color: yellow_d2, fadeWith: 'lighten' }),
-  danger: flav({ bgColor: red_l4, color: red_d1, fadeWith: 'lighten' }),
+  happy: flav({ bgColor: green_l4, color: green }),
+  warning: flav({ bgColor: yellow_l3, color: yellow_d2 }),
+  danger: flav({ bgColor: red_l4, color: red_d1 }),
   transparent,
   transparentH1: flav({ ...transparent, ...h1FlavorOpts }),
   transparentWithBorder: flav({}),

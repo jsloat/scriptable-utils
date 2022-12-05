@@ -230,6 +230,8 @@ declare const config: {
   readonly runsWithSiri: boolean;
   /** Whether running in a widget */
   readonly runsInWidget: boolean;
+  /** Whether running in a lockscreen widget */
+  readonly runsInAccessoryWidget: boolean;
   /** Whether running in a notification */
   readonly runsInNotification: boolean;
   /** Whether the script was run from the home screen. You can add a script to the home screen from the script settings. */
@@ -238,7 +240,14 @@ declare const config: {
    * The size of the widget the script is running in.
    * Value is null when the script is not running in a widget.
    */
-  readonly widgetFamily: 'small' | 'medium' | 'large' | null;
+  readonly widgetFamily:
+    | 'small'
+    | 'medium'
+    | 'large'
+    | 'accessoryRectangular'
+    | 'accessoryInline'
+    | 'accessoryCircular'
+    | null;
 };
 
 declare class Script {

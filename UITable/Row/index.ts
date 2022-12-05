@@ -2,13 +2,10 @@ import { conditionalArr } from '../../array';
 import { compose, filter, map, toArray } from '../../arrayTransducers';
 import { getColor } from '../../colors';
 import {
-  darken,
   ErrorWithPayload,
   ExcludeFalsy,
-  fade,
   isNumber,
   isString,
-  lighten,
 } from '../../common';
 import { ScreenHeightMeasurements } from '../../serviceRegistry';
 import { getSfSymbolImg } from '../../sfSymbols';
@@ -103,12 +100,8 @@ const parseRowOpts = ({
 //
 //
 
-const parseColor = (color: Color, { isFaded, fadeWith }: ParsedRowOpts) => {
-  if (!isFaded) return color;
-  if (!fadeWith) return fade(color);
-  if (!isString(fadeWith)) return fadeWith;
-  return (fadeWith === 'darken' ? darken : lighten)(color);
-};
+const parseColor = (color: Color, { isFaded }: ParsedRowOpts) =>
+  isFaded ? new Color(color.hex, 0.6) : color;
 
 const getCell = (
   {

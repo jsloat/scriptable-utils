@@ -4,7 +4,7 @@ import { ContentAreaOpts, Flavor, RowOpts, RowSize } from '../../types';
 
 type FromRowOpts = Omit_<
   RowOpts,
-  'rowHeight' | 'padding' | 'bgColor' | 'fadeWith' | 'content'
+  'rowHeight' | 'padding' | 'bgColor' | 'content'
 >;
 
 export type _INTERNAL_ButtonOpts = FromRowOpts & {

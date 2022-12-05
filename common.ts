@@ -7,7 +7,7 @@
 
 export const isNumber = (val: any): val is number => Number.isFinite(val);
 
-export const isDate = (val: any): val is Date =>
+const isDate = (val: any): val is Date =>
   val instanceof Date ||
   Object.prototype.toString.call(val) === '[object Date]';
 
@@ -95,12 +95,12 @@ const shade = (colorObj: Color, change: number) => {
   );
 };
 
-export const darken = (colorObj: Color, change = 0.4) => {
+const darken = (colorObj: Color, change = 0.4) => {
   const parsedChange = change < 0 ? change : change * -1;
   return shade(colorObj, parsedChange);
 };
 
-export const lighten = (colorObj: Color, change = 0.4) => {
+const lighten = (colorObj: Color, change = 0.4) => {
   const parsedChange = change < 0 ? change * -1 : change;
   return shade(colorObj, parsedChange);
 };

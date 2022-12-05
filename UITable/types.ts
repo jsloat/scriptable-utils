@@ -1,9 +1,10 @@
 import { Persisted } from '../io/persisted';
 import { RepeatingTimerOpts } from '../RepeatingTimer';
 import { Stream } from '../streams';
+import { CellContainerShape } from './elements/shapes';
 
 /** Falsy values will be filtered out, arrays will be flattened.  */
-export type ValidTableEl = MaybeArray<UITableRow | Falsy>;
+export type ValidTableEl = MaybeArray<UITableRow | CellContainerShape | Falsy>;
 
 export type CombineProps<Props, $Data> = Props extends void
   ? $Data extends void

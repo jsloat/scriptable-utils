@@ -44,13 +44,12 @@ export const getSharedOpts = (opts: _EntityOpts): RowOpts => {
     isFaded,
     dismissOnTap,
   } = opts;
-  const { bgColor, fadeWith, rowHeight, padding } = getConfigOpts(opts);
+  const { bgColor, rowHeight, padding } = getConfigOpts(opts);
   return {
     onTap: parseOnTap(onTap, isDisabled),
     onDoubleTap: parseOnTap(onDoubleTap, isDisabled),
     onTripleTap: parseOnTap(onTripleTap, isDisabled),
     bgColor,
-    fadeWith,
     isFaded: isFaded || isDisabled,
     rowHeight,
     padding: { paddingTop: padding, paddingBottom: padding },
