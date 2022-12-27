@@ -1,7 +1,5 @@
-import { getTypesafeArrOfType } from '../../array';
 import { getColors, getDynamicColor } from '../../colors';
-import { isString } from '../../common';
-import { sortByPredicates } from '../../sort';
+import presetStyles, { FlavorKey } from '../elements/presetStyles';
 import { H1Consts } from './templates/consts';
 import { Flavor } from './types';
 
@@ -49,44 +47,7 @@ const flavors = {
   domainWork: flav({ color: domain_work }),
 };
 
-export const parseFlavor = (f: Flavor | FlavorOption = 'default') =>
-  isString(f) ? flavors[f] : f;
+export const parseFlavor = (f: FlavorKey | FlavorOption = 'default') =>
+  presetStyles().flavors[f];
 
 export type FlavorOption = keyof typeof flavors;
-
-//
-// Sorting
-//
-
-const flavorBoldnessDesc = getTypesafeArrOfType<FlavorOption>({
-  sereneH1: null,
-  transparentH1: null,
-  danger: null,
-  serene: null,
-  happy: null,
-  warning: null,
-  default: null,
-  domainWork: null,
-  domainPersonal: null,
-  transparentWithBorder: null,
-  defaultNoBorder: null,
-  transparent: null,
-});
-
-const sortByBoldnessDesc = sortByPredicates(
-  ...flavorBoldnessDesc.map(
-    sortedKey => (keyToSort: FlavorOption) => keyToSort === sortedKey
-  )
-);
-
-/** Used to determine which button's border in a stack should take priority as
- * compared to its neighbor. */
-export const whichFlavorIsBolder = (
-  above: Flavor | FlavorOption = 'default',
-  below: Flavor | FlavorOption = 'default'
-): Flavor => {
-  // If either option is a custom flavor object, don't attempt to compare.
-  if (!(isString(above) && isString(below))) return parseFlavor(above);
-  const sortedOpts = [above, below].sort(sortByBoldnessDesc);
-  return parseFlavor(sortedOpts[0]!);
-};

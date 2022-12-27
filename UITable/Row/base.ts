@@ -32,7 +32,7 @@ type TextCellParams = {
   color?: Color;
   font?: Font;
 };
-type CellParams = {
+export type BaseCellParams = {
   value?: string | Image;
   type?: CellType;
 } & CellParamsBase &
@@ -64,7 +64,7 @@ export const BaseCell: Cell = ({
   value = '',
   color,
   font,
-}: CellParams = {}) => {
+}: BaseCellParams = {}) => {
   const cell = (() => {
     if (type === 'image' && !isString(value)) return UITableCell.image(value);
     if (!isString(value))
@@ -100,7 +100,7 @@ export type BaseRowOpts = Partial<{
   onDoubleTap: () => any;
   onTripleTap: () => any;
   dismissTableOnTap?: boolean;
-  cells: UITableCell[];
+  cells: (UITableCell | BaseCellParams)[];
   isHeader: boolean;
   height: number;
   bgColor: Color;
@@ -145,6 +145,10 @@ const executeTapListener = (() => {
   };
 })();
 
+/** Base cell params must have a type, or must be an empty object. */
+const isCell = (x: UITableCell | BaseCellParams): x is UITableCell =>
+  Boolean(Object.keys(x).length && !('type' in x));
+
 export const BaseRow = ({
   cells = [],
   height,
@@ -167,6 +171,7 @@ export const BaseRow = ({
     });
   if (height) returnRow.height = height;
   if (bgColor) returnRow.backgroundColor = bgColor;
-  if (cells.length) cells.forEach(c => returnRow.addCell(c));
+  if (cells.length)
+    cells.forEach(c => returnRow.addCell(isCell(c) ? c : BaseCell(c as any)));
   return returnRow;
 };

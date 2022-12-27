@@ -111,3 +111,38 @@ export const mapFind = <T, U>(
 /** Shorthand for filtering primitive values out of an array. */
 export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>
   arr.filter(el => !exclude.includes(el));
+
+export const chunk = <T>(arr: T[], n: number): T[][] =>
+  arr.reduce<T[][]>((chunkedArrs, el) => {
+    const mostRecentChunk = last(chunkedArrs);
+    if (!mostRecentChunk) return [[el]];
+    const isChunkFull = mostRecentChunk.length === n;
+    return isChunkFull
+      ? [...chunkedArrs, [el]]
+      : [...chunkedArrs.slice(0, -1), [...mostRecentChunk, el]];
+  }, []);
+
+// ts-unused-exports:disable-next-line
+export const padArrEnd = <T>(arr: T[], fillTo: number, fill: T) =>
+  arr.length >= fillTo
+    ? arr
+    : [...arr, ...Array<T>(fillTo - arr.length).fill(fill)];
+
+/** Akin to `findIndex`, but searches starting from the end of the array. This
+ * is a native JS function but my environment isn't up-to-date. */
+export const findLastIndex = <T>(
+  arr: T[],
+  callback: ArrCallback<T>,
+  /** Search backwards from which index. Defaults to last */
+  searchFromIndex = Math.max(arr.length - 1, 0)
+): number => {
+  if (!arr.length) return -1;
+  if (searchFromIndex < 0) throw new Error('Invalid index');
+  const isMatch = Boolean(
+    callback(arr[searchFromIndex] as T, searchFromIndex, arr)
+  );
+  if (isMatch) return searchFromIndex;
+  return searchFromIndex === 0
+    ? -1
+    : findLastIndex(arr, callback, searchFromIndex - 1);
+};

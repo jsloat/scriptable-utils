@@ -42,7 +42,7 @@ const makeContentAreaOpts = (
   align: ALIGN[cellID],
 });
 
-export const getThreeColReducer = (ownOpts: OwnOpts): Identity<RowOpts> => {
+const getThreeColReducer = (ownOpts: OwnOpts): Identity<RowOpts> => {
   const { gutterLeft, main, gutterRight } = ownOpts;
   return rowOpts => {
     const widths = getWidths(ownOpts);

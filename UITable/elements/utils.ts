@@ -1,9 +1,10 @@
 import { sum } from '../../array';
-import { getColor } from '../../colors';
+import { getColor, getGradientMidpoints } from '../../colors';
 import { isNumber } from '../../common';
 import { getMaxScreenHeight } from '../../device';
+import { pick } from '../../object';
 import { ScreenHeightMeasurements } from '../../serviceRegistry';
-import { BaseRow, BaseRowOpts } from '../Row/base';
+import { BaseRowOpts } from '../Row/base';
 import { FALLBACK_CELL_WIDTH_PERCENT, FALLBACK_ROW_HEIGHT } from './consts';
 import { ContainerStyle } from './shapes';
 import {
@@ -55,11 +56,13 @@ export const normalizeCellWidthPercentages = (
   cellWidthPercentages: number[]
 ) => {
   const totalPercent = sum(cellWidthPercentages);
-  return totalPercent === 100
-    ? cellWidthPercentages
-    : // Else, normalize the percentage values to the total percentage. Maintain
-      // the ratio, but normalize to a total of 100.
-      cellWidthPercentages.map(oldPct => (oldPct / totalPercent) * 100);
+  const normalizedValues =
+    totalPercent === 100
+      ? cellWidthPercentages
+      : // Else, normalize the percentage values to the total percentage. Maintain
+        // the ratio, but normalize to a total of 100.
+        cellWidthPercentages.map(oldPct => (oldPct / totalPercent) * 100);
+  return normalizedValues.map(val => Math.floor(val));
 };
 
 export const parsePercent = (percent: Percent) =>
@@ -68,14 +71,14 @@ export const parsePercent = (percent: Percent) =>
 /** Converts border prop to a height and color. If the calling row has no
  * inherited color to use for the border (if the border doesn't specify its own
  * color), use default text color. */
-const parseBorder = (border: Border, inheritedColor?: Color) => {
+export const parseBorder = (border: Border, inheritedColor?: Color) => {
   if (Array.isArray(border)) {
     const [height, color] = border;
     return { height, color };
   }
   return {
     height: border,
-    color: inheritedColor ?? getColor('primaryTextColor'),
+    color: inheritedColor ?? getColor('hr'),
   };
 };
 
@@ -103,6 +106,16 @@ export const parseRowHeight = ({
 export const parseColor = (color: Color, { isFaded }: CascadingStyle) =>
   isFaded ? new Color(color.hex, 0.6) : color;
 
+/** Attempts to fade the foreground color into the background color. */
+export const fadeColorIntoBackground = (
+  color: Color,
+  style: CascadingStyle
+) => {
+  if (!style.isFaded) return color;
+  const bgColor = style.bgColor ?? getColor('bg');
+  return getGradientMidpoints({ from: color, to: bgColor, numPoints: 1 })[0];
+};
+
 export const tapPropsToBaseRowOpts = ({
   dismissOnTap: dismissTableOnTap,
   ...onTaps
@@ -112,20 +125,23 @@ const getBorderRow = (
   border: Border | undefined,
   rowStyle: CascadingStyle,
   tapProps: TapProps
-) => {
+): BaseRowOpts | null => {
   if (!border) return null;
   const rowColor = rowStyle.color;
-  const inheritedColor = rowColor && parseColor(rowColor, rowStyle);
+  const inheritedColor =
+    rowColor && fadeColorIntoBackground(rowColor, rowStyle);
   const { color, height } = parseBorder(border, inheritedColor);
-  return BaseRow({
+  return rowOpts({
     bgColor: color,
     height,
     ...tapPropsToBaseRowOpts(tapProps),
   });
 };
 
+const rowOpts: Identity<BaseRowOpts> = x => x;
+
 /** Returns adjacent rows including padding, margin, and border */
-export const getContainerSurroundingRows = (
+export const getContainerSurroundingRowsOpts = (
   style: ContainerStyle,
   contentBgColor: Color,
   tapProps: TapProps
@@ -142,21 +158,21 @@ export const getContainerSurroundingRows = (
   } = style;
   const paddingTopRow =
     paddingTop &&
-    BaseRow({
+    rowOpts({
       height: paddingTop,
       bgColor: contentBgColor,
       ...baseRowTapProps,
     });
   const paddingBottomRow =
     paddingBottom &&
-    BaseRow({
+    rowOpts({
       height: paddingBottom,
       bgColor: contentBgColor,
       ...baseRowTapProps,
     });
-  const marginTopRow = marginTop && BaseRow({ height: marginTop, bgColor: bg });
+  const marginTopRow = marginTop && rowOpts({ height: marginTop, bgColor: bg });
   const marginBottomRow =
-    marginBottom && BaseRow({ height: marginBottom, bgColor: bg });
+    marginBottom && rowOpts({ height: marginBottom, bgColor: bg });
   const borderTopRow = getBorderRow(borderTop, style, tapProps);
   const borderBottomRow = getBorderRow(borderBottom, style, tapProps);
   return {
@@ -168,3 +184,9 @@ export const getContainerSurroundingRows = (
     borderBottomRow,
   };
 };
+
+export const numToPct = (num: number): Percent => `${num}%`;
+
+/** Used to only pick the tap props when passing a combination of other props. */
+export const getTapProps: Identity<TapProps> = props =>
+  pick(props, ['dismissOnTap', 'onDoubleTap', 'onTap', 'onTripleTap']);

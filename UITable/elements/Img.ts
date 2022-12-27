@@ -1,29 +1,26 @@
-import { BaseCell } from '../Row/base';
-import { CellShape, CellShapeStyle } from './shapes';
+import { Cell, CellShapeStyle } from './shapes';
 
 type ImgStyle = Pick<CellShapeStyle, 'align' | 'width'>;
 
-class Img extends CellShape {
-  private image: Image;
-
+class Img extends Cell {
   constructor(image: Image, style: ImgStyle) {
-    super(style);
-    this.image = image;
-  }
-
-  render() {
-    const { align = 'center' } = this.style;
-    const width = this.getWidthPercent();
-    return BaseCell({
-      type: 'image',
-      value: this.image,
-      align,
-      widthWeight: width,
+    super({
+      style,
+      getCellOptsWithCalibratedWidth: ({ align = 'center' }, widthWeight) => ({
+        type: 'image',
+        value: image,
+        align,
+        widthWeight,
+      }),
     });
   }
 }
 
-export default (image: Image, style: ImgStyle = {}) => new Img(image, style);
+export default (image: Image, style: ImgStyle = {}) => {
+  const el = new Img(image, style);
+  el.setDescription('IMAGE');
+  return el;
+};
 
 // TODO: add a variation `RemoteImage` that fetches the image `src` and displays
 // a fallback icon while waiting.

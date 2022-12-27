@@ -20,6 +20,20 @@ export const composeIdentities =
 
 export const combineReducers = composeIdentities;
 
+export const combineAsyncReducers =
+  <D>(...reducers: MapFn<D, MaybePromise<D>>[]): MapFn<D, MaybePromise<D>> =>
+  async (initData: D) => {
+    let reducedValue = initData;
+    await sequentialPromiseAll(
+      reducers.map(reducer => async () => {
+        const updatedValue = await reducer(reducedValue);
+        // eslint-disable-next-line require-atomic-updates
+        reducedValue = updatedValue;
+      })
+    );
+    return reducedValue;
+  };
+
 /** HOF to invert a predicate function */
 export const invert =
   <Args extends any[]>(predicate: (...args: Args) => boolean) =>
@@ -122,18 +136,18 @@ const getPerformanceMeasurers = ({
   return { start, stop };
 };
 
-type Measure = <R>(
+type AsyncMeasure = <R>(
   opts: MakeSomeOptional<
     PerformanceMeasurerOpts,
     'threshold',
     'logAllMeasurements'
   > & { fn: NoParamFn<MaybePromise<R>> }
-) => () => Promise<R>;
+) => NoParamFn<Promise<R>>;
 
 /** If threshold is provided, will only notify if it is exceeded, else will log
  * the duration every time */
 // ts-unused-exports:disable-next-line
-export const measure: Measure =
+export const asyncMeasure: AsyncMeasure =
   ({ name, fn, threshold, metadata }) =>
   async () => {
     const measurer = getPerformanceMeasurers({
@@ -144,6 +158,32 @@ export const measure: Measure =
     });
     measurer.start();
     const result = await fn();
+    measurer.stop();
+    return result;
+  };
+
+type Measure = <R>(
+  opts: MakeSomeOptional<
+    PerformanceMeasurerOpts,
+    'threshold',
+    'logAllMeasurements'
+  > & { fn: NoParamFn<R> }
+) => NoParamFn<R>;
+
+/** If threshold is provided, will only notify if it is exceeded, else will log
+ * the duration every time */
+// ts-unused-exports:disable-next-line
+export const measure: Measure =
+  ({ name, fn, threshold, metadata }) =>
+  () => {
+    const measurer = getPerformanceMeasurers({
+      name,
+      threshold: threshold || 0,
+      metadata,
+      logAllMeasurements: !threshold,
+    });
+    measurer.start();
+    const result = fn();
     measurer.stop();
     return result;
   };

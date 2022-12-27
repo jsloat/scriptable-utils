@@ -38,7 +38,10 @@ export const confirm = async (
   const shouldBypassDialog = Boolean(
     dontShowAgainKey && dontShowAgainMap[dontShowAgainKey]
   );
-  if (shouldBypassDialog) return true;
+  if (shouldBypassDialog) {
+    await onConfirm?.();
+    return true;
+  }
 
   const DONT_SHOW_AGAIN_LABEL = `${confirmButtonTitle} (stop asking)`;
   const { tappedButtonText } = await alert({

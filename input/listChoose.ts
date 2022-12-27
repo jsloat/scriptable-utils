@@ -1,6 +1,6 @@
 import { ExcludeFalsy, isString } from '../common';
 import { noop } from '../flow';
-import { SFSymbolKey } from '../sfSymbols';
+import { IconOrSFKey } from '../UITable/elements/Icon';
 import { FlavorOption } from '../UITable/Row/flavors';
 import fullscreenOpts, { FullscreenOptNode } from './fullscreenOpts';
 import textInput from './textInput';
@@ -9,13 +9,13 @@ type Opts<V> = {
   onOptionSelect?: MapFn<V>;
   onCancel?: NoParamFn;
   /** If provided, use this icon as the default */
-  fallbackIcon?: SFSymbolKey;
+  fallbackIcon?: IconOrSFKey;
 };
 
 export type ListChooseOptionObj<L extends string, V> = {
   label: L;
   value: V;
-  icon?: SFSymbolKey;
+  icon?: IconOrSFKey;
   flavor?: FlavorOption;
 };
 

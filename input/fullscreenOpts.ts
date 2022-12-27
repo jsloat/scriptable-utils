@@ -4,14 +4,14 @@ import { getColor, getDynamicColor } from '../colors';
 import { isFunc } from '../common';
 import { getMaxScreenHeight } from '../device';
 import { isOdd } from '../numbers';
-import { getSfSymbolImg, SFSymbolKey } from '../sfSymbols';
+import { Div, HSpace, P } from '../UITable/elements';
+import Icon, { IconOrSFKey } from '../UITable/elements/Icon';
 import getTable from '../UITable/getTable';
-import { BaseCell, BaseRow } from '../UITable/Row/base';
 import { FlavorOption, parseFlavor } from '../UITable/Row/flavors';
 
 export type FullscreenOptNode = {
   label: string;
-  icon: SFSymbolKey;
+  icon: IconOrSFKey;
   flavor?: FlavorOption;
   /** Action or children are required, though typing doesn't enforce it. */
   action?: NoParamFn;
@@ -61,38 +61,30 @@ export default async (initNodes: FullscreenOptNode[]) => {
       const color = flavor
         ? parseFlavor(flavor).color
         : getColor('primaryTextColor');
-      return BaseRow({
-        bgColor: flavor ? parseFlavor(flavor).bgColor : defaultBgColor,
-        dismissTableOnTap: !children,
-        height: getOptionHeight(totalNodesShown),
-        onTap: async () => {
-          if (children) {
-            const childrenNodes = isFunc(children)
-              ? await children()
-              : children;
-            setState({ nodes: childrenNodes });
-          } else if (action) {
-            setState({ selectedActionLabel: label });
-            action();
-          }
-        },
-        cells: [
-          BaseCell({
-            type: 'image',
-            value: getSfSymbolImg(icon, color),
-            align: 'center',
-          }),
-          BaseCell({ type: 'text', value: '', widthWeight: 1 }),
-          BaseCell({
-            type: 'text',
-            value: label,
-            align: 'left',
-            color,
-            font: Font.title1(),
-            widthWeight: 14,
-          }),
+      return Div(
+        [
+          Icon(icon, { width: '10%' }),
+          HSpace('10%'),
+          P(label, { font: Font.title1 }),
         ],
-      });
+        {
+          color,
+          bgColor: flavor ? parseFlavor(flavor).bgColor : defaultBgColor,
+          dismissOnTap: !children,
+          height: getOptionHeight(totalNodesShown),
+          onTap: async () => {
+            if (children) {
+              const childrenNodes = isFunc(children)
+                ? await children()
+                : children;
+              setState({ nodes: childrenNodes });
+            } else if (action) {
+              setState({ selectedActionLabel: label });
+              action();
+            }
+          },
+        }
+      );
     }
   );
 

@@ -1,5 +1,6 @@
 import { conditionalArr } from '../../../array';
 import { range } from '../../../object';
+import { Container } from '../../elements/shapes';
 import { ValidTableEl } from '../../types';
 import _CycleTabs from './_CycleTabs';
 import _HR from './_HR';
@@ -7,7 +8,7 @@ import _Spacer from './_Spacer';
 
 type Opts<Entity> = {
   getEntities: NoParamFn<Entity[]>;
-  getEntityRow: MapFn<Entity, ValidTableEl>;
+  getEntityRow: MapFn<Entity, Container>;
   rerenderParent: NoParamFn;
   name: string;
   pageSize?: number;
@@ -49,14 +50,20 @@ export default <E>({
   const labels = range(1, Math.ceil(entities.length / pageSize)).map(String);
   const shouldShowPagination = labels.length > 1;
   const currPage = stateRegister.get(name)!;
-  const shownEntities = getEntriesForPage(entities, currPage, pageSize);
+  /** It's possible for the user to be on a page that doesn't exist, if e.g.
+   * they were on page 2, then applied a filter that reduced the entity count
+   * enough to fit on a single page (in which case the user would see an empty
+   * screen). */
+  const doesCurrPageExist = currPage <= labels.length;
+  const guardedCurrPage = doesCurrPageExist ? currPage : 1;
+  const shownEntities = getEntriesForPage(entities, guardedCurrPage, pageSize);
 
   const Controller =
     shouldShowPagination &&
     [
       _CycleTabs({
         labels,
-        initValue: String(currPage),
+        initValue: String(guardedCurrPage),
         name,
         rerenderParent,
         onTabChange: ({ nextTab }) => setPageNr(name, parseInt(nextTab, 10)),

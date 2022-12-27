@@ -1,51 +1,50 @@
 import { getColor } from '../../colors';
-import { ICONS } from '../../icons';
+import { IconKey, ICONS } from '../../icons';
 import { getSfSymbolImg, SFSymbolKey } from '../../sfSymbols';
 import { isSFSymbolKey } from '../../sfSymbols/utils';
-import { BaseCell } from '../Row/base';
-import { CellShape, CellShapeStyle } from './shapes';
-import { parseColor } from './utils';
+import { Cell, CellShapeStyle } from './shapes';
+import { fadeColorIntoBackground } from './utils';
 
-type IconKey = keyof typeof ICONS;
-export type ValidIconKey = SFSymbolKey | IconKey;
+export type IconOrSFKey = SFSymbolKey | IconKey;
 
-class Icon extends CellShape {
-  private key: ValidIconKey;
+type IconOpts = CellShapeStyle & { doNotTint?: boolean };
 
-  constructor(key: ValidIconKey, style: CellShapeStyle) {
-    super(style);
-    this.key = key;
-  }
-
-  render() {
-    const {
-      align = 'center',
-      color = getColor('primaryTextColor'),
-      font = Font.boldSystemFont,
-      fontSize = 20,
-    } = this.style;
-    const width = this.getWidthPercent();
-    const parsedColor = parseColor(color, this.style);
-
-    if (isSFSymbolKey(this.key)) {
-      return BaseCell({
-        type: 'image',
-        value: getSfSymbolImg(this.key, parsedColor),
-        align,
-        widthWeight: width,
-      });
-    } else {
-      return BaseCell({
-        type: 'text',
-        value: ICONS[this.key],
-        align,
-        widthWeight: width,
-        color: parsedColor,
-        font: font(fontSize),
-      });
-    }
+class Icon extends Cell {
+  constructor(key: IconOrSFKey, { doNotTint = false, ...style }: IconOpts) {
+    super({
+      style,
+      getCellOptsWithCalibratedWidth: (inheritedStyle, widthWeight) => {
+        const {
+          align = 'center',
+          color = getColor('primaryTextColor'),
+          font = Font.boldSystemFont,
+          fontSize = 20,
+        } = inheritedStyle;
+        const parsedColor = fadeColorIntoBackground(color, inheritedStyle);
+        if (isSFSymbolKey(key)) {
+          return {
+            type: 'image',
+            value: getSfSymbolImg(key, doNotTint ? null : parsedColor),
+            align,
+            widthWeight,
+          };
+        } else {
+          return {
+            type: 'text',
+            value: ICONS[key],
+            align,
+            widthWeight,
+            color: parsedColor,
+            font: font(fontSize),
+          };
+        }
+      },
+    });
   }
 }
 
-export default (key: ValidIconKey, style: CellShapeStyle = {}) =>
-  new Icon(key, style);
+export default (key: IconOrSFKey, style: IconOpts = {}) => {
+  const el = new Icon(key, style);
+  el.setDescription(`ICON > key: "${key}"`);
+  return el;
+};

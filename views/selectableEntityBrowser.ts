@@ -8,8 +8,9 @@ import { ExcludeFalsy } from '../common';
 import listChoose, { ListChooseOptionObj } from '../input/listChoose';
 import textInput from '../input/textInput';
 import { getReducerCreator, getTableActionCreator } from '../reducerAction';
-import { SFSymbolKey } from '../sfSymbols';
 import { Stream } from '../streams';
+import { IconOrSFKey } from '../UITable/elements/Icon';
+import { Container } from '../UITable/elements/shapes';
 import getTable from '../UITable/getTable';
 import {
   ButtonStack,
@@ -19,13 +20,12 @@ import {
   Spacer,
 } from '../UITable/Row/templates';
 import { H1Opts } from '../UITable/Row/templates/_H1';
-import { ValidTableEl } from '../UITable/types';
 import entityFilter from './entityFilter';
 import { FilterRecord, FilterWithState } from './entityFilter/types';
 import { getAppliedFiltersPredicate } from './entityFilter/utils';
 
 export type BulkAction<E> = {
-  icon: SFSymbolKey;
+  icon: IconOrSFKey;
   label: string;
   onTap: MapFn<E[], any>;
   shouldHide?: MapFn<E[], boolean>;
@@ -66,7 +66,7 @@ export type SelectableEntityBrowserOpts<Entity> = {
   beforeLoad?: NoParamFn<any>;
   onClose?: MapFn<$Props<Entity>, any>;
   getEntities: NoParamFn<MaybePromise<Entity[]>>;
-  getEntityRow: MapFn<EntityRowCallbackOpts<Entity>, ValidTableEl>;
+  getEntityRow: MapFn<EntityRowCallbackOpts<Entity>, Container>;
   /** This action occurs when single tapping an entity. */
   openEntity: MapFn<OpenEntityCallbackOpts<Entity>, any>;
   /** Available actions when bulk selecting entities. If not provided,
@@ -92,7 +92,7 @@ const selectBulkAction = async <E>(
   bulkActions: SelectableEntityBrowserOpts<E>['bulkActions']
 ) => {
   if (!bulkActions) return;
-  await listChoose(
+  const chosenAction = await listChoose(
     bulkActions
       .map<ListChooseOptionObj<string, NoParamFn> | null>(
         ({ label, onTap, shouldHide, icon }) =>
@@ -100,9 +100,9 @@ const selectBulkAction = async <E>(
             ? null
             : { label, icon, value: () => onTap(entities) }
       )
-      .filter(ExcludeFalsy),
-    { onOptionSelect: fn => fn() }
+      .filter(ExcludeFalsy)
   );
+  await chosenAction?.();
 };
 
 const getDefaultProps$State = <E>(): $Props<E> => ({
@@ -183,7 +183,7 @@ export default async <E>({
     props$.setData(newProps);
   };
 
-  const { present, connect, getProps, getState, setState } = getTable<
+  const { present, connect, getProps, getState, setState, rerender } = getTable<
     State<E>,
     void,
     $Props<E>
@@ -292,14 +292,12 @@ export default async <E>({
             rerender: () => reloadEntities(state),
           })
         : []),
-    ]).map<ButtonStackOpt>(opt => ({
-      ...opt,
-      flavor: 'transparentWithBorder',
-    }));
+    ]).map<ButtonStackOpt>(opt => ({ ...opt }));
     return stackOpts.length && ButtonStack(stackOpts);
   });
 
-  const EntityRow = connect(({ state, rerender }, id: EntityId) => {
+  const EntityRow = (id: EntityId) => {
+    const state = getState();
     const { selectedEntityIds } = state;
     const props = getProps();
     const { entityMap } = props;
@@ -311,31 +309,28 @@ export default async <E>({
       rerender,
       entity,
     };
-    return [
-      getEntityRow({
-        entity,
-        isSelected,
-        onTap: async () => {
-          if (numSelected) return toggleEntitySelect(id);
-          await openEntity(openEntityOpts);
-          reloadEntities(state);
-        },
-        onDoubleTap: async () => {
-          if (!numSelected) return setSelectedIds([id]);
-          const isSelectingBulkAction = isSelected && numSelected > 1;
-          if (isSelectingBulkAction) {
-            const selectedEntities = [...selectedEntityIds].map(
-              id => entityMap.get(id)!
-            );
-            await selectBulkAction(selectedEntities, bulkActions);
-          } else await openEntity(openEntityOpts);
-          deselectAll();
-          reloadEntities(state);
-        },
-      }),
-      Spacer({ rowHeight: 1 }),
-    ].flat();
-  });
+    return getEntityRow({
+      entity,
+      isSelected,
+      onTap: async () => {
+        if (numSelected) return toggleEntitySelect(id);
+        await openEntity(openEntityOpts);
+        reloadEntities(state);
+      },
+      onDoubleTap: async () => {
+        if (!numSelected) return setSelectedIds([id]);
+        const isSelectingBulkAction = isSelected && numSelected > 1;
+        if (isSelectingBulkAction) {
+          const selectedEntities = [...selectedEntityIds].map(
+            id => entityMap.get(id)!
+          );
+          await selectBulkAction(selectedEntities, bulkActions);
+        } else await openEntity(openEntityOpts);
+        deselectAll();
+        reloadEntities(state);
+      },
+    });
+  };
 
   const Pagination = connect(({ rerender }) =>
     PaginationController({

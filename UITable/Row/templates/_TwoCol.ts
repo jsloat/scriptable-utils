@@ -5,7 +5,7 @@ import { getRowConstructor } from './utils';
 type OwnContentAreaOpts = Omit<ContentAreaOpts, 'align' | 'width'>;
 type OwnOpts = { gutterLeft: OwnContentAreaOpts; main: OwnContentAreaOpts };
 
-export const getTwoColReducer =
+const getTwoColReducer =
   ({ gutterLeft, main }: OwnOpts): Identity<RowOpts> =>
   rowOpts => ({
     ...rowOpts,

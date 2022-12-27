@@ -24,6 +24,8 @@ export type CascadingCellStyle = Partial<{
   fontSize: number;
   font: (textSize: number) => Font;
   align: Align;
+  /** Flag used to print style tree to console. */
+  debug: boolean;
 }>;
 
 export type CascadingStyle = CascadingRowStyle & CascadingCellStyle;

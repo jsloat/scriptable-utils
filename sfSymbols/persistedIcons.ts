@@ -1,4 +1,5 @@
-import { createDirIfNotExists } from '../io/filesystemUtils';
+import { destructiveConfirm, OK } from '../input/confirm';
+import { createDirIfNotExists, getDirContents } from '../io/filesystemUtils';
 import { FILE_EXTENSION, IMAGE_DIR_PATH } from './consts';
 import { SFSymbolKey, TintRequestKey } from './types';
 import { getTintRequestKey } from './utils';
@@ -22,6 +23,25 @@ const saveImage = (key: TintRequestKey, image: Image) => {
   const path = getImgPath(key);
   io.writeImage(path, image);
   cache.set(key, image);
+};
+
+/** Used to reset the stored icon cache, useful if e.g. there's a major change
+ * to the icons or color palettes used in scripts. */
+export const deleteAllCachedIcons = async () => {
+  const cachedIcons = getDirContents(IMAGE_DIR_PATH);
+  if (!cachedIcons.length) {
+    OK('No icons to delete');
+    return;
+  }
+  const confirmed = await destructiveConfirm(
+    `Delete all cached icons (${cachedIcons.length})?`,
+    { message: 'Icons will be re-cached over time' }
+  );
+  if (!confirmed) return;
+  const io = FileManager.iCloud();
+  cachedIcons.forEach(({ filepath: cachedIconPath }) =>
+    io.remove(cachedIconPath)
+  );
 };
 
 type GetCachedImageReturn = Image | 'FILE_DOES_NOT_EXIST' | 'LOADING_FILE';

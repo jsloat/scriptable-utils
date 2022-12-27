@@ -1,35 +1,37 @@
 import { getColor } from '../../colors';
-import { BaseCell } from '../Row/base';
-import { CellShape, CellShapeStyle } from './shapes';
-import { parseColor } from './utils';
+import { truncate } from '../../string';
+import { Cell, CellShapeStyle } from './shapes';
+import { fadeColorIntoBackground } from './utils';
 
-class P extends CellShape {
-  private text: string;
-
+class P extends Cell {
   constructor(text: string, style: CellShapeStyle) {
-    super(style);
-    this.text = text;
-  }
-
-  render() {
-    const {
-      align = 'left',
-      color = getColor('primaryTextColor'),
-      font = Font.regularRoundedSystemFont,
-      fontSize = 20,
-    } = this.style;
-    const width = this.getWidthPercent();
-    const parsedColor = parseColor(color, this.style);
-
-    return BaseCell({
-      type: 'text',
-      value: this.text,
-      align,
-      widthWeight: width,
-      color: parsedColor,
-      font: font(fontSize),
+    super({
+      style,
+      getCellOptsWithCalibratedWidth: (
+        {
+          align = 'left',
+          color = getColor('primaryTextColor'),
+          font = Font.regularRoundedSystemFont,
+          fontSize = 20,
+        },
+        widthWeight
+      ) => {
+        const parsedColor = fadeColorIntoBackground(color, this.style);
+        return {
+          type: 'text',
+          value: text,
+          align,
+          widthWeight,
+          color: parsedColor,
+          font: font(fontSize),
+        };
+      },
     });
   }
 }
 
-export default (text: string, style: CellShapeStyle = {}) => new P(text, style);
+export default (text: string, style: CellShapeStyle = {}) => {
+  const el = new P(text, style);
+  el.setDescription(`P > text: "${truncate(text, 20)}"`);
+  return el;
+};

@@ -1,6 +1,7 @@
+import { chunk } from './array';
 import { isString, objectFromEntries } from './common';
 import { shortSwitch } from './flow';
-import { hasKey, objectKeys } from './object';
+import { hasKey, objectKeys, range } from './object';
 
 type DynamicColor = { color: Color; isDynamic: true };
 export type EnhancedColor = { color: Color; label: string; isDynamic: boolean };
@@ -79,23 +80,49 @@ const COLORS = {
   blue: c`c6e0ff`,
   blue_d1: c`add2ff`,
   blue_d2: c`85bcff`,
+
+  // RANDOM COLORS I LIKE
+  // Named by coolors.co
+
+  // Nice dusky gray, good for dark mode
+  umber: c`695958`,
+  black_coffee: c`41393e`,
+  alice_blue: c`e4f0ff`,
+  black_coral: c`4b5463`,
+  platinum: c`e6e8e9`,
+  majorelle_blue: c`4f46e5`,
+  neon_blue: c`6366f1`,
+  magnolia: c`f2f1fd`,
+  ocean_blue: c`4339ca`,
+
+  // TAILWIND COLORS
+  slate_100: c`f1f5f9`,
+  slate_700: c`334155`,
+  sky_500: c`0ea5e9`,
+  red_500: c`ef4444`,
+
+  // BULMA COLORS (another UI framework)
+  caribbean_green: c`00d1b2`,
+  jasmine: c`ffe08a`,
+  field_drab: c`574a2b`,
 };
 
 const COLOR_ALIASES = {
-  domain_personal: COLORS.deep_blue,
-  domain_work: COLORS.yellow,
-  domain_mix: c`73928D`,
+  domain_personal: COLORS.sky_500,
+  domain_work: COLORS.red_500,
   danger: COLORS.red_l1,
-  success: COLORS.green_l2,
+  success: COLORS.caribbean_green,
+  warning: COLORS.jasmine,
   bg: getDynamicColorObj(COLORS.white, COLORS.black),
   primaryTextColor: getDynamicColorObj(COLORS.gray8, COLORS.gray1),
-  secondaryTextColor: getDynamicColorObj(COLORS.gray6, COLORS.gray3),
+  secondaryTextColor: getDynamicColorObj(COLORS.gray5, COLORS.gray4),
   hr: getDynamicColorObj(COLORS.gray0, COLORS.gray7),
+  selectedBgColor: getDynamicColorObj(COLORS.gray1, COLORS.gray7),
 };
 
 export const colorKeys = [...objectKeys(COLORS), ...objectKeys(COLOR_ALIASES)];
 
-type ColorKey = typeof colorKeys[number];
+export type ColorKey = typeof colorKeys[number];
 
 const getKeyVal = (key: ColorKey) => {
   if (hasKey(COLORS, key)) return COLORS[key];
@@ -139,3 +166,73 @@ export const getDomainColor = (domain: Domain) =>
     personal: getColor('domain_personal'),
     work: getColor('domain_work'),
   });
+
+type FormattedHex = { r: string; g: string; b: string };
+const formatHex = (hexStr: string): FormattedHex => {
+  if (hexStr.length !== 6) throw new Error('Must be 6 chars');
+  const [r, g, b] = chunk(hexStr.split(''), 2);
+  return { r: r!.join(''), g: g!.join(''), b: b!.join('') };
+};
+
+type FormattedInt = { r: number; g: number; b: number };
+const formattedHexToInt = ({ r, g, b }: FormattedHex): FormattedInt => ({
+  r: parseInt(r, 16),
+  g: parseInt(g, 16),
+  b: parseInt(b, 16),
+});
+
+const intToHex = (int: number): string =>
+  Math.round(int).toString(16).padStart(2, '0');
+
+const formattedHexToColor = ({ r, g, b }: FormattedHex) =>
+  new Color([r, g, b].join(''));
+
+const hexOrColorToHex = (val: string | Color) =>
+  isString(val) ? val : val.hex;
+
+type GetColorFadeMidpointsOpts<N extends number> = {
+  from: string | Color;
+  to: string | Color;
+  numPoints: N;
+};
+
+type GetColorFadeMidpoints = {
+  (opts: GetColorFadeMidpointsOpts<1>): [Color];
+  (opts: GetColorFadeMidpointsOpts<2>): [Color, Color];
+  (opts: GetColorFadeMidpointsOpts<3>): [Color, Color, Color];
+  (opts: GetColorFadeMidpointsOpts<4>): [Color, Color, Color, Color];
+  (opts: GetColorFadeMidpointsOpts<5>): [Color, Color, Color, Color, Color];
+  (
+    opts: Omit_<GetColorFadeMidpointsOpts<any>, 'numPoints'> & {
+      numPoints: number;
+    }
+  ): Color[];
+};
+
+/**
+ * Inspired by https://stackoverflow.com/a/52306228
+ *
+ * Generates `numPoints` number of midpoints between `from` and `to` colors.
+ * Returned colors are exclusive of `from` and `to`.
+ */
+export const getGradientMidpoints: GetColorFadeMidpoints = ({
+  from,
+  to,
+  numPoints,
+}) => {
+  const fromInt = formattedHexToInt(formatHex(hexOrColorToHex(from)));
+  const toInt = formattedHexToInt(formatHex(hexOrColorToHex(to)));
+  const stepPercent = 1 / (numPoints + 1);
+  const intPoints = range(1, numPoints).map(stepMultiplier => ({
+    r: fromInt.r + stepPercent * stepMultiplier * (toInt.r - fromInt.r),
+    g: fromInt.g + stepPercent * stepMultiplier * (toInt.g - fromInt.g),
+    b: fromInt.b + stepPercent * stepMultiplier * (toInt.b - fromInt.b),
+  }));
+  return intPoints.map(({ r, g, b }) =>
+    formattedHexToColor({
+      r: intToHex(Math.floor(r)),
+      g: intToHex(Math.floor(g)),
+      b: intToHex(Math.floor(b)),
+    })
+  ) as any;
+};

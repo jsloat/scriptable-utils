@@ -1,58 +1,54 @@
-import { conditionalArr } from '../../array';
-import { getColor } from '../../colors';
-import {
-  AnyElement,
-  CellContainerShape,
-  ContainerShape,
-  ContainerStyle,
-  isCellShape,
-  Row,
-} from './shapes';
+import { ExcludeFalsy } from '../../common';
+import { objectKeys } from '../../object';
+import { Container, ContainerChild, ContainerStyle } from './shapes';
 import { TapProps } from './types';
-import { getContainerSurroundingRows, parseColor } from './utils';
+import { getTapProps } from './utils';
 
-class Div extends ContainerShape {
-  constructor(
-    children: AnyElement[],
-    style: ContainerStyle,
-    tapProps: TapProps
-  ) {
-    super(children, style, tapProps);
-  }
+export type DivStyle = ContainerStyle & TapProps;
 
-  render() {
-    if (this.children.every(isCellShape)) {
-      return new Row(this.children, this.style, this.tapProps).render();
-    }
-    if (this.children.some(isCellShape)) {
-      throw new Error('Div contains a mix of cells and containers');
-    }
-    // Else, is a container for other containers/rows
-    const {
-      borderBottomRow,
-      borderTopRow,
-      marginBottomRow,
-      marginTopRow,
-      paddingBottomRow,
-      paddingTopRow,
-    } = getContainerSurroundingRows(
-      this.style,
-      parseColor(this.style.bgColor ?? getColor('bg'), this.style),
-      this.tapProps
-    );
-    return conditionalArr([
-      marginTopRow,
-      borderTopRow,
-      paddingTopRow,
-      ...this.children.flatMap(child =>
-        (child as CellContainerShape<AnyElement[]>).render()
+export type DivChild = ContainerChild | Falsy;
+
+const Div = (children: DivChild[], opts: DivStyle = {}) => {
+  const realChildren = children.filter(ExcludeFalsy);
+  const el = new Container(realChildren, opts, getTapProps(opts));
+  el.setDescription(`DIV > shownCells: ${realChildren.length}`);
+  return el;
+};
+export default Div;
+
+//
+//
+//
+
+const onTapKeys: (keyof DivStyle)[] = [
+  'onTap',
+  'onDoubleTap',
+  'onTripleTap',
+  'dismissOnTap',
+];
+
+/**
+ * This is for cases when you want to apply style to a Div, but don't want it to
+ * cascade beyone that container. E.g. if you want margin for the Div to
+ * separate it from other elements, but do not want the margin to be applied to
+ * children as well.
+ *
+ * NB this explicitly allows onTap props to cascade, since the assumption is
+ * that if an onTap is defined for a container, the implied meaning is that all
+ * children have that same onTap logic. It would be possible to have e.g.
+ * different onTap actions for padding vs content of a Div, for example.
+ */
+export const NonCascadingDiv = (children: DivChild[], opts: DivStyle = {}) =>
+  Div(
+    [
+      Div(
+        children,
+        objectKeys(opts).reduce(
+          (acc, key) =>
+            onTapKeys.includes(key) ? acc : { ...acc, [key]: undefined },
+          {} as DivStyle
+        )
       ),
-      paddingBottomRow,
-      borderBottomRow,
-      marginBottomRow,
-    ]);
-  }
-}
-
-export default (children: AnyElement[], opts: ContainerStyle & TapProps = {}) =>
-  new Div(children, opts, opts);
+    ],
+    opts
+  );

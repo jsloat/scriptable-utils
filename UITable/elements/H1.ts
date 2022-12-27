@@ -1,31 +1,27 @@
 import { conditionalArr } from '../../array';
-import { pick } from '../../object';
 import Div from './Div';
-import Icon, { ValidIconKey } from './Icon';
+import Icon, { IconOrSFKey } from './Icon';
 import P from './P';
-import { ContainerStyle, Row } from './shapes';
-import { CascadingStyle, Percent, TapProps } from './types';
+import { ContainerStyle } from './shapes';
+import { CascadingStyle, TapProps } from './types';
+import { getTapProps, numToPct } from './utils';
 
 type H1Opts = Partial<{
   subtitle: string;
   titleColor: Color;
   subtitleColor: Color;
-  icon?: ValidIconKey;
+  icon?: IconOrSFKey;
 }> &
   Pick<CascadingStyle, 'isFaded' | 'marginBottom' | 'marginTop'> &
   TapProps;
 
 const ICON_WIDTH = 10;
-const ICON_WIDTH_PCT: Percent = `${ICON_WIDTH}%`;
 const NO_SPACING: ContainerStyle = {
   marginBottom: 0,
   marginTop: 0,
   paddingBottom: 0,
   paddingTop: 0,
 };
-
-const getTapProps: Identity<TapProps> = props =>
-  pick(props, ['dismissOnTap', 'onDoubleTap', 'onTap', 'onTripleTap']);
 
 const getTopRow = (
   title: string,
@@ -35,27 +31,26 @@ const getTopRow = (
   const hasOnTap = Boolean(
     tapProps.onTap || tapProps.onDoubleTap || tapProps.onTripleTap
   );
-  const numShownIcons = (icon ? 1 : 0) + (hasOnTap ? 1 : 0);
-  return new Row(
+  const displayedIcon: IconOrSFKey | null =
+    icon ?? (hasOnTap ? 'ellipsis_circle' : null);
+  const textWidth = numToPct(100 - (displayedIcon ? ICON_WIDTH : 0));
+  return Div(
     conditionalArr([
-      icon && Icon(icon, { width: ICON_WIDTH_PCT, color: titleColor }),
-
       P(title, {
         font: Font.boldSystemFont,
         fontSize: 25,
-        width: `${100 - numShownIcons * ICON_WIDTH}%`,
+        width: textWidth,
         color: titleColor,
       }),
 
-      hasOnTap &&
-        Icon('ellipsis_circle', {
-          width: ICON_WIDTH_PCT,
+      displayedIcon &&
+        Icon(displayedIcon, {
+          width: numToPct(ICON_WIDTH),
           isFaded: true,
           color: titleColor,
         }),
     ]),
-    NO_SPACING,
-    tapProps
+    { ...NO_SPACING, ...tapProps }
   );
 };
 
@@ -63,27 +58,18 @@ const getSubtitleRow = (
   subtitle: string,
   { subtitleColor, icon, ...restProps }: H1Opts
 ) =>
-  new Row(
-    conditionalArr([
-      icon && P('', { width: ICON_WIDTH_PCT }),
+  Div([P(subtitle)], {
+    font: Font.footnote,
+    color: subtitleColor,
+    height: 14,
+    ...NO_SPACING,
+    ...getTapProps(restProps),
+  });
 
-      P(subtitle, {
-        width: `${100 - (icon ? ICON_WIDTH : 0)}%`,
-        font: Font.footnote,
-        color: subtitleColor,
-      }),
-    ]),
-    { height: 14, ...NO_SPACING },
-    getTapProps(restProps)
-  );
-
-export default (title: string, opts: H1Opts) => {
+export default (text: string, opts: H1Opts = {}) => {
   const { subtitle, isFaded, marginBottom, marginTop } = opts;
-  return Div(
-    conditionalArr([
-      getTopRow(title, opts),
-      subtitle && getSubtitleRow(subtitle, opts),
-    ]),
+  const el = Div(
+    [getTopRow(text, opts), subtitle && getSubtitleRow(subtitle, opts)],
     {
       marginTop,
       marginBottom,
@@ -93,4 +79,6 @@ export default (title: string, opts: H1Opts) => {
       ...getTapProps(opts),
     }
   );
+  el.setDescription(`H1 > title: ${text}`);
+  return el;
 };

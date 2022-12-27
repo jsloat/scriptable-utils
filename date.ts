@@ -107,6 +107,17 @@ const DATE_FORMATTER_MAP = {
   dayOfWeekNameShort: formatter(date =>
     date.toLocaleString('en-us', { weekday: 'short' })
   ),
+  // December 9, 2022, 13:40
+  longDateAndTime: formatter(date =>
+    date.toLocaleDateString(undefined, {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  ),
 };
 
 export const formatDate = (

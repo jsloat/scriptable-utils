@@ -1,5 +1,5 @@
-import { filter, toReduce } from './arrayTransducers';
-import { getType, objectFromEntries } from './common';
+import { compose, filter, map, toFind, toReduce } from './arrayTransducers';
+import { ExcludeFalsy, getType, objectFromEntries } from './common';
 
 /**
  * NB: doesn't take into account order of elements in an array
@@ -97,3 +97,82 @@ export const arrToObjMap = <T, O extends AnyObj>(
 
 export const hasKey = <O extends AnyObj>(obj: O, key: any): key is keyof O =>
   key in obj;
+
+export const spreadIgnoreUndefined = <T extends AnyObj>(
+  obj: T,
+  updater: Partial<T>
+): T =>
+  Object.entries(updater).reduce(
+    (acc, [key, val]) => (val === undefined ? acc : { ...acc, [key]: val }),
+    Object.assign({}, obj)
+  );
+
+type Apportion = {
+  <T extends AnyObj, K1 extends keyof T>(obj: T, keys1: K1[]): [
+    group1: Pick<T, K1>,
+    remainder: Omit<T, K1>
+  ];
+
+  <T extends AnyObj, K1 extends keyof T, K2 extends keyof T>(
+    obj: T,
+    keys1: K1[],
+    keys2: K2[]
+  ): [group1: Pick<T, K1>, group2: Pick<T, K2>, remainder: Omit<T, K1 | K2>];
+
+  <
+    T extends AnyObj,
+    K1 extends keyof T,
+    K2 extends keyof T,
+    K3 extends keyof T
+  >(
+    obj: T,
+    keys1: K1[],
+    keys2: K2[],
+    keys3: K3[]
+  ): [
+    group1: Pick<T, K1>,
+    group2: Pick<T, K2>,
+    group4: Pick<T, K3>,
+    remainder: Omit<T, K1 | K2 | K3>
+  ];
+};
+
+const updateObjAtIndex = <T extends AnyObj>(
+  objs: T[],
+  index: number,
+  updater: Partial<T>
+) => objs.map((obj, i) => (i === index ? { ...obj, ...updater } : obj));
+
+/** Breaks an object up into multiple smaller segments. NB that a key-value pair
+ * can NOT belong to multiple groups, the first matching group will be chosen.
+ * So be explicit. */
+// ts-unused-exports:disable-next-line
+export const apportion: Apportion = <T extends AnyObj>(
+  obj: T,
+  k1: (keyof T)[],
+  k2?: (keyof T)[],
+  k3?: (keyof T)[]
+): any => {
+  // Add to this array to extend supported arity
+  const keySets = [new Set(k1), k2 && new Set(k2), k2 && new Set(k3)];
+  const numSegments = 1 + (k2 ? 1 : 0) + (k3 ? 1 : 0);
+  return objectEntries(obj).reduce<Partial<T>[]>(
+    (results, [key, val]) => {
+      const updater = { [key]: val } as Partial<T>;
+      const addedToASegment = toFind(
+        keySets,
+        compose(
+          map(
+            (set, i) => set?.has(key) && updateObjAtIndex(results, i, updater)
+          ),
+          filter(ExcludeFalsy)
+        ),
+        Boolean
+      );
+      if (addedToASegment) return addedToASegment;
+      return updateObjAtIndex(results, numSegments, updater);
+    },
+    // +1 for the "remainder"
+    Array(numSegments + 1).fill({})
+  );
+};

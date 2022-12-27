@@ -3,7 +3,7 @@
 // I haven't dug too far into the code so it may be able to be improved. I found
 // settings that work pretty well through experimentation.
 
-import { ExcludeFalsy, clamp, isNumber } from '../common';
+import { clamp, ExcludeFalsy, isNumber } from '../common';
 
 /**
  * @param {Image} image The image from the SFSymbol
@@ -207,9 +207,6 @@ let oldHsl = oldColor.map(
   }
 );
 const hasOldColor = oldHsl.length > 0;
-log("hasOldColor: " + hasOldColor);
-log("oldHsl:");
-log(oldHsl);
 
 canvas.width = img.width;
 canvas.height = img.height;

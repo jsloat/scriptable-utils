@@ -1,16 +1,19 @@
 import alert from '../input/alert';
-import { CellContainerShape } from './elements/shapes';
+import { Container } from './elements/shapes';
+import { BaseRow } from './Row/base';
 
 export const reloadTableRows = (
   table: UITable,
-  rows: (UITableRow | CellContainerShape)[]
+  rows: (UITableRow | Container)[]
 ) => {
   table.removeAllRows();
   rows.forEach(row => {
-    const parsedRows = [
-      row instanceof CellContainerShape ? row.render() : row,
-    ].flat();
-    parsedRows.forEach(parsedRow => table.addRow(parsedRow));
+    if (row instanceof Container) {
+      const rowOpts = row.render();
+      rowOpts.forEach(rowOpts => table.addRow(BaseRow(rowOpts)));
+    } else {
+      table.addRow(row);
+    }
   });
   table.reload();
 };

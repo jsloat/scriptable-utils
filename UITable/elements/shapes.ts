@@ -1,7 +1,7 @@
 import { conditionalArr } from '../../array';
 import { getColor } from '../../colors';
-import { isNumber } from '../../common';
-import { BaseRow } from '../Row/base';
+import { tidyLog } from '../../string';
+import { BaseCellParams, BaseRowOpts } from '../Row/base';
 import {
   CascadingCellStyle,
   CascadingRowStyle,
@@ -12,7 +12,7 @@ import {
 } from './types';
 import {
   fillInCellWidthBlanks,
-  getContainerSurroundingRows,
+  getContainerSurroundingRowsOpts,
   normalizeCellWidthPercentages,
   parseColor,
   parsePercent,
@@ -20,33 +20,27 @@ import {
   tapPropsToBaseRowOpts,
 } from './utils';
 
-/**
- * Inheritance  tree (read as "Cell is an Element")
- *
- * Element
- * |-- Cell
- * |-- CellContainer
- *    |-- Row
- *    |-- Container
- */
-
-/**
- * Parent-child tree
- *
- * Container
- * |-- Container
- * |-- Cell
- * |-- Row
- *    |-- Cell
- */
+type StyleTree = {
+  DESCRIPTION: string;
+  style: AnyObj;
+  parent: StyleTree | null;
+};
+const getNodeStyleTree = (node: AnyElement): StyleTree => ({
+  DESCRIPTION: String(node),
+  style: node.style,
+  parent: node.parent ? getNodeStyleTree(node.parent) : null,
+});
 
 abstract class Element<
   ValidParentType extends Element<any, Style, any>,
   Style extends AnyObj,
   Renders
 > {
-  protected parent: ValidParentType | null = null;
+  parent: ValidParentType | null = null;
   style: Style;
+  /** Intended to generate a descriptive string for the element, for use in
+   * debugging. The goal is to make this work without much user interaction. */
+  protected description = 'ELEMENT';
 
   constructor(style: Style) {
     this.style = style;
@@ -54,7 +48,25 @@ abstract class Element<
 
   setParent(parent: ValidParentType) {
     this.parent = parent;
-    this.style = { ...this.parent.style, ...this.style };
+  }
+
+  setDescription(description: string) {
+    this.description = description;
+  }
+
+  toString() {
+    return this.description;
+  }
+
+  /** To be called just before rendering */
+  protected inheritStyle() {
+    if (!this.parent) return;
+    // Don't inherit debug flag; keep it focused
+    const { debug, ...inheritableParentStyle } = this.parent.style;
+    this.style = { ...inheritableParentStyle, ...this.style };
+    /** Logs to console all styles all the way up the tree. Useful for spotting
+     * issues with cascading styles. */
+    if (this.style.debug) tidyLog(getNodeStyleTree(this));
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -63,7 +75,7 @@ abstract class Element<
   }
 }
 
-export type AnyElement = Element<any, any, any>;
+type AnyElement = Element<any, any, any>;
 
 //
 //
@@ -73,111 +85,82 @@ export type CellShapeStyle = Pick<CascadingRowStyle, 'isFaded'> &
   CascadingCellStyle &
   CellStyle;
 
-/** A cell within a `CellContainer`, laid out horizontally. This base class is
- * defined w/ text cells in mind; sub-class ImageCell is used for image use
- * cases. */
-export abstract class CellShape extends Element<
-  Row,
+type GetCellOptsWithCalibratedWidth = (
+  style: CellShapeStyle,
+  calibratedWidth: number
+) => BaseCellParams;
+type CellConstructorOpts = {
+  style: CellShapeStyle;
+  getCellOptsWithCalibratedWidth: GetCellOptsWithCalibratedWidth;
+};
+
+/** A cell within a `CellContainer`, laid out horizontally. */
+export abstract class Cell extends Element<
+  CellContainer | Container,
   CellShapeStyle,
-  UITableCell
+  Cell
 > {
-  siblingIndex: number | null = null;
+  getCellOptsWithCalibratedWidth: GetCellOptsWithCalibratedWidth;
 
-  constructor(style: CellShapeStyle) {
+  constructor({ style, getCellOptsWithCalibratedWidth }: CellConstructorOpts) {
     super(style);
-  }
-
-  protected getWidthPercent() {
-    if (!(this.parent && isNumber(this.siblingIndex))) {
-      throw new Error(
-        'Parent and siblingIndex must be registered before calculating cell width.'
-      );
-    }
-    return this.parent.getCellWidthPercent(this.siblingIndex);
-  }
-}
-
-export const isCellShape = (child: AnyElement): child is CellShape =>
-  child instanceof CellShape;
-
-//
-//
-//
-
-/** A container may only serve to cascade style downward, or it may serve as a
- * row that has cells as children. Thus it must accept `RowStyle` as well */
-export type ContainerStyle = CascadingStyle & RowStyle;
-
-/** An element that can act as a container for `Cell`s (but could have other
- * child types). A `Cell` container evaluates to a UITableRow, and thus can have
- * onTap attributes. */
-export abstract class CellContainerShape<
-  ValidChildren extends AnyElement[] = AnyElement[]
-> extends Element<ContainerShape, ContainerStyle, UITableRow[]> {
-  protected children: ValidChildren;
-  /** If children are cells, this will contain their normalized width percentages. */
-  private childCellWidths: number[] | null = null;
-  protected tapProps: TapProps;
-
-  constructor(
-    children: ValidChildren,
-    style: ContainerStyle,
-    tapProps: TapProps
-  ) {
-    super(style);
-    this.children = children;
-    this.children.forEach((child, i) => {
-      child.setParent(this);
-      if (isCellShape(child)) child.siblingIndex = i;
-    });
-    if (this.children.every(isCellShape)) {
-      this.childCellWidths = normalizeCellWidthPercentages(
-        fillInCellWidthBlanks(
-          this.children.map(cell => {
-            const width = cell.style.width;
-            return width ? parsePercent(width) : width;
-          })
-        )
-      );
-    }
-    this.tapProps = tapProps;
-  }
-
-  getCellWidthPercent(index: number) {
-    if (!this.childCellWidths) {
-      throw new Error('Attempting to fetch cell width, but it is not defined');
-    }
-    const widthPercent = this.childCellWidths[index];
-    if (!isNumber(widthPercent)) throw new Error('Invalid index');
-    return widthPercent;
-  }
-}
-
-//
-//
-//
-
-export class Row extends CellContainerShape<CellShape[]> {
-  constructor(
-    children: CellShape[],
-    style: ContainerStyle,
-    tapProps: TapProps
-  ) {
-    super(children, style, tapProps);
+    this.getCellOptsWithCalibratedWidth = getCellOptsWithCalibratedWidth;
   }
 
   render() {
-    // Defined here to it will be dynamic with rerenders
-    const fallbackBG = getColor('bg');
-    const { bgColor = fallbackBG } = this.style;
-    const cells = this.children.map(child => child.render());
-    const contentBgColor = parseColor(bgColor, this.style);
-    const mainRow = BaseRow({
-      cells,
-      height: parseRowHeight(this.style),
-      bgColor: parseColor(bgColor, this.style),
-      ...tapPropsToBaseRowOpts(this.tapProps),
-    });
+    this.inheritStyle();
+    return this;
+  }
+}
+
+const isContainerShape = (el: AnyElement): el is Container =>
+  el instanceof Container;
+
+//
+//
+//
+
+export type ContainerStyle = CascadingStyle & RowStyle & CellStyle;
+
+export type ContainerChild = Container | CellContainer | Cell;
+
+const collapseCollidingBorders = (rows: Container[]) =>
+  rows.map((row, i, arr) => {
+    if (!row.style.borderTop) return row;
+    const prevChild = arr[i - 1];
+    if (!prevChild?.style.borderBottom) return row;
+    const isSpaceBetweenBorders = Boolean(
+      prevChild.style.marginBottom || row.style.marginTop
+    );
+    if (!isSpaceBetweenBorders) row.style.borderTop = 0;
+    return row;
+  });
+
+/** A container can contain other Containers, CellContainers, or Cells */
+export class Container extends Element<
+  Container,
+  ContainerStyle,
+  BaseRowOpts[]
+> {
+  protected tapProps: TapProps;
+  protected children: ContainerChild[];
+
+  constructor(
+    children: ContainerChild[],
+    style: ContainerStyle,
+    tapProps: TapProps
+  ) {
+    super(style);
+    this.tapProps = tapProps;
+    this.children = children;
+    this.children.forEach(element => element.setParent(this));
+  }
+
+  private getBgColor() {
+    return parseColor(this.style.bgColor ?? getColor('bg'), this.style);
+  }
+
+  private wrapRowsWithSpacingAndBorder(contents: BaseRowOpts[]) {
     const {
       borderBottomRow,
       borderTopRow,
@@ -185,31 +168,93 @@ export class Row extends CellContainerShape<CellShape[]> {
       marginTopRow,
       paddingBottomRow,
       paddingTopRow,
-    } = getContainerSurroundingRows(this.style, contentBgColor, this.tapProps);
+    } = getContainerSurroundingRowsOpts(
+      this.style,
+      this.getBgColor(),
+      this.tapProps
+    );
     return conditionalArr([
       marginTopRow,
       borderTopRow,
       paddingTopRow,
-      mainRow,
+      ...contents,
       paddingBottomRow,
       borderBottomRow,
       marginBottomRow,
     ]);
   }
+
+  private getPartialBaseRowOpts(): BaseRowOpts {
+    return {
+      height: parseRowHeight(this.style),
+      bgColor: parseColor(this.getBgColor(), this.style),
+      ...tapPropsToBaseRowOpts(this.tapProps),
+    };
+  }
+
+  render(): BaseRowOpts[] {
+    this.inheritStyle();
+
+    // Treat it as a row with no cells
+    if (!this.children.length) {
+      return this.wrapRowsWithSpacingAndBorder([this.getPartialBaseRowOpts()]);
+    }
+
+    // If the Container is NOT functioning as a UITableRow
+    if (this.children.every(isContainerShape)) {
+      return this.wrapRowsWithSpacingAndBorder(
+        collapseCollidingBorders(this.children).flatMap(row => {
+          row.tapProps = { ...this.tapProps, ...row.tapProps };
+          return row.render();
+        })
+      );
+    }
+
+    if (this.children.some(isContainerShape)) {
+      throw new Error(
+        'If a Container has a Container child, all siblings must also be Containers'
+      );
+    }
+
+    // ELSE: Children are a mix of Cells and CellContainers, thus we render a
+    // single row (with padding/margin)
+
+    const cells = (this.children as (CellContainer | Cell)[]).flatMap(child =>
+      child.render()
+    );
+    const calibratedCellWidths = normalizeCellWidthPercentages(
+      fillInCellWidthBlanks(
+        cells.map(cell =>
+          cell.style.width ? parsePercent(cell.style.width) : undefined
+        )
+      )
+    );
+    const mainRow: BaseRowOpts = {
+      cells: cells.map((cell, i) => {
+        const calibratedWidth = calibratedCellWidths[i]!;
+        return cell.getCellOptsWithCalibratedWidth(cell.style, calibratedWidth);
+      }),
+      ...this.getPartialBaseRowOpts(),
+    };
+    return this.wrapRowsWithSpacingAndBorder([mainRow]);
+  }
 }
 
-//
-//
-//
+export class CellContainer extends Element<
+  Container | CellContainer,
+  CellShapeStyle,
+  Cell[]
+> {
+  protected children: Cell[];
 
-/** A container for any type of element. If its children are `Cell`s, the
- * container acts as their parent row. */
-export abstract class ContainerShape extends CellContainerShape<AnyElement[]> {
-  constructor(
-    children: AnyElement[],
-    style: ContainerStyle,
-    tapProps: TapProps
-  ) {
-    super(children, style, tapProps);
+  constructor(children: Cell[], style: CellShapeStyle) {
+    super(style);
+    this.children = children;
+    this.children.forEach(cell => cell.setParent(this));
+  }
+
+  render() {
+    this.inheritStyle();
+    return this.children.map(child => child.render());
   }
 }
