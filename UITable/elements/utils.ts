@@ -1,5 +1,5 @@
 import { sum } from '../../array';
-import { getColor, getGradientMidpoints } from '../../colors';
+import { fadeIntoColor, getColor } from '../../colors';
 import { isNumber } from '../../common';
 import { getMaxScreenHeight } from '../../device';
 import { pick } from '../../object';
@@ -107,14 +107,8 @@ export const parseColor = (color: Color, { isFaded }: CascadingStyle) =>
   isFaded ? new Color(color.hex, 0.6) : color;
 
 /** Attempts to fade the foreground color into the background color. */
-export const fadeColorIntoBackground = (
-  color: Color,
-  style: CascadingStyle
-) => {
-  if (!style.isFaded) return color;
-  const bgColor = style.bgColor ?? getColor('bg');
-  return getGradientMidpoints({ from: color, to: bgColor, numPoints: 1 })[0];
-};
+export const maybeFadeForegroundColor = (color: Color, style: CascadingStyle) =>
+  style.isFaded ? fadeIntoColor(color, style.bgColor ?? getColor('bg')) : color;
 
 export const tapPropsToBaseRowOpts = ({
   dismissOnTap: dismissTableOnTap,
@@ -129,7 +123,7 @@ const getBorderRow = (
   if (!border) return null;
   const rowColor = rowStyle.color;
   const inheritedColor =
-    rowColor && fadeColorIntoBackground(rowColor, rowStyle);
+    rowColor && maybeFadeForegroundColor(rowColor, rowStyle);
   const { color, height } = parseBorder(border, inheritedColor);
   return rowOpts({
     bgColor: color,

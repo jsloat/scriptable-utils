@@ -7,6 +7,15 @@ declare type UnwrapPromise<T> = T extends PromiseLike<infer U> ? U : T;
 
 declare type UnwrapArr<T> = T extends (infer U)[] ? U : unknown;
 
+declare type RecordOfMap<T extends Map<any, any>> = T extends Map<
+  infer U,
+  infer V
+>
+  ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    Record<U, V>
+  : unknown;
+
 declare type Nullish = null | undefined;
 
 declare type NonNullish<T> = Exclude<T, Nullish>;

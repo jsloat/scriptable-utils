@@ -1,7 +1,7 @@
 import { getColor } from '../../colors';
 import { truncate } from '../../string';
 import { Cell, CellShapeStyle } from './shapes';
-import { fadeColorIntoBackground } from './utils';
+import { maybeFadeForegroundColor } from './utils';
 
 class P extends Cell {
   constructor(text: string, style: CellShapeStyle) {
@@ -16,7 +16,7 @@ class P extends Cell {
         },
         widthWeight
       ) => {
-        const parsedColor = fadeColorIntoBackground(color, this.style);
+        const parsedColor = maybeFadeForegroundColor(color, this.style);
         return {
           type: 'text',
           value: text,

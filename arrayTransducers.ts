@@ -228,7 +228,7 @@ export const toPromiseAll = <Init, Final extends Promise<any>>(
 ) => Promise.all(sourceData.reduce(xform(joinConcat()), []));
 
 // ts-unused-exports:disable-next-line
-export const toFlat = <Init, Final extends any[]>(
+export const toFlat = <Init, Final>(
   sourceData: Init[],
-  xform: Transducer<Init, Final>
+  xform: Transducer<Init, (Final | Final[])[]>
 ) => sourceData.reduce(xform(joinFlat()), []);

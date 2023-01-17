@@ -57,7 +57,7 @@ export const confirm = async (
     presentAsSheet,
   });
 
-  if (tappedButtonText === DEFAULT_CANCEL_BUTTON_TEXT) {
+  if (tappedButtonText === cancelButtonTitle) {
     await onCancel?.();
     return false;
   }

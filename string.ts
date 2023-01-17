@@ -51,8 +51,18 @@ export const camelCase = (sentence: string) =>
 export const pluralize = (singularWord: string, count: number) =>
   `${singularWord}${count === 1 ? '' : 's'}`;
 
-export const lowerIncludes = (containingString: string, query: string) =>
-  containingString.toLowerCase().includes(query.toLowerCase());
+export const lowerIncludes = (
+  containingStringOrArr: string | string[],
+  query: string
+) => {
+  if (isString(containingStringOrArr)) {
+    return containingStringOrArr.toLowerCase().includes(query.toLowerCase());
+  } else {
+    return containingStringOrArr.some(
+      arrVal => arrVal.toLowerCase() === query.toLowerCase()
+    );
+  }
+};
 
 export const lowerEquals = (s1: string, s2: string) =>
   s1.toLowerCase() === s2.toLowerCase();

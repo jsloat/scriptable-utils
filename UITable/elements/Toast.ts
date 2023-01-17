@@ -14,7 +14,7 @@ export type ToastProps = {
   icon: IconOrSFKey;
   flavor?: FlavorKey;
   metadata?: number | string;
-  canDismissWithDoubleTap?: boolean;
+  showCloseIcon?: boolean;
   description?: string;
 } & TapProps;
 
@@ -25,7 +25,7 @@ const BANNED_ICON_COLOR_FLAVORS: FlavorKey[] = ['secondary', 'warning'];
 export default ({
   icon,
   title,
-  canDismissWithDoubleTap,
+  showCloseIcon,
   flavor = 'secondary',
   metadata,
   description,
@@ -39,7 +39,7 @@ export default ({
     [
       (metadata || isNumber(metadata)) &&
         P(String(metadata), { align: 'center', width: '15%' }),
-      canDismissWithDoubleTap && Icon('x_in_circle', { width: '8%' }),
+      showCloseIcon && Icon('x_in_circle', { width: '8%' }),
     ],
     { font: Font.footnote, align: 'center', isFaded: true }
   );

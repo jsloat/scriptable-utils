@@ -110,7 +110,7 @@ const COLORS = {
 const COLOR_ALIASES = {
   domain_personal: COLORS.sky_500,
   domain_work: COLORS.red_500,
-  danger: COLORS.red_l1,
+  danger: COLORS.red_500,
   success: COLORS.caribbean_green,
   warning: COLORS.jasmine,
   bg: getDynamicColorObj(COLORS.white, COLORS.black),
@@ -236,3 +236,7 @@ export const getGradientMidpoints: GetColorFadeMidpoints = ({
     })
   ) as any;
 };
+
+/** Get the color halfway between the 2 colors */
+export const fadeIntoColor = (color: Color, colorFadingInto: Color) =>
+  getGradientMidpoints({ from: color, to: colorFadingInto, numPoints: 1 })[0];

@@ -3,6 +3,27 @@ import { StreamConstructorOpts } from './types';
 
 export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
 
+type SubscriptionOpts<
+  DependentState extends AnyObj,
+  SourceState extends AnyObj
+> = {
+  subscriptionName: string;
+  dependent$: Stream<DependentState>;
+  source$: Stream<SourceState>;
+  stateReducer?: (
+    latestDependentState: DependentState,
+    prevSourceState: SourceState,
+    updatedSourceState: SourceState
+  ) => MaybePromise<DependentState | null>;
+};
+
+const getUnsubscribe =
+  <S extends AnyObj>(
+    opts: Pick<SubscriptionOpts<any, S>, 'source$' | 'subscriptionName'>
+  ) =>
+  () =>
+    opts.source$.unregisterUpdateCallback(opts.subscriptionName);
+
 /**
  * Subscribe a stream to another stream.
  *
@@ -27,19 +48,14 @@ export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
 export const subscribe = <
   DependentState extends AnyObj,
   SourceState extends AnyObj
->(
-  subscriptionName: string,
-  dependent$: Stream<DependentState>,
-  source$: Stream<SourceState>,
-  stateReducer: (
-    latestDependentState: DependentState,
-    prevSourceState: SourceState,
-    updatedSourceState: SourceState
-  ) => MaybePromise<DependentState | null> = state => state
-) => {
-  const callbackId = subscriptionName;
+>({
+  subscriptionName,
+  dependent$,
+  source$,
+  stateReducer = state => state,
+}: SubscriptionOpts<DependentState, SourceState>) => {
   source$.registerUpdateCallback({
-    callbackId,
+    callbackId: subscriptionName,
     callback: async (prevSourceState, updatedSourceState) => {
       const latestDependentData = dependent$.getData();
       const reducedData = await stateReducer(
@@ -51,8 +67,14 @@ export const subscribe = <
       if (reducedData) dependent$.setData(reducedData);
     },
   });
-  return { unsubscribe: () => source$.unregisterUpdateCallback(callbackId) };
+  return { unsubscribe: getUnsubscribe({ source$, subscriptionName }) };
 };
+
+/** Useful when you need the unsubscribe function before initializing the
+ * subscription. */
+export const getSubscribeFns = <D extends AnyObj, S extends AnyObj>(
+  opts: SubscriptionOpts<D, S>
+) => ({ subscribe: () => subscribe(opts), unsubscribe: getUnsubscribe(opts) });
 
 type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
   opts: {

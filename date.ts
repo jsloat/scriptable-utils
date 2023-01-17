@@ -34,6 +34,8 @@ const getTimeUnitBetween =
   (unitInMs: number) => (laterDate: Date, earlierDate: Date) =>
     Math.floor(msBetween(laterDate, earlierDate) / unitInMs);
 
+export const hoursBetween = getTimeUnitBetween(ONE_HOUR);
+
 export const daysBetween = getTimeUnitBetween(24 * ONE_HOUR);
 
 /** Check if day, month, and year are the same for 2 dates. Can not use === on date objects */
@@ -203,6 +205,8 @@ const getReadableDaysLabel = (dayGap: number, abbreviate: boolean) => {
       return null;
   }
 };
+
+export const UTCToPacific = (date: Date) => addToDate(date, { hours: 8 });
 
 export const getReadableDaysFromNowLabel = (date: Date, abbreviate = false) => {
   const daysFromNow = daysBetween(stripTime(date), stripTime());

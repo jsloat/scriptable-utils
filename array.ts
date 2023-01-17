@@ -1,6 +1,6 @@
-import { map, toFind } from './arrayTransducers';
+import { compose, filter, map, toArray, toFind } from './arrayTransducers';
 import { ExcludeFalsy, isString } from './common';
-import { objectKeys } from './object';
+import { objectEntries, objectKeys } from './object';
 
 export const isLastArrIndex = (index: number, arr: any[]) =>
   index === arr.length - 1;
@@ -49,6 +49,31 @@ export const intersection = <T extends PrimitiveType, U extends PrimitiveType>(
   const isAShorter = arrA.length < arrB.length;
   const compareSet = new Set(isAShorter ? arrA : arrB);
   return (isAShorter ? arrB : arrA).filter(arrEl => compareSet.has(arrEl));
+};
+
+/**
+ * Inspired by C.K.:
+ *
+ * "To get an intersection of a list of lists, you have to look at each item
+ * just once, you can basically count the occurance of a given item (by tracking
+ * the uniqueness) per list and then take the once which occur as often a you
+ * have input lists, that means you can do it in linear time.
+ */
+export const intersection2 = <T extends ObjKey, U extends ObjKey>(
+  arrA: (T | U)[],
+  arrB: (T | U)[]
+) => {
+  const valueCount = [...arrA, ...arrB].reduce(
+    (acc, value) => ({ ...acc, [value]: (acc[value] ?? 0) + 1 }),
+    {} as Record<T | U, number>
+  );
+  return toArray(
+    objectEntries(valueCount),
+    compose(
+      filter(([_, count]: [key: T | U, count: number]) => count === 2),
+      map(([key]) => key)
+    )
+  );
 };
 
 /** AKA "complement" in set theory */
@@ -145,4 +170,20 @@ export const findLastIndex = <T>(
   return searchFromIndex === 0
     ? -1
     : findLastIndex(arr, callback, searchFromIndex - 1);
+};
+
+/** Identical to `Array.findIndex`, but starts looking from a custom index in
+ * the array. Returns -1 if not found, else the index (from the original array,
+ * not the segment being searched). */
+export const findIndexFromIndex = <T>(
+  arr: T[],
+  fromIndex: number,
+  predicate: ArrCallback<T>
+) => {
+  if (fromIndex > arr.length - 1 || fromIndex < 0) {
+    throw new Error(`Invalid fromIndex ${fromIndex}, arr len: ${arr.length}`);
+  }
+  const segment = arr.slice(fromIndex);
+  const indexInSegment = segment.findIndex(predicate);
+  return indexInSegment === -1 ? -1 : indexInSegment + fromIndex;
 };

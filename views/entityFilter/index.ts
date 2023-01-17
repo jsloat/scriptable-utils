@@ -59,11 +59,11 @@ export default async <E>(opts: Opts<E>) => {
       })
     );
 
-  const updateProps$onStateChange = subscribe(
-    'update props$ on some state change',
-    props$,
-    payload$,
-    (prev$Props, { state: oldState }, { state: newState }) => {
+  const updateProps$onStateChange = subscribe({
+    subscriptionName: 'update props$ on some state change',
+    dependent$: props$,
+    source$: payload$,
+    stateReducer: (prev$Props, { state: oldState }, { state: newState }) => {
       if (!(oldState && newState)) return null;
       const haveFiltersChanged = !isEqual(
         [...oldState.filterState.entries()],
@@ -72,8 +72,8 @@ export default async <E>(opts: Opts<E>) => {
       return haveFiltersChanged
         ? recalculateProps$({ prev$Props, props: opts, state: newState })
         : null;
-    }
-  );
+    },
+  });
 
   const action = getTableActionCreator(getState, setState);
   const cycleFilterState = action(handleCycleFilterState);

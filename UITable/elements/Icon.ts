@@ -3,7 +3,7 @@ import { IconKey, ICONS } from '../../icons';
 import { getSfSymbolImg, SFSymbolKey } from '../../sfSymbols';
 import { isSFSymbolKey } from '../../sfSymbols/utils';
 import { Cell, CellShapeStyle } from './shapes';
-import { fadeColorIntoBackground } from './utils';
+import { maybeFadeForegroundColor } from './utils';
 
 export type IconOrSFKey = SFSymbolKey | IconKey;
 
@@ -20,7 +20,7 @@ class Icon extends Cell {
           font = Font.boldSystemFont,
           fontSize = 20,
         } = inheritedStyle;
-        const parsedColor = fadeColorIntoBackground(color, inheritedStyle);
+        const parsedColor = maybeFadeForegroundColor(color, inheritedStyle);
         if (isSFSymbolKey(key)) {
           return {
             type: 'image',
