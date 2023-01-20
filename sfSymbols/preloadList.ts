@@ -1,4 +1,5 @@
 import { without } from '../array';
+import { getConfig } from '../configRegister';
 import { composeIdentities } from '../flow';
 import persisted from '../io/persisted';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
@@ -8,18 +9,22 @@ import { getTintRequestKey } from './utils';
 /** The persisted data is indexed by script name (from `Script.name()`) and
  * light/dark mode. Each of these permutations will have an array of
  * `TintRequestKey`s that should be preloaded for that script. */
-type Data = Record<string, Record<LightDarkKey, TintRequestKey[]>>;
+export type IconPreloadListData = Record<
+  string,
+  Record<LightDarkKey, TintRequestKey[]>
+>;
 
-type Reducer = Identity<Data>;
+type Reducer = Identity<IconPreloadListData>;
 
 type Path = { script: string; mode: LightDarkKey };
 
 //
 
-const io = persisted<Data>({
-  defaultData: {},
-  filename: 'sfSymbolPreloadList',
-});
+const getIO = () =>
+  persisted<IconPreloadListData>({
+    defaultData: {},
+    filename: getConfig('ICON_PRELOAD_LIST_FILENAME'),
+  });
 
 const getDataPath = (): Path => ({
   script: Script.name(),
@@ -43,7 +48,10 @@ const getAddKeyReducer = (key: TintRequestKey): Reducer => {
   };
 };
 
-const removeExistingKeys = (keys: TintRequestKey[], data: Data) => {
+const removeExistingKeys = (
+  keys: TintRequestKey[],
+  data: IconPreloadListData
+) => {
   const { script, mode } = getDataPath();
   const currVals = data[script]?.[mode] ?? [];
   return without(keys, ...currVals);
@@ -51,9 +59,9 @@ const removeExistingKeys = (keys: TintRequestKey[], data: Data) => {
 
 const addRequestKeyQueue = new ThrottledBatchQueue<TintRequestKey>({
   batchOperation: async keys => {
-    const newKeys = removeExistingKeys(keys, await io.getData());
+    const newKeys = removeExistingKeys(keys, await getIO().getData());
     if (newKeys.length) {
-      await io.reduce(composeIdentities(...newKeys.map(getAddKeyReducer)));
+      await getIO().reduce(composeIdentities(...newKeys.map(getAddKeyReducer)));
     }
   },
 });
@@ -66,24 +74,24 @@ export const getCurrScriptPreloadIconKeys = async (): Promise<
   TintRequestKey[]
 > => {
   const { script, mode } = getDataPath();
-  return (await io.getData())[script]?.[mode] ?? [];
+  return (await getIO().getData())[script]?.[mode] ?? [];
 };
 
 /** Requires cache instantiation */
 export const getScriptNamesInFile = () =>
-  Object.keys(io.getData({ useCache: true }));
+  Object.keys(getIO().getData({ useCache: true }));
 
 export const deleteScriptNameData = (...scriptNamesToDelete: string[]) =>
-  io.reduce(data => {
+  getIO().reduce(data => {
     const keysInData = Object.keys(data);
-    const newData: Data = {};
+    const newData: IconPreloadListData = {};
     keysInData.forEach(
       key => !scriptNamesToDelete.includes(key) && (newData[key] = data[key]!)
     );
     return newData;
   });
 
-export const preloadListFile$ = io.cache$;
+export const getPreloadListFile$ = () => getIO().cache$;
 
 export const throttledLogTintRequest = (
   iconKey: SFSymbolKey,

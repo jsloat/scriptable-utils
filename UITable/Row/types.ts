@@ -1,4 +1,4 @@
-import { ScreenHeightMeasurements } from '../../serviceRegistry';
+import { ScreenHeightMeasurements } from '../../configRegister';
 import { SFSymbolKey } from '../../sfSymbols';
 
 export type RowSize = 'sm' | 'md' | 'lg';

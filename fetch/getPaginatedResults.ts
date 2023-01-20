@@ -1,6 +1,5 @@
+import { getConfig } from '../configRegister';
 import { destructiveConfirm } from '../input/confirm';
-
-const MAX_LOOPS_BEFORE_WARNING = 5;
 
 type GetPaginatedResultsOptsShared<Response, Returns> = {
   initRequest: () => MaybePromise<Response>;
@@ -39,6 +38,9 @@ const getPaginatedResultsRecur = async <Response, Returns>({
   const initResult = transformResponse(initResponse);
   if (onEachPageResult) await onEachPageResult(initResult);
   if (isLastResponse(initResponse)) return initResult;
+  const MAX_LOOPS_BEFORE_WARNING = getConfig(
+    'GET_PAGINATED_RESULTS_MAX_LOOPS_BEFORE_WARNING'
+  );
   if (n === MAX_LOOPS_BEFORE_WARNING) {
     const shouldContinue = await destructiveConfirm('Continue requests?', {
       message: `You have already made ${MAX_LOOPS_BEFORE_WARNING} requests. Do you want to continue, or return the current results?`,

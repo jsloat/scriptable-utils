@@ -23,7 +23,7 @@ export const pickDate = async ({
       const isConfirmed = await confirm(description, {
         confirmButtonTitle: 'Choose date',
       });
-      if (!isConfirmed) throw new Error('Abort');
+      if (!isConfirmed) throw new Error('Cancelled');
     }
 
     const dp = new DatePicker();

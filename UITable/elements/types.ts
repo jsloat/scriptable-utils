@@ -1,4 +1,4 @@
-import { ScreenHeightMeasurements } from '../../serviceRegistry';
+import { ScreenHeightMeasurements } from '../../configRegister';
 
 export type Percent = `${number}%`;
 

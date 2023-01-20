@@ -1,7 +1,7 @@
 import { isString } from '../common';
+import { getConfig } from '../configRegister';
 import { isEqual, objectKeys } from '../object';
 import Stream from '../streams/Stream';
-import { SCRIPTABLE_STORE_PATH } from './consts';
 
 type CreateIObjectOpts<T> = {
   filename: string;
@@ -13,7 +13,7 @@ type CreateIObjectOpts<T> = {
   disableCache?: boolean;
 };
 
-type Cache$Data<T> = { data: T };
+export type Cache$Data<T> = { data: T };
 
 type IOObject<T> = Pick<
   Required<CreateIObjectOpts<T>>,
@@ -33,7 +33,7 @@ const USE_CACHE_DEFAULT = false;
 const createIOObject = <T>({
   filename,
   defaultData,
-  directory = SCRIPTABLE_STORE_PATH,
+  directory = getConfig('SCRIPTABLE_STORE_PATH'),
   fileExtension = 'txt',
   prettify = true,
   areEntitiesEqual = basicEquality,

@@ -2,6 +2,7 @@
 
 import { getColor, getDynamicColor } from '../colors';
 import { isFunc } from '../common';
+import { getConfig } from '../configRegister';
 import { getMaxScreenHeight } from '../device';
 import { isOdd } from '../numbers';
 import { Div, HSpace, P } from '../UITable/elements';
@@ -27,11 +28,11 @@ type State = { nodes: FullscreenOptNode[]; selectedActionLabel: string | null };
 export const getZebraStripeColor = (index: number) =>
   isOdd(index) ? getColor('bg') : getDynamicColor('gray0', 'gray8');
 
-const MAX_OPTIONS_ON_SCREEN = 7;
-
 const getOptionHeight = (totalNodesShown: number) => {
   const totalHeight = getMaxScreenHeight('notFullscreen');
-  const minOptionHeight = Math.floor(totalHeight / MAX_OPTIONS_ON_SCREEN);
+  const minOptionHeight = Math.floor(
+    totalHeight / getConfig('FULLSCREEN_OPTS_MAX_ON_SCREEN')
+  );
   const heightWithAllShown = Math.floor(totalHeight / totalNodesShown);
   return Math.max(heightWithAllShown, minOptionHeight);
 };

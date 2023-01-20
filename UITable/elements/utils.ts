@@ -1,11 +1,10 @@
 import { sum } from '../../array';
 import { fadeIntoColor, getColor } from '../../colors';
 import { isNumber } from '../../common';
+import { getConfig, ScreenHeightMeasurements } from '../../configRegister';
 import { getMaxScreenHeight } from '../../device';
 import { pick } from '../../object';
-import { ScreenHeightMeasurements } from '../../serviceRegistry';
 import { BaseRowOpts } from '../Row/base';
-import { FALLBACK_CELL_WIDTH_PERCENT, FALLBACK_ROW_HEIGHT } from './consts';
 import { ContainerStyle } from './shapes';
 import {
   Border,
@@ -45,7 +44,8 @@ export const fillInCellWidthBlanks = (
     // Leave valid widths untouched
     if (isValid) return width as number;
     // If specified cell widths add up to >= 100, use fallback percentage
-    if (remainingSpaceToAllot <= 0) return FALLBACK_CELL_WIDTH_PERCENT;
+    if (remainingSpaceToAllot <= 0)
+      return getConfig('UI_TABLE_DEFAULT_CELL_WIDTH_PERCENT');
     // If there is remaining space to allot, divide it evenly among unspecified widths
     return remainingSpaceToAllot / numInvalidWidths;
   });
@@ -95,13 +95,10 @@ const heightPercentToNumber = (
 };
 
 export const parseRowHeight = ({
-  height,
+  height = getConfig('UI_TABLE_DEFAULT_ROW_HEIGHT'),
   mode,
-}: CascadingRowStyle & RowStyle) => {
-  if (isNumber(height)) return height;
-  const heightPercent: Percent = height ?? FALLBACK_ROW_HEIGHT;
-  return heightPercentToNumber(heightPercent, mode);
-};
+}: CascadingRowStyle & RowStyle) =>
+  isNumber(height) ? height : heightPercentToNumber(height, mode);
 
 export const parseColor = (color: Color, { isFaded }: CascadingStyle) =>
   isFaded ? new Color(color.hex, 0.6) : color;

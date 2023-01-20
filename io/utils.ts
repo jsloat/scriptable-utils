@@ -1,5 +1,5 @@
+import { getConfig } from '../configRegister';
 import { Stream } from '../streams';
-import { SCRIPTABLE_STORE_PATH } from './consts';
 import { getDirContents } from './filesystemUtils';
 import persisted from './persisted';
 
@@ -10,7 +10,7 @@ export const getTemporaryFilename = () =>
   `${temporaryFilenamePrefix}${UUID.string()}`;
 
 const getTmpFilePaths = () => {
-  const allFilesInStore = getDirContents(SCRIPTABLE_STORE_PATH);
+  const allFilesInStore = getDirContents(getConfig('SCRIPTABLE_STORE_PATH'));
   return allFilesInStore.filter(
     ({ filenameNoExtension }) =>
       filenameNoExtension.startsWith(temporaryFilenamePrefix) ||

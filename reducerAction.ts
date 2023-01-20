@@ -40,13 +40,23 @@ export const getReducerCreator =
 // In the above example, `setAttr` has the signature `(value: string) => void`
 //
 
+type GetTableActionCreatorOpts<S> = {
+  onStateUpdate?: (updatedState: S) => any;
+};
+
 export const getTableActionCreator =
-  <S>(getState: NoParamFn<S>, setState: MapFn<S, any>) =>
+  <S>(
+    getState: NoParamFn<S>,
+    setState: MapFn<S, any>,
+    { onStateUpdate }: GetTableActionCreatorOpts<S> = {}
+  ) =>
   <A extends any[]>(reducerGetter: (...args: A) => MaybePromise<Identity<S>>) =>
   async (...args: A) => {
     const currState = getState();
     const reducer = await reducerGetter(...args);
-    setState(reducer(currState));
+    const updatedState = reducer(currState);
+    setState(updatedState);
+    await onStateUpdate?.(updatedState);
   };
 
 export const getStreamActionCreator =

@@ -30,7 +30,7 @@ export default async (
   const {
     textFieldResults: { inputText },
     tappedButtonText,
-  } = await alert<'inputText'>({
+  } = await alert({
     title,
     message,
     buttons: {

@@ -65,7 +65,7 @@ const getButtonAtIndex = <ButtonKey extends string>(
   // Cancel buttons are always moved to the end in both the UI and the return
   // index (though they return -1)
   const button = orderedButtonKeysWithText.filter(b => !b.isCancel)[i];
-  if (!button) throw new Error('Button is not  there');
+  if (!button) throw new Error('Button is not there');
   return button;
 };
 

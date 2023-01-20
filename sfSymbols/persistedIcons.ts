@@ -1,14 +1,21 @@
+import { getConfig } from '../configRegister';
 import { destructiveConfirm, OK } from '../input/confirm';
 import { createDirIfNotExists, getDirContents } from '../io/filesystemUtils';
-import { FILE_EXTENSION, IMAGE_DIR_PATH } from './consts';
+import { FILE_EXTENSION } from './consts';
 import { SFSymbolKey, TintRequestKey } from './types';
 import { getTintRequestKey } from './utils';
+
+const getImgDirPath = () =>
+  [
+    getConfig('SCRIPTABLE_STORE_PATH'),
+    getConfig('ICON_TINTING_CACHED_ICON_PATH'),
+  ].join('/');
 
 /** Images stored in-memory once requested */
 const cache = new Map<TintRequestKey, Image>();
 
 const getImgPath = (key: TintRequestKey) =>
-  `${IMAGE_DIR_PATH}/${key}.${FILE_EXTENSION}`;
+  `${getImgDirPath()}/${key}.${FILE_EXTENSION}`;
 
 const downloadAndCacheImage = async (key: TintRequestKey, path: string) => {
   const io = FileManager.iCloud();
@@ -28,7 +35,7 @@ const saveImage = (key: TintRequestKey, image: Image) => {
 /** Used to reset the stored icon cache, useful if e.g. there's a major change
  * to the icons or color palettes used in scripts. */
 export const deleteAllCachedIcons = async () => {
-  const cachedIcons = getDirContents(IMAGE_DIR_PATH);
+  const cachedIcons = getDirContents(getImgDirPath());
   if (!cachedIcons.length) {
     OK('No icons to delete');
     return;
@@ -49,7 +56,7 @@ export const getCachedImage = (
   iconKey: SFSymbolKey,
   colorHex: string
 ): GetCachedImageReturn => {
-  createDirIfNotExists(IMAGE_DIR_PATH);
+  createDirIfNotExists(getImgDirPath());
   const key = getTintRequestKey(iconKey, colorHex);
   const cachedImg = cache.get(key);
   if (cachedImg) return cachedImg;
@@ -64,7 +71,7 @@ export const cacheTintedImage = (
   colorHex: string,
   image: Image
 ) => {
-  createDirIfNotExists(IMAGE_DIR_PATH);
+  createDirIfNotExists(getImgDirPath());
   const key = getTintRequestKey(iconKey, colorHex);
   const exists = FileManager.iCloud().fileExists(getImgPath(key));
   if (!exists) saveImage(key, image);

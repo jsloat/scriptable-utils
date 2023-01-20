@@ -1,4 +1,5 @@
 import { ErrorWithPayload, isString } from '../../common';
+import { getConfig } from '../../configRegister';
 import { force, shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 
@@ -106,17 +107,14 @@ export type BaseRowOpts = Partial<{
   bgColor: Color;
 }>;
 
-/** Allowed time between clicks */
-const CLICK_INTERVAL = 200;
-
 type ValidTapCount = 1 | 2 | 3;
 type ClickMap = Partial<Record<ValidTapCount, () => any>>;
 
 const executeTapListener = (() => {
   let tapCount = 0;
   const clickTimer = new Timer();
-  clickTimer.timeInterval = CLICK_INTERVAL;
   return (clickMap: ClickMap) => {
+    clickTimer.timeInterval = getConfig('ON_TAP_CLICK_INTERVAL');
     const maxClicks = Math.max(
       ...Object.keys(clickMap).map(numStr => parseInt(numStr, 10))
     );

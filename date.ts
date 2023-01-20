@@ -1,8 +1,8 @@
 import { compose, filter, map, toArray } from './arrayTransducers';
 import { getDomainColor } from './colors';
 import { ExcludeFalsy } from './common';
+import { getConfig } from './configRegister';
 import { range } from './object';
-import { getCalendarTitles } from './serviceRegistry';
 import { pluralize } from './string';
 
 const ONE_MILLISECOND = 1;
@@ -230,10 +230,11 @@ export const areDatesEqual = (d1: Date, d2: Date) =>
 //
 
 export const getCalDomain = (cal: Calendar): Domain | null => {
+  const { PERSONAL, WORK } = getConfig('CALENDAR_TITLES');
   switch (cal.title) {
-    case getCalendarTitles().PERSONAL:
+    case PERSONAL:
       return 'personal';
-    case getCalendarTitles().WORK:
+    case WORK:
       return 'work';
     default:
       return null;
@@ -248,15 +249,16 @@ export const getPrimaryCalColor = (cal: Calendar): Color => {
 
 export const getEventDomain = (event: CalendarEvent): Domain => {
   const { title: calTitle } = event.calendar;
-  if (!Object.values(getCalendarTitles()).includes(calTitle))
+  const calendars = getConfig('CALENDAR_TITLES');
+  if (!Object.values(calendars).includes(calTitle))
     throw new Error('Events in non-domain calendars have no domain!');
-  return calTitle === getCalendarTitles().PERSONAL ? 'personal' : 'work';
+  return calTitle === calendars.PERSONAL ? 'personal' : 'work';
 };
 
 export const getAllEventCals = () =>
   Promise.all(
     toArray(
-      Object.values(getCalendarTitles()),
+      Object.values(getConfig('CALENDAR_TITLES')),
       compose(filter(ExcludeFalsy), map(Calendar.forEventsByTitle))
     )
   );
