@@ -12,10 +12,12 @@ type StepOptions = {
   fadeUntilPercentOfTo: number;
 };
 
+export type GradientMode = 'UP' | 'DOWN';
+
 type GradientOpts = {
   from: Color;
   to?: Color;
-  mode: 'UP' | 'DOWN';
+  mode: GradientMode;
   stepOptions?: Partial<StepOptions>;
 };
 

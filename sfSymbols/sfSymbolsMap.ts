@@ -31,9 +31,9 @@ export default {
   chevron_right: 'chevron.right',
   chevron_up: 'chevron.up',
   circle_done_filled: 'checkmark.circle.fill',
-  circle_done: 'checkmark.circle', //
+  circle_done: 'checkmark.circle',
   circle_filled: 'largecircle.fill.circle',
-  circle: 'circle', //
+  circle: 'circle',
   circled_checkmark_filled: 'checkmark.circle.fill',
   circled_exclamation_filled: 'exclamationmark.circle.fill',
   circled_exclamation: 'exclamationmark.circle',
@@ -72,6 +72,7 @@ export default {
   folder_circle: 'folder.circle',
   folder_question: 'questionmark.folder.fill',
   folder: 'folder',
+  font: 'textformat',
   fork_knife: 'fork.knife',
   forward: 'arrowshape.turn.up.right',
   future: 'chevron.right.2',
