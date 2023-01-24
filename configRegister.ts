@@ -1,3 +1,4 @@
+import { TimePreset } from './input/date/presetDateTime';
 import { Percent } from './UITable/elements/types';
 
 /**
@@ -44,6 +45,8 @@ type OptionalConfig = {
   /** Max milliseconds between taps to distinguish between single, double, or
    * triple taps. */
   ON_TAP_CLICK_INTERVAL: number;
+  /** `presetDateTime`: preset times to be shown in the dialog */
+  TIME_PRESETS: TimePreset[];
 };
 
 type RequiredConfig = {
@@ -77,6 +80,7 @@ let config: OptionalConfig & Partial<RequiredConfig> = {
   UI_TABLE_DEFAULT_ROW_HEIGHT: '5%',
   UI_TABLE_DEFAULT_CELL_WIDTH_PERCENT: 10,
   ON_TAP_CLICK_INTERVAL: 200,
+  TIME_PRESETS: [{ label: '9:00', targetHourOfDay: 9, icon: 'clock' }],
 };
 
 export const getConfig = <K extends keyof Config>(key: K) => {
