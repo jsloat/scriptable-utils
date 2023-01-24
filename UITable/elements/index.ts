@@ -12,3 +12,4 @@ export { default as P } from './P';
 export { default as Span } from './Span';
 export { default as ThreeCol } from './ThreeCol';
 export { default as Toast } from './Toast';
+export { default as ProgressBar } from './ProgressBar';
