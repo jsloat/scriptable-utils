@@ -136,7 +136,6 @@ export default <CompleteFormState extends FormStateShape>(
         Title(),
         Spacer(),
         FieldRows(),
-        HR(),
         Spacer(),
         Spacer(),
         Submit(),

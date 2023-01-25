@@ -3,7 +3,7 @@ import { haltTintRequests } from './sfSymbols/preloadList';
 import { stopAllHeaderMenuTimers } from './UITable/Row/templates/_HeaderMenu/stateInterface';
 
 /** Tasks to be done before starting a script. */
-export const startup = (config: Partial<Config>) => {
+export const setScriptConfig = (config: Partial<Config>) => {
   setConfig(config);
 };
 

@@ -1,7 +1,7 @@
 import { without } from '../array';
 import { getConfig } from '../configRegister';
 import { composeIdentities } from '../flow';
-import persisted from '../io/persisted';
+import persisted, { Persisted } from '../io/persisted';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
 import { LightDarkKey, SFSymbolKey, TintRequestKey } from './types';
 import { getTintRequestKey } from './utils';
@@ -20,11 +20,17 @@ type Path = { script: string; mode: LightDarkKey };
 
 //
 
-const getIO = () =>
-  persisted<IconPreloadListData>({
-    defaultData: {},
-    filename: getConfig('ICON_PRELOAD_LIST_FILENAME'),
-  });
+const getIO = (() => {
+  let io: Persisted<IconPreloadListData> | null = null;
+  return () => {
+    if (io) return io;
+    io = persisted<IconPreloadListData>({
+      defaultData: {},
+      filename: getConfig('ICON_PRELOAD_LIST_FILENAME'),
+    });
+    return io;
+  };
+})();
 
 const getDataPath = (): Path => ({
   script: Script.name(),
@@ -76,6 +82,8 @@ export const getCurrScriptPreloadIconKeys = async (): Promise<
   const { script, mode } = getDataPath();
   return (await getIO().getData())[script]?.[mode] ?? [];
 };
+
+export const initPreloadListCache = () => getIO().getData();
 
 /** Requires cache instantiation */
 export const getScriptNamesInFile = () =>
