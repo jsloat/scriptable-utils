@@ -18,7 +18,7 @@
     "noUnusedLocals": true,
     "lib": ["ESNext"],
     "noUncheckedIndexedAccess": true,
-    "typeRoots": [ "types/*.ts" ],
+    "typeRoots": [ "src/types/*.ts" ],
   },
   "include": [ "./**/*.ts" ],
   "exclude": [
