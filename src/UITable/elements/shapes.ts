@@ -40,7 +40,7 @@ abstract class Element<
   style: Style;
   /** Intended to generate a descriptive string for the element, for use in
    * debugging. The goal is to make this work without much user interaction. */
-  protected description = 'ELEMENT';
+  description = 'ELEMENT';
 
   constructor(style: Style) {
     this.style = style;
@@ -59,7 +59,7 @@ abstract class Element<
   }
 
   /** To be called just before rendering */
-  protected inheritStyle() {
+  inheritStyle() {
     if (!this.parent) return;
     // Don't inherit debug flag; keep it focused
     const { debug, ...inheritableParentStyle } = this.parent.style;

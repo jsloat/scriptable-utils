@@ -231,3 +231,8 @@ export const isIn = <T>(
   arr: T[],
   isEqual: ObjComparison<T> = (a, b) => a === b
 ) => arr.some(arrEl => isEqual(element, arrEl));
+
+// https://stackoverflow.com/questions/39419170/how-do-i-check-that-a-switch-block-is-exhaustive-in-typescript/39419171#39419171
+export const assertUnreachable = (x: never): never => {
+  throw new Error(`Unexpectedly received value ${x}`);
+};
