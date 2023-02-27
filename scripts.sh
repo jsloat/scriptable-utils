@@ -5,7 +5,7 @@ lint() {
 }
 
 circDeps() {
-  madge ./src/index.ts --circular
+  madge ./src/index.ts --circular --extensions ts
 }
 
 tests() {

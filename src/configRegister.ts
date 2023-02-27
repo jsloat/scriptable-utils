@@ -1,4 +1,4 @@
-import { TimePreset } from './input/date/presetDateTime';
+import type { TimePreset } from './input/date/presetDateTime';
 import { Percent } from './UITable/elements/types';
 
 /**
