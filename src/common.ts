@@ -1,6 +1,8 @@
 // Home for utils that are required by other util files, to avoid circular dependency issues.
 // Also home for random utils that don't fit elsewhere.
 
+import { AnyObj, Falsy, MapFn, NotUndefined } from './types/utilTypes';
+
 //
 // TYPEGUARDS / TYPE UTILS
 //

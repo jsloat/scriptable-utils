@@ -1,4 +1,4 @@
-import Row from '..';
+import Row from '../Row';
 import { RowOpts } from '../types';
 
 const DEFAULT_HEIGHT = 15;

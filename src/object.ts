@@ -1,5 +1,6 @@
 import { compose, filter, map, toFind, toReduce } from './arrayTransducers';
 import { ExcludeFalsy, getType, objectFromEntries } from './common';
+import { AnyObj, PrimitiveType } from './types/utilTypes';
 
 /**
  * NB: doesn't take into account order of elements in an array

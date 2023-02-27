@@ -1,3 +1,4 @@
+import { MapFn } from '../../types/utilTypes';
 import type { StaticFontLabel } from './fonts';
 
 export type FontGetter = MapFn<number, Font>;

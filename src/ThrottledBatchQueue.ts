@@ -1,5 +1,6 @@
 import { ONE_SECOND } from './date';
 import { wait } from './flow';
+import { MaybePromise } from './types/utilTypes';
 
 type Opts<T> = {
   batchOperation: (entities: [T, ...T[]]) => MaybePromise<any>;

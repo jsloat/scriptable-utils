@@ -1,3 +1,5 @@
+import { NoParamFn } from '../../../../types/utilTypes';
+
 export type CycleTabsOpts<T extends string = string> = {
   name: string;
   rerenderParent: NoParamFn;

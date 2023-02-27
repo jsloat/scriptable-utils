@@ -1,7 +1,7 @@
 import { conditionalArr } from '../../../array';
 import { getColor } from '../../../colors';
 import { fade } from '../../../common';
-import Row from '..';
+import Row from '../Row';
 import { RowOpts } from '../types';
 
 type Opts = { dim?: number; color?: Color; height?: number } & Pick<

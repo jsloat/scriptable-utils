@@ -1,27 +1,20 @@
 {
   "compilerOptions": {
-    // Target latest version of ECMAScript.
     "target": "ESNext",
-    // Search under node_modules for non-relative imports.
+    "declaration": true,
+    "declarationDir": "dist",
     "moduleResolution": "node",
-    // Process & infer types from .js files.
     "allowJs": true,
     "checkJs": false,
-    // Don't emit; allow other to transform files.
-    "noEmit": true,
-    // Enable strictest settings like strictNullChecks & noImplicitAny.
     "strict": true,
-    "rootDir": ".",
+    "rootDir": "src",
     "noImplicitAny": true,
-    "outDir": ".",
+    "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "lib": ["ESNext"],
     "noUncheckedIndexedAccess": true,
-    "typeRoots": [ "src/types/*.ts" ],
+    "skipLibCheck": true
   },
-  "include": [ "./**/*.ts" ],
-  "exclude": [
-    "node_modules",
-  ],
+  "include": [ "src" ],
 }

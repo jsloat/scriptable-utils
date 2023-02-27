@@ -16,7 +16,7 @@ export type TextFieldConfigOpts = {
   initValue?: string;
 } & TextFieldFormatting;
 
-export type Button = {
+export type AlertButton = {
   // If true, use `addDestructiveAction`
   isRed?: boolean;
   // If true, use `addCancelAction`
@@ -32,6 +32,6 @@ export type AlertOpts<
   /** `TextFieldKey` values are used to index the final text field values. */
   textFields?: Record<TextFieldKey, TextFieldConfigOpts>;
   /** `ButtonKey` values are used as button labels */
-  buttons: Record<ButtonKey, Button>;
+  buttons: Record<ButtonKey, AlertButton>;
   presentAsSheet?: boolean;
 };

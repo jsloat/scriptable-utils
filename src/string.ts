@@ -105,7 +105,7 @@ export const spliceInPlace = <T, U>(
 const countChar = (string: string, char: string) =>
   string.split(char).length - 1;
 
-export const isID = (val: any): val is ID =>
+export const isID = (val: any): val is string =>
   isString(val) && countChar(val, '-') === 4;
 
 export const prefixEachLine = (str: string, prefix: string) =>

@@ -1,6 +1,13 @@
 import { combineReducers } from './flow';
 import { Persisted } from './io/persisted';
 import { Stream } from './streams';
+import {
+  AnyObj,
+  Identity,
+  MapFn,
+  MaybePromise,
+  NoParamFn,
+} from './types/utilTypes';
 
 //
 // REDUCER CREATOR

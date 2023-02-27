@@ -4,6 +4,15 @@ export const postJson = post.postJson;
 
 export const getJson = get.getJson;
 
-export { getPaginatedResults } from './getPaginatedResults';
-export { default as multipartRequest } from './multipart';
+export {
+  getPaginatedResults,
+  GetPaginatedResultsOpts,
+} from './getPaginatedResults';
+export {
+  default as multipartRequest,
+  MultipartOpts,
+  MultipartRequest,
+} from './multipart';
 export { putJson } from './verbs/put';
+
+export * from './types';

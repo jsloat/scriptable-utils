@@ -1,5 +1,6 @@
 import { SFSymbolKey } from '../../../../sfSymbols';
-import { ButtonStackOpt } from '../_Button';
+import { Falsy, NoParamFn, Omit_ } from '../../../../types/utilTypes';
+import { ButtonOpts } from '../_Button/types';
 
 export type HeaderMenuState = { isExpanded: boolean; timer: Timer };
 
@@ -26,10 +27,7 @@ export type HeaderMenuOpts = {
   settingOpts: (HeaderMenuButtonOpts | Falsy)[];
 } & TableOpts;
 
-export type HeaderMenuButtonOpts = Omit_<
-  ButtonStackOpt,
-  'isLarge' | 'isSmall'
-> & {
+export type HeaderMenuButtonOpts = Omit_<ButtonOpts, 'isLarge'> & {
   /** By default, any tap action will collapse the menu */
   shouldNotCollapseMenuOnNTap?: ShouldNotCollapseRecord;
 };

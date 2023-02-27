@@ -1,6 +1,13 @@
 import { ExcludeFalsy, isString, objectFromEntries } from '../common';
+import {
+  Falsy,
+  LabeledValue,
+  MapFn,
+  NoParamFn,
+  Omit_,
+} from '../types/utilTypes';
 import alert from './alert';
-import { AlertOpts, Button } from './types';
+import { AlertOpts, AlertButton } from './types';
 
 const CANCEL_BUTTON_TEXT = 'Cancel';
 
@@ -35,7 +42,7 @@ const quickOptions: QuickOptions = async (
 ): Promise<any> => {
   const validListOptions = listOptions.filter(ExcludeFalsy);
   if (!validListOptions.length) return null;
-  const optionButtonEntries = validListOptions.map<[string, Button]>(
+  const optionButtonEntries = validListOptions.map<[string, AlertButton]>(
     strOrLV => [isString(strOrLV) ? strOrLV : strOrLV.label, {}]
   );
   if (!optionButtonEntries.length) return null;

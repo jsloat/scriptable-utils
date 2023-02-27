@@ -1,6 +1,7 @@
 import { conditionalArr } from '../../array';
 import { getColor } from '../../colors';
 import { tidyLog } from '../../string';
+import { AnyObj } from '../../types/utilTypes';
 import { BaseCellParams, BaseRowOpts } from '../Row/base';
 import {
   CascadingCellStyle,

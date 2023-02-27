@@ -1,3 +1,4 @@
+import { AnyObj } from '../types/utilTypes';
 import { ParsedFetchOpts } from './types';
 
 // Don't log auth details in persisted log

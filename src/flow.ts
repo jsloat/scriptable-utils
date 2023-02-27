@@ -1,5 +1,15 @@
 import { safeArrLookup } from './common';
 import { notifyNow } from './notifications';
+import {
+  AnyObj,
+  Identity,
+  MakeSomeOptional,
+  MapFn,
+  MaybePromise,
+  NoParamFn,
+  ObjComparison,
+  ReduceCallback,
+} from './types/utilTypes';
 
 export const sequentialPromiseAll = async <T>(fns: (() => Promise<T>)[]) => {
   const result: T[] = [];

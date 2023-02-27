@@ -3,14 +3,9 @@ import { ExcludeFalsy } from '../../common';
 import { isEqual } from '../../object';
 import { getTableActionCreator } from '../../reducerAction';
 import { Stream, subscribe } from '../../streams';
+import { Button, ButtonOpts, Div } from '../../UITable';
 import getTable from '../../UITable/getTable';
-import {
-  ButtonStack,
-  ButtonStackOpt,
-  H1,
-  H2,
-  Spacer,
-} from '../../UITable/Row/templates';
+import { H1, H2, Spacer } from '../../UITable/Row/templates';
 import { recalculateProps$ } from './props$Calculations';
 import {
   handleClearFilters,
@@ -93,22 +88,18 @@ export default async <E>(opts: Opts<E>) => {
   });
 
   const CTAs = connect(({ state }) =>
-    ButtonStack(
-      [
-        {
-          text: 'Clear filters',
-          icon: 'filter',
-          onTap: clearFilters,
-          isDisabled: !areFiltersApplied(state),
-        },
-      ],
-      { flavor: 'transparentWithBorder' }
-    )
+    Div([
+      Button({
+        text: 'Clear filters',
+        icon: 'filter',
+        onTap: clearFilters,
+        isDisabled: !areFiltersApplied(state),
+        flavor: 'transparentWithBorder',
+      }),
+    ])
   );
 
-  const getFilterRowOpts = (
-    filter: FilterWithState<E>
-  ): ButtonStackOpt | null => {
+  const getFilterRowOpts = (filter: FilterWithState<E>): ButtonOpts | null => {
     const { filterKeyToFilteredCount, numFiltered } = getProps();
     const isApplied = filter.state !== null;
     const count = filterKeyToFilteredCount.get(getFilterKey(filter));
@@ -144,7 +135,7 @@ export default async <E>(opts: Opts<E>) => {
     if (!filterButtonOpts.length) return null;
     return conditionalArr([
       FilterCategoryHeader(category, isCollapsed),
-      !isCollapsed && ButtonStack(filterButtonOpts),
+      !isCollapsed && Div(filterButtonOpts.map(Button)),
       Spacer(),
       Spacer(),
     ]).flat();
@@ -184,3 +175,5 @@ export default async <E>(opts: Opts<E>) => {
 
   return getAppliedFilters(finalState, filters);
 };
+
+export * from './types';

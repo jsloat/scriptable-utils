@@ -1,4 +1,5 @@
 import { getReducerCreator, getTableActionCreator } from '../../reducerAction';
+import { NoParamFn } from '../../types/utilTypes';
 import {
   Div,
   H1,

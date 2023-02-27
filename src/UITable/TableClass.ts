@@ -2,6 +2,7 @@ import { ExcludeFalsy } from '../common';
 import { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
 import { getIconPreloadHelpers } from '../sfSymbols';
+import { AnyObj, NoParamFn } from '../types/utilTypes';
 import {
   AfterFirstRender,
   AfterPropsLoad,

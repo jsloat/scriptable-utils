@@ -3,6 +3,7 @@ import { getConfig } from '../configRegister';
 import { composeIdentities } from '../flow';
 import persisted, { Persisted } from '../io/persisted';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
+import { Identity } from '../types/utilTypes';
 import { LightDarkKey, SFSymbolKey, TintRequestKey } from './types';
 import { getTintRequestKey } from './utils';
 

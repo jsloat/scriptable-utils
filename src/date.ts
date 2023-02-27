@@ -4,6 +4,7 @@ import { ExcludeFalsy } from './common';
 import { getConfig } from './configRegister';
 import { range } from './object';
 import { pluralize } from './string';
+import { Domain, Identity, MapFn } from './types/utilTypes';
 
 const ONE_MILLISECOND = 1;
 export const ONE_SECOND = ONE_MILLISECOND * 1000;

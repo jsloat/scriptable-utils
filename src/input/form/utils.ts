@@ -1,4 +1,5 @@
 import { groupBy, isString, segment } from '../../common';
+import { Entry } from '../../types/utilTypes';
 import {
   CommonFieldOpts,
   CommonRowOptOpts,

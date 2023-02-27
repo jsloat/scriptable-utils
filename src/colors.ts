@@ -2,6 +2,7 @@ import { chunk } from './array';
 import { isString, objectFromEntries } from './common';
 import { shortSwitch } from './flow';
 import { hasKey, objectKeys, range } from './object';
+import { Domain, Omit_ } from './types/utilTypes';
 
 type DynamicColor = { color: Color; isDynamic: true };
 export type EnhancedColor = { color: Color; label: string; isDynamic: boolean };

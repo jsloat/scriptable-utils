@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 lint() {
-  eslint "./**/*.{ts,js}" --fix
+  eslint "./src/**/*.{ts,js}" --fix
 }
 
 tests() {

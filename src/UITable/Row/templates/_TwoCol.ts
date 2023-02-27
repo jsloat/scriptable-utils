@@ -1,3 +1,4 @@
+import { Identity } from '../../../types/utilTypes';
 import { DEFAULT_GRID_WIDTH, DEFAULT_LEFT_GUTTER_WIDTH } from '../consts';
 import { ContentAreaOpts, RowOpts } from '../types';
 import { getRowConstructor } from './utils';

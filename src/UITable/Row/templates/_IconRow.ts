@@ -2,6 +2,7 @@
 // in the leftmost, with metadata optional.
 
 import { SFSymbolKey } from '../../../sfSymbols';
+import { Omit_ } from '../../../types/utilTypes';
 import { ContentAreaOpts, RowOpts } from '../types';
 import _ThreeCol from './_ThreeCol';
 import _TwoCol from './_TwoCol';

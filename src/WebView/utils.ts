@@ -1,6 +1,7 @@
 import { safeArrLookup } from '../common';
 import { Stream } from '../streams';
 import { lowerIncludes, spliceInPlace, splitByRegex } from '../string';
+import { AnyObj } from '../types/utilTypes';
 import { getUrlEncodedParams } from '../url';
 import { WEBVIEW_PASS_DATA_PREFIX } from './consts';
 import { WebViewOpts } from './types';
@@ -136,9 +137,9 @@ export const getUrlDetails = async (url: string): Promise<UrlDetails> => {
   const w = new WebView();
   await w.loadURL(url);
   try {
-    return w.evaluateJavaScript<UrlDetails>(
+    return (await w.evaluateJavaScript(
       `({ url: ${urlFetchJS.url}, title: ${urlFetchJS.title}, elCount: ${urlFetchJS.elCount} })`
-    );
+    )) as UrlDetails;
   } catch {
     return { title: 'Could not load page', url, elCount: 0 };
   }

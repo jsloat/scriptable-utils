@@ -7,9 +7,10 @@ import {
   stripTime,
 } from '../../date';
 import { range } from '../../object';
-import { Button, H1 } from '../../UITable/elements';
+import { MakeSomeReqd } from '../../types/utilTypes';
+import { Button, ButtonOpts, H1 } from '../../UITable/elements';
 import getTable from '../../UITable/getTable';
-import { ButtonOpts, HR, IconRow } from '../../UITable/Row/templates';
+import { HR, IconRow } from '../../UITable/Row/templates';
 import { pickDate } from './pickDate';
 import presetDateTime from './presetDateTime';
 
@@ -115,7 +116,7 @@ type NavCTAOpts = Required<Pick<ButtonOpts, 'text' | 'icon' | 'onTap'>> & {
   isFaded?: boolean;
 };
 const NavCTA = ({ text, icon, onTap, isFaded = false }: NavCTAOpts) =>
-  [IconRow({ icon, text, isFaded, onTap }), Divider()].flat();
+  [Button({ icon, text, isFaded, onTap }), Divider()].flat();
 
 const PrevCTA = connect(({ setState }) => {
   const isDisabled = !canGoBack();

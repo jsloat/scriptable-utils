@@ -2,6 +2,7 @@ import { conditionalArr, hasLength } from '../../array';
 import { isFunc, isString } from '../../common';
 import { isIn } from '../../flow';
 import { objectEntries } from '../../object';
+import { Entry } from '../../types/utilTypes';
 import { Button, HR } from '../../UITable/elements';
 import presetStyles from '../../UITable/elements/presetStyles';
 import getTable from '../../UITable/getTable';
@@ -18,6 +19,8 @@ import {
   NO_FIELD_SECTION,
 } from './types';
 import { groupFieldsIntoSection } from './utils';
+
+export * from './fieldRows';
 
 export default <CompleteFormState extends FormStateShape>(
   optsOrOptsGetter:

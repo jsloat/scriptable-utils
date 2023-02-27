@@ -1,6 +1,6 @@
-import Row from '../..';
 import { conditionalArr } from '../../../../array';
 import { cycle } from '../../../../flow';
+import Row from '../../Row';
 import {
   BackCyclingSpacer,
   getStyle,

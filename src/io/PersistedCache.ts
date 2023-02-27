@@ -1,5 +1,6 @@
 import { composeIdentities } from '../flow';
 import { Stream } from '../streams';
+import { AnyObj, Identity } from '../types/utilTypes';
 import persisted, { Persisted } from './persisted';
 import { getTemporaryFilename } from './utils';
 

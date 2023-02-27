@@ -1,6 +1,14 @@
 import { Persisted } from '../io/persisted';
 import { RepeatingTimerOpts } from '../RepeatingTimer';
 import { Stream } from '../streams';
+import {
+  AnyObj,
+  Falsy,
+  MapFn,
+  MaybeArray,
+  MaybePromise,
+  NoParamFn,
+} from '../types/utilTypes';
 import { Container } from './elements/shapes';
 
 /** Falsy values will be filtered out, arrays will be flattened.  */

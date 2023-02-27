@@ -1,6 +1,7 @@
 import { insertBetween } from '../../array';
 import { getColor } from '../../colors';
 import { objectEntries } from '../../object';
+import { NoParamFn, Omit_ } from '../../types/utilTypes';
 import Div, { DivStyle, NonCascadingDiv } from './Div';
 import Gradient from './Gradient';
 import HR from './HR';

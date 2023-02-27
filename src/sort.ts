@@ -1,3 +1,12 @@
+import {
+  Identity,
+  MakeSomeReqd,
+  MapFn,
+  ObjComparison,
+  Predicate,
+  SortFn,
+} from './types/utilTypes';
+
 const RAISE_A = -1;
 const RAISE_B = 1;
 const NO_CHANGE = 0;
@@ -30,11 +39,13 @@ export const combineSortFunctions =
       return sortFnResult === NO_CHANGE ? prevValue : sortFnResult;
     }, NO_CHANGE);
 
+type NewType<T> = Predicate<T>;
+
 /** Generates a sorter based on the `shouldRaise` predicates passed in.
  * Predicates are evaluated in order. If no predicates match either of the
  * elements, NO_CHANGE is returned. */
 export const sortByPredicates =
-  <T>(...shouldRaisePreds: Predicate<T>[]): SortFn<T> =>
+  <T>(...shouldRaisePreds: NewType<T>[]): SortFn<T> =>
   (a, b) => {
     for (const shouldRaise of shouldRaisePreds) {
       if (shouldRaise(a) && !shouldRaise(b)) return RAISE_A;

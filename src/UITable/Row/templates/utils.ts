@@ -1,6 +1,12 @@
-import Row from '..';
 import { RowOpts } from '../types';
 import { composeIdentities } from '../../../flow';
+import {
+  AnyObj,
+  Identity,
+  IfHasAtLeastOneReq,
+  MapFn,
+} from '../../../types/utilTypes';
+import Row from '../Row';
 
 type CombinedRowOpts<OwnOpts extends AnyObj | void> = OwnOpts extends void
   ? RowOpts

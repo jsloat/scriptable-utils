@@ -4,6 +4,7 @@ import { isNumber } from '../../common';
 import { getConfig, ScreenHeightMeasurements } from '../../configRegister';
 import { getMaxScreenHeight } from '../../device';
 import { pick } from '../../object';
+import { Identity } from '../../types/utilTypes';
 import { BaseRowOpts } from '../Row/base';
 import { ContainerStyle } from './shapes';
 import {

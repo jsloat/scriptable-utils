@@ -1,5 +1,12 @@
 import { EnhancedColor } from '../../colors';
 import { SFSymbolKey } from '../../sfSymbols';
+import {
+  Falsy,
+  MapFn,
+  NotUndefined,
+  Omit_,
+  Predicate,
+} from '../../types/utilTypes';
 import { RowOpts } from '../../UITable/Row/types';
 import { ValidTableEl } from '../../UITable/types';
 

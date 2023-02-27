@@ -1,3 +1,4 @@
+import { AnyObj } from '../../types/utilTypes';
 import { ContentTypes, FetchImplementationOpts } from '../types';
 
 export type MultipartRequest = Pick<Request, 'url' | 'method'> & {

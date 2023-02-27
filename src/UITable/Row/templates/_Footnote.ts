@@ -1,3 +1,4 @@
+import { Identity } from '../../../types/utilTypes';
 import { RowOpts } from '../types';
 
 /** NB -- should be placed at end of composed identities to ensure content

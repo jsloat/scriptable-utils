@@ -1,4 +1,5 @@
 import { Stream } from '../streams';
+import { AnyObj } from '../types/utilTypes';
 import { Table } from './TableClass';
 import {
   CombineProps,

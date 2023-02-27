@@ -1,4 +1,5 @@
 import { isBoolean, isNumber, isString } from './common';
+import { AnyObj, ObjKey } from './types/utilTypes';
 
 const getValAsString = (val: any) =>
   isString(val) ? val : JSON.stringify(val);
@@ -45,7 +46,8 @@ export const openCallbackUrl = async <ExpectedReturn = void>(
     if (val !== undefined) cb.addParameter(key, getValAsString(val));
   });
   try {
-    return cb.open<ExpectedReturn>();
+    const result = await cb.open();
+    return result as unknown as ExpectedReturn;
   } catch (e) {
     const prompt = new Alert();
     prompt.title = `Error encountered opening callback URL`;

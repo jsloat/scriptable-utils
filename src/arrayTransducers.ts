@@ -1,4 +1,5 @@
 import { getSegmentConsts, getSegmentReducer, SegmentRules } from './common';
+import { MapFn, PrimitiveType, Typeguard } from './types/utilTypes';
 
 type Reducer<Result, Input> = (
   result: Result,

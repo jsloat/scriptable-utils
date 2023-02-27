@@ -1,13 +1,13 @@
-declare type MaybePromise<T> = T | Promise<T>;
+export type MaybePromise<T> = T | Promise<T>;
 
-declare type MaybeArray<T> = T | T[];
+export type MaybeArray<T> = T | T[];
 
 /** Given a promise type, returns the type contained within the promise */
-declare type UnwrapPromise<T> = T extends PromiseLike<infer U> ? U : T;
+export type UnwrapPromise<T> = T extends PromiseLike<infer U> ? U : T;
 
-declare type UnwrapArr<T> = T extends (infer U)[] ? U : unknown;
+export type UnwrapArr<T> = T extends (infer U)[] ? U : unknown;
 
-declare type RecordOfMap<T extends Map<any, any>> = T extends Map<
+export type RecordOfMap<T extends Map<any, any>> = T extends Map<
   infer U,
   infer V
 >
@@ -16,15 +16,15 @@ declare type RecordOfMap<T extends Map<any, any>> = T extends Map<
     Record<U, V>
   : unknown;
 
-declare type Nullish = null | undefined;
+export type Nullish = null | undefined;
 
-declare type NonNullish<T> = Exclude<T, Nullish>;
+export type NonNullish<T> = Exclude<T, Nullish>;
 
 // https://stackoverflow.com/questions/48230773/how-to-create-a-partial-like-that-requires-a-single-property-to-be-set
-declare type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> &
+export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> &
   U[keyof U];
 
-declare type LabeledValue<Value, Label extends string = string> = {
+export type LabeledValue<Value, Label extends string = string> = {
   label: Label;
   value: Value;
 };
@@ -37,7 +37,7 @@ type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
   ? A
   : B;
 
-declare type WritableKeys<T> = {
+export type WritableKeys<T> = {
   [P in keyof T]-?: IfEquals<
     { [Q in P]: T[P] },
     { -readonly [Q in P]: T[P] },
@@ -45,7 +45,7 @@ declare type WritableKeys<T> = {
   >;
 }[keyof T];
 
-declare type ReadonlyKeys<T> = {
+export type ReadonlyKeys<T> = {
   [P in keyof T]-?: IfEquals<
     { [Q in P]: T[P] },
     { -readonly [Q in P]: T[P] },
@@ -57,75 +57,75 @@ declare type ReadonlyKeys<T> = {
 //
 
 /** Useful for cases when need to type object w/ nothing inside */
-declare type EmptyObject = {
+export type EmptyObject = {
   [K in any]: never;
 };
 
-declare type Falsy = false | null | undefined | '' | void | 0;
+export type Falsy = false | null | undefined | '' | void | 0;
 
-declare type NotFalsy<T> = Exclude<T, Falsy>;
+export type NotFalsy<T> = Exclude<T, Falsy>;
 
 //
 
-declare type AnyFn = (...args: any) => any;
+export type AnyFn = (...args: any) => any;
 
-declare type NonFunctionKeys<T> = Exclude<
+export type NonFunctionKeys<T> = Exclude<
   {
     [K in keyof T]: T[K] extends AnyFn ? never : K;
   }[keyof T],
   undefined
 >;
 
-declare type NonFunctionProperties<T> = Pick<T, NonFunctionKeys<T>>;
+export type NonFunctionProperties<T> = Pick<T, NonFunctionKeys<T>>;
 
-declare type FunctionKeys<T> = Exclude<
+export type FunctionKeys<T> = Exclude<
   {
     [K in keyof T]: T[K] extends AnyFn ? K : never;
   }[keyof T],
   undefined
 >;
 
-declare type FunctionProperties<T> = Pick<T, FunctionKeys<T>>;
+export type FunctionProperties<T> = Pick<T, FunctionKeys<T>>;
 
 /** Writable non-function keys in a type */
-declare type SettableKeys<T> = Exclude<NonFunctionKeys<T>, ReadonlyKeys<T>>;
+export type SettableKeys<T> = Exclude<NonFunctionKeys<T>, ReadonlyKeys<T>>;
 
 //
 
 // stackoverflow.com/questions/44425344/typescript-interface-with-xor-barstring-xor-cannumber
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-declare type XOR<T, U> = T | U extends AnyObj
+export type XOR<T, U> = T | U extends AnyObj
   ? (Without<T, U> & U) | (Without<U, T> & T)
   : T | U;
 
 //
 
-declare type SortOrder = 'ASC' | 'DESC';
+export type SortOrder = 'ASC' | 'DESC';
 
-declare type MapFn<Input, Output = unknown> = (input: Input) => Output;
+export type MapFn<Input, Output = unknown> = (input: Input) => Output;
 
-declare type NoParamFn<Output = unknown> = () => Output;
+export type NoParamFn<Output = unknown> = () => Output;
 
-declare type OptionalMapFn<Input, Output> = (input?: Input) => Output;
+export type OptionalMapFn<Input, Output> = (input?: Input) => Output;
 
-declare type Identity<T> = MapFn<T, T>;
+export type Identity<T> = MapFn<T, T>;
 
-declare type Predicate<T> = MapFn<T, boolean>;
+export type Predicate<T> = MapFn<T, boolean>;
 
-declare type Typeguard<AssertedType extends ActualType, ActualType = any> = (
+export type Typeguard<AssertedType extends ActualType, ActualType = any> = (
   val: ActualType
 ) => val is AssertedType;
 
-declare type NotUndefined<T> = Exclude<T, undefined>;
+export type NotUndefined<T> = Exclude<T, undefined>;
 
-declare type ObjKey = string | number | symbol;
+export type ObjKey = string | number | symbol;
 
-declare type AnyObj = Record<ObjKey, any>;
+export type AnyObj = Record<ObjKey, any>;
 
-declare type ObjComparison<T, R = boolean> = (a: T, b: T) => R;
+export type ObjComparison<T, R = boolean> = (a: T, b: T) => R;
 
 /** Used to define possible actions based on entity type being actioned. */
-declare type ConditionalAction<E> = {
+export type ConditionalAction<E> = {
   label: string;
   action: (entity: E) => MaybePromise<boolean>;
   shouldRerenderOnSuccess?: boolean;
@@ -133,41 +133,41 @@ declare type ConditionalAction<E> = {
 };
 
 /** Used across many systems to differentiate between life domains */
-declare type Domain = 'personal' | 'work';
+export type Domain = 'personal' | 'work';
 
-declare type Align = 'left' | 'center' | 'right';
+export type Align = 'left' | 'center' | 'right';
 
 /**
  * Returns object keys that are optional
  * From https://stackoverflow.com/questions/53899692/typescript-how-to-extract-only-the-optional-keys-from-a-type
  */
-declare type OptionalPropertyOf<T extends Record<string, unknown>> = Exclude<
+export type OptionalPropertyOf<T extends Record<string, unknown>> = Exclude<
   {
     [K in keyof T]: T extends Record<K, T[K]> ? never : K;
   }[keyof T],
   undefined
 >;
-declare type RequiredPropertyOf<T extends Record<string, unknown>> = Exclude<
+export type RequiredPropertyOf<T extends Record<string, unknown>> = Exclude<
   {
     [K in keyof T]: T extends Record<K, T[K]> ? K : never;
   }[keyof T],
   undefined
 >;
 
-declare type NonNullishRecord<T extends Record<string, unknown>> = {
+export type NonNullishRecord<T extends Record<string, unknown>> = {
   [k in keyof T]: NonNullish<T[k]>;
 };
 
-declare type PartialWithNull<T extends AnyObj> = {
+export type PartialWithNull<T extends AnyObj> = {
   [key in keyof T]: T[key] | null;
 };
 
-declare type PickRequired<T, K extends keyof T> = Pick<Required<T>, K>;
-declare type PickPartial<T, K extends keyof T> = Pick<Partial<T>, K>;
+export type PickRequired<T, K extends keyof T> = Pick<Required<T>, K>;
+export type PickPartial<T, K extends keyof T> = Pick<Partial<T>, K>;
 
 /** Convert some keys to be required, leaving others untouched. Can also include
  * keys to exclude from resulting type */
-declare type MakeSomeReqd<
+export type MakeSomeReqd<
   Source extends Record<string, any>,
   // Keys to convert to required
   MakeReqKeys extends keyof Source = never,
@@ -175,7 +175,7 @@ declare type MakeSomeReqd<
 > = Omit<Source, ExcludeKeys | MakeReqKeys> &
   Pick<Required<Source>, MakeReqKeys>;
 
-declare type MakeSomeOptional<
+export type MakeSomeOptional<
   T extends AnyObj,
   OptionalKeys extends keyof T,
   ExcludeKeys extends keyof T = never
@@ -187,7 +187,7 @@ declare type MakeSomeOptional<
  * Example, to map {first_name: string} to {firstName: string}:
  * `MapKeys<{first_name: string}, {firstName: 'first_name'}>`
  */
-declare type MapKeys<
+export type MapKeys<
   Source extends Record<string, any>,
   NewKeyMap extends Record<string, any> = never
 > = NewKeyMap extends never
@@ -206,14 +206,14 @@ declare type MapKeys<
       >;
 
 /** Map some of the values of existing keys to new values */
-declare type MapVals<
+export type MapVals<
   Source extends AnyObj,
   PartialNewVals extends {
     [key in keyof Source]?: any;
   }
 > = Omit<Source, keyof PartialNewVals> & PartialNewVals;
 
-declare type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
 > &
@@ -221,7 +221,7 @@ declare type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
   }[Keys];
 
-declare type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
+export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
 > &
@@ -234,26 +234,26 @@ declare type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
  * Checks if object type `T` has at least one required attribute. If it does,
  * return type `IfTrue`, else `IfFalse`
  */
-declare type IfHasAtLeastOneReq<
+export type IfHasAtLeastOneReq<
   T extends AnyObj,
   IfTrue,
   IfFalse
 > = Partial<T> extends T ? IfFalse : IfTrue;
 
-declare type ArrCallback<T, R = unknown> = (
+export type ArrCallback<T, R = unknown> = (
   value: T,
   index: number,
   array: T[]
 ) => R;
 
-declare type ReduceCallback<SourceArrEl, Final, Return = Final> = (
+export type ReduceCallback<SourceArrEl, Final, Return = Final> = (
   previousValue: Final,
   currentValue: SourceArrEl,
   currentIndex: number,
   array: SourceArrEl[]
 ) => Return;
 
-declare type StreamCallback = { remove: () => void };
+export type StreamCallback = { remove: () => void };
 
 type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
   SubSubKeyOrVal extends void
@@ -271,7 +271,7 @@ type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
  * Could be rewritten as:
  * `Index<string, number, string, Set<any>>`
  */
-declare type Index<
+export type Index<
   A extends ObjKey,
   B,
   C = void,
@@ -287,11 +287,11 @@ declare type Index<
 >;
 
 /** With autosuggestion for keys */
-declare type Omit_<T, K extends keyof T> = Omit<T, K>;
+export type Omit_<T, K extends keyof T> = Omit<T, K>;
 /** With autosuggestion for keys */
-declare type Extract_<T, U extends T> = Extract<T, U>;
+export type Extract_<T, U extends T> = Extract<T, U>;
 
-declare type ValOf<T extends AnyObj, K extends keyof T> = T[K];
+export type ValOf<T extends AnyObj, K extends keyof T> = T[K];
 
 /**
  * Returns tuple from inferred Map type.
@@ -303,21 +303,21 @@ declare type ValOf<T extends AnyObj, K extends keyof T> = T[K];
  * // Returns `[string, boolean]`
  * ```
  */
-declare type MapEntry<M extends Map<any, any>> = M extends Map<infer T, infer U>
+export type MapEntry<M extends Map<any, any>> = M extends Map<infer T, infer U>
   ? [T, U]
   : never;
 
-declare type Entry<T extends AnyObj> = [key: keyof T, val: T[keyof T]];
+export type Entry<T extends AnyObj> = [key: keyof T, val: T[keyof T]];
 
 type WithoutNeverKeys<T extends AnyObj> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
 
-declare type WithoutNever<T extends AnyObj> = Pick<T, WithoutNeverKeys<T>>;
+export type WithoutNever<T extends AnyObj> = Pick<T, WithoutNeverKeys<T>>;
 
-declare type SortFn<T> = (a: T, b: T) => number;
+export type SortFn<T> = (a: T, b: T) => number;
 
-declare type PrimitiveType =
+export type PrimitiveType =
   | bigint
   | boolean
   | null

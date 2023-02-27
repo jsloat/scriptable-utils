@@ -1,4 +1,5 @@
 import { SFSymbolKey } from '../../sfSymbols';
+import { Predicate } from '../../types/utilTypes';
 import { SetRenderOpts } from '../../UITable/types';
 import {
   EntityId,

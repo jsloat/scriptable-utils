@@ -1,3 +1,4 @@
+import { AnyObj, MaybePromise } from '../types/utilTypes';
 import Stream from './Stream';
 import { StreamConstructorOpts } from './types';
 

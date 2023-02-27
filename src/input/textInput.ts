@@ -1,3 +1,4 @@
+import { MapFn, NoParamFn } from '../types/utilTypes';
 import alert from './alert';
 import { TextFieldConfigOpts, TextFieldKeyboardFlavor } from './types';
 

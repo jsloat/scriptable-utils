@@ -1,4 +1,5 @@
 import { ScreenHeightMeasurements } from '../../configRegister';
+import { Align, NoParamFn } from '../../types/utilTypes';
 
 export type Percent = `${number}%`;
 

@@ -1,4 +1,5 @@
 import { getColors, getDynamicColor } from '../../colors';
+import { Identity } from '../../types/utilTypes';
 import presetStyles, { FlavorKey } from '../elements/presetStyles';
 import { H1Consts } from './templates/consts';
 import { Flavor } from './types';

@@ -9,16 +9,18 @@ import listChoose, { ListChooseOptionObj } from '../input/listChoose';
 import textInput from '../input/textInput';
 import { getReducerCreator, getTableActionCreator } from '../reducerAction';
 import { Stream } from '../streams';
+import {
+  MapFn,
+  MaybePromise,
+  NoParamFn,
+  Omit_,
+  Predicate,
+} from '../types/utilTypes';
+import { Button, ButtonOpts, Div } from '../UITable';
 import { IconOrSFKey } from '../UITable/elements/Icon';
 import { Container } from '../UITable/elements/shapes';
 import getTable from '../UITable/getTable';
-import {
-  ButtonStack,
-  ButtonStackOpt,
-  H1,
-  PaginationController,
-  Spacer,
-} from '../UITable/Row/templates';
+import { H1, PaginationController, Spacer } from '../UITable/Row/templates';
 import { H1Opts } from '../UITable/Row/templates/_H1';
 import entityFilter from './entityFilter';
 import { FilterRecord, FilterWithState } from './entityFilter/types';
@@ -76,7 +78,7 @@ export type SelectableEntityBrowserOpts<Entity> = {
   headerOpts?: H1Opts;
   getCustomCTAs?: MapFn<
     CustomCTACallbackOpts<Entity>,
-    Omit_<ButtonStackOpt, 'flavor'>[]
+    Omit_<ButtonOpts, 'flavor'>[]
   >;
   /** Used to toggle selection status, etc. */
   getEntityId: MapFn<Entity, EntityId>;
@@ -228,7 +230,7 @@ export default async <E>({
 
   const Header = connect(() => H1(headerOpts || { title: 'Entity browser' }));
 
-  const SearchCTAOpts = (): ButtonStackOpt | null => {
+  const SearchCTAOpts = (): ButtonOpts | null => {
     if (!getSearchMatchPredicate) return null;
     const { filterBySearchQuery: query } = getState();
     return {
@@ -248,7 +250,7 @@ export default async <E>({
     };
   };
 
-  const FilterCTAOpts = (): ButtonStackOpt | null => {
+  const FilterCTAOpts = (): ButtonOpts | null => {
     if (!filters) return null;
     const { appliedFilters } = getState();
     return {
@@ -268,7 +270,7 @@ export default async <E>({
     };
   };
 
-  const SelectionCTAOpts = (): ButtonStackOpt | null => {
+  const SelectionCTAOpts = (): ButtonOpts | null => {
     const { selectedEntityIds } = getState();
     const { allEntitiesCount, allEntityIds } = getProps();
     if (!(allEntitiesCount && bulkActions)) return null;
@@ -292,8 +294,8 @@ export default async <E>({
             rerender: () => reloadEntities(state),
           })
         : []),
-    ]).map<ButtonStackOpt>(opt => ({ ...opt }));
-    return stackOpts.length && ButtonStack(stackOpts);
+    ]).map<ButtonOpts>(opt => ({ ...opt }));
+    return stackOpts.length && Div(stackOpts.map(Button));
   });
 
   const EntityRow = (id: EntityId) => {

@@ -1,5 +1,6 @@
 import { conditionalArr } from '../../../array';
 import { range } from '../../../object';
+import { MapFn, NoParamFn } from '../../../types/utilTypes';
 import { Container } from '../../elements/shapes';
 import { ValidTableEl } from '../../types';
 import _CycleTabs from './_CycleTabs';

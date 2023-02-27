@@ -5,6 +5,7 @@ import { isFunc } from '../common';
 import { getConfig } from '../configRegister';
 import { getMaxScreenHeight } from '../device';
 import { isOdd } from '../numbers';
+import { MaybePromise, NoParamFn } from '../types/utilTypes';
 import { Div, HSpace, P } from '../UITable/elements';
 import Icon, { IconOrSFKey } from '../UITable/elements/Icon';
 import getTable from '../UITable/getTable';

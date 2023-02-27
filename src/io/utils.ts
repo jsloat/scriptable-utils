@@ -1,5 +1,6 @@
 import { getConfig } from '../configRegister';
 import { Stream } from '../streams';
+import { MapFn } from '../types/utilTypes';
 import { getDirContents } from './filesystemUtils';
 import persisted from './persisted';
 

@@ -3,7 +3,7 @@ import { truncate } from '../../string';
 import { Cell, CellShapeStyle } from './shapes';
 import { maybeFadeForegroundColor } from './utils';
 
-class P extends Cell {
+export class P extends Cell {
   constructor(text: string, style: CellShapeStyle) {
     super({
       style,

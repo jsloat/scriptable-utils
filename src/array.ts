@@ -1,6 +1,14 @@
 import { compose, filter, map, toArray, toFind } from './arrayTransducers';
 import { ExcludeFalsy, isString } from './common';
 import { objectEntries, objectKeys } from './object';
+import {
+  ArrCallback,
+  Falsy,
+  MapFn,
+  ObjComparison,
+  ObjKey,
+  PrimitiveType,
+} from './types/utilTypes';
 
 export const isLastArrIndex = (index: number, arr: any[]) =>
   index === arr.length - 1;

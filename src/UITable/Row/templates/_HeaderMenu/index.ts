@@ -1,5 +1,6 @@
 import { conditionalArr } from '../../../../array';
 import { ExcludeFalsy } from '../../../../common';
+import { NoParamFn, Omit_ } from '../../../../types/utilTypes';
 import { ButtonStack } from '../_Button';
 import _Spacer from '../_Spacer';
 import {
@@ -85,3 +86,5 @@ export default ({
     isThisOpen && _Spacer(),
   ]).flat();
 };
+
+export * from './types';

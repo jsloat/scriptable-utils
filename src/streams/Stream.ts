@@ -1,4 +1,5 @@
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
+import { AnyObj, Identity, StreamCallback } from '../types/utilTypes';
 import { StreamConstructorOpts } from './types';
 
 type UpdateCallback<D extends AnyObj> = (

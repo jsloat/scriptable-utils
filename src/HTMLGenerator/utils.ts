@@ -1,4 +1,5 @@
 import { isString } from '../common';
+import { Omit_ } from '../types/utilTypes';
 import { AttrDictionary, Child, Element, PageStyle } from './types';
 
 const getStyleString = (styleDefinition: AttrDictionary) => {

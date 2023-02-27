@@ -2,6 +2,13 @@ import { isString } from '../common';
 import { getConfig } from '../configRegister';
 import { isEqual, objectKeys } from '../object';
 import Stream from '../streams/Stream';
+import {
+  AnyObj,
+  ArrCallback,
+  Identity,
+  ObjComparison,
+  UnwrapArr,
+} from '../types/utilTypes';
 
 type CreateIObjectOpts<T> = {
   filename: string;

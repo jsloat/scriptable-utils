@@ -1,7 +1,7 @@
 import { objectKeys } from '../object';
 import {
   AlertOpts,
-  Button,
+  AlertButton,
   TextFieldConfigOpts,
   TextFieldKeyboardFlavor,
 } from './types';
@@ -38,7 +38,10 @@ const addTextFields = (textFields: TextFieldConfigOpts[], alert: Alert) =>
     }
   );
 
-const addButtons = (buttons: (Button & { text: string })[], alert: Alert) =>
+const addButtons = (
+  buttons: (AlertButton & { text: string })[],
+  alert: Alert
+) =>
   buttons.forEach(({ text, isCancel, isRed }) => {
     if (isCancel) alert.addCancelAction(text);
     else if (isRed) alert.addDestructiveAction(text);
@@ -50,7 +53,7 @@ const addButtons = (buttons: (Button & { text: string })[], alert: Alert) =>
 /** Returns the button tapped for the given return index. */
 const getButtonAtIndex = <ButtonKey extends string>(
   i: number,
-  buttons: Record<ButtonKey, Button>,
+  buttons: Record<ButtonKey, AlertButton>,
   orderedButtonKeys: ButtonKey[]
 ) => {
   const orderedButtonKeysWithText = orderedButtonKeys.map(text => ({

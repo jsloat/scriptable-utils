@@ -9,6 +9,7 @@ import {
 import { cycle, force } from '../../flow';
 import { ICONS } from '../../icons';
 import { SFSymbolKey } from '../../sfSymbols';
+import { LabeledValue, MapFn, NoParamFn, Omit_ } from '../../types/utilTypes';
 import { RowSize } from '../../UITable/Row/types';
 import { ValidTableEl } from '../../UITable/types';
 import chooseColor from '../chooseColor';

@@ -1,5 +1,6 @@
 import { ColorKey, getColor, getDynamicColor } from '../../colors';
 import { isString } from '../../common';
+import { MapVals } from '../../types/utilTypes';
 import { H1Consts } from '../Row/templates/consts';
 import { CascadingStyle, RowStyle } from './types';
 

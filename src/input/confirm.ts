@@ -1,3 +1,4 @@
+import { NoParamFn } from '../types/utilTypes';
 import alert from './alert';
 
 const DEFAULT_CONFIRM_DIALOG_TITLE = 'Confirm action?';

@@ -6,9 +6,9 @@ import {
   getEnhancedColor,
 } from '../colors';
 import { getReducerCreator, getTableActionCreator } from '../reducerAction';
+import { NoParamFn } from '../types/utilTypes';
+import { Button, H1, Row } from '../UITable';
 import getTable from '../UITable/getTable';
-import Row from '../UITable/Row';
-import { Button, H1 } from '../UITable/Row/templates';
 import textInput from './textInput';
 
 type S = { selectedColor: EnhancedColor | 'ADD_CUSTOM' | null };
@@ -30,7 +30,7 @@ const colorData = colorKeys.map(getEnhancedColor);
 
 //
 
-const Title = () => H1({ title: 'Choose color' });
+const Title = () => H1('Choose color');
 
 const AddCustomCTA = () =>
   Button({

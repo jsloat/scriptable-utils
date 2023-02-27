@@ -1,4 +1,5 @@
 import { isEqual } from '../object';
+import { AnyObj } from '../types/utilTypes';
 import persisted from './persisted';
 
 // ts-unused-exports:disable-next-line

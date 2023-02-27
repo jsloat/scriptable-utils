@@ -1,11 +1,9 @@
 import { conditionalArr } from '../../../../array';
 import { ExcludeFalsy } from '../../../../common';
+import { Falsy } from '../../../../types/utilTypes';
 import { Button as NewButton, Div } from '../../../elements';
 import presetStyles, { FlavorKey } from '../../../elements/presetStyles';
 import { ButtonOpts, ButtonStackOpt } from './types';
-
-export { ButtonOpts, ButtonStackOpt } from './types';
-export { getButtonHeight } from './utils';
 
 export const Button = ({
   flavor,

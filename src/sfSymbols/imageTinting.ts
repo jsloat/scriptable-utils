@@ -2,6 +2,7 @@ import { compose, map, tap, toArray } from '../arrayTransducers';
 import { getColor } from '../colors';
 import { isString } from '../common';
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
+import { NoParamFn } from '../types/utilTypes';
 import { cacheTintedImage, getCachedImage } from './persistedIcons';
 import {
   getCurrScriptPreloadIconKeys,

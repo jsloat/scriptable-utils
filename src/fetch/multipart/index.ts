@@ -1,3 +1,4 @@
+import { AnyObj } from '../../types/utilTypes';
 import { postString } from '../verbs/post';
 import { MultipartOpts } from './types';
 import { extractMultipartResponseArray, getMultipartBody } from './utils';
@@ -27,3 +28,5 @@ const multipartRequest: MultipartRequestFn = async ({
 };
 
 export default multipartRequest;
+
+export * from './types';

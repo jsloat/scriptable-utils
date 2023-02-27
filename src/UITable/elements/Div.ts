@@ -1,5 +1,6 @@
 import { ExcludeFalsy } from '../../common';
 import { objectKeys } from '../../object';
+import { Falsy } from '../../types/utilTypes';
 import { Container, ContainerChild, ContainerStyle } from './shapes';
 import { TapProps } from './types';
 import { getTapProps } from './utils';

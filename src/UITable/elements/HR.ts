@@ -1,4 +1,5 @@
 import { getColor } from '../../colors';
+import { Omit_ } from '../../types/utilTypes';
 import { Container, ContainerStyle } from './shapes';
 
 type HRStyle = Pick<

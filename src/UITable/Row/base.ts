@@ -2,6 +2,7 @@ import { ErrorWithPayload, isString } from '../../common';
 import { getConfig } from '../../configRegister';
 import { force, shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
+import { Align } from '../../types/utilTypes';
 
 const warnError = async (error: any, context: string) => {
   // eslint-disable-next-line no-console

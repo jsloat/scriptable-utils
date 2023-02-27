@@ -1,5 +1,6 @@
 import { getConfig } from '../configRegister';
 import { destructiveConfirm } from '../input/confirm';
+import { MaybePromise } from '../types/utilTypes';
 
 type GetPaginatedResultsOptsShared<Response, Returns> = {
   initRequest: () => MaybePromise<Response>;

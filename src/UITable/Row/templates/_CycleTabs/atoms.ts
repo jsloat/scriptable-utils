@@ -1,5 +1,6 @@
 import { getColor } from '../../../../colors';
 import { ICONS } from '../../../../icons';
+import { NoParamFn } from '../../../../types/utilTypes';
 import { DEFAULT_GRID_WIDTH } from '../../consts';
 import { ContentAreaOpts, RowSize } from '../../types';
 import _Spacer from '../_Spacer';
