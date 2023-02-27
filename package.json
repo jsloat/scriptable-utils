@@ -1,6 +1,6 @@
 {
   "name": "scriptable-utils",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,12 +8,11 @@
     "dist"
   ],
   "scripts": {
-    "tests": "source ./scripts.sh; tests",
-    "deploy": "source ./scripts.sh; tests && git push",
+    "test": "source ./scripts.sh; test",
     "tsc": "clear; tsc",
     "lint": "source ./scripts.sh; lint",
     "build": "rm -rf ./dist;tsc --declaration",
-    "publish": "source ./scripts.sh; yarn build; tests && npm publish"
+    "release": "yarn build; np"
   },
   "repository": {
     "type": "git",
@@ -27,7 +26,11 @@
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",
     "eslint": "^8.26.0",
+    "np": "^7.6.3",
     "tslib": "^2.3.1",
     "typescript": "^4.6.3"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }

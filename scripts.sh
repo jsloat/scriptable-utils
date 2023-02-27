@@ -8,7 +8,7 @@ circDeps() {
   madge ./src/index.ts --circular --extensions ts
 }
 
-tests() {
+test() {
   clear
   echo "Linting..."
   if ! lint; then
