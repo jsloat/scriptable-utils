@@ -1,6 +1,6 @@
 {
   "name": "scriptable-utils",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,12 +8,12 @@
     "dist"
   ],
   "scripts": {
+    "tests": "source ./scripts.sh; tests",
     "deploy": "source ./scripts.sh; tests && git push",
     "tsc": "clear; tsc",
     "lint": "source ./scripts.sh; lint",
-    "tests": "source ./scripts.sh; tests",
-    "build": "rm -rf ./dist;tsc --declaration", 
-    "publish": "yarn build; npm publish"
+    "build": "rm -rf ./dist;tsc --declaration",
+    "publish": "source ./scripts.sh; yarn build; tests && npm publish"
   },
   "repository": {
     "type": "git",
