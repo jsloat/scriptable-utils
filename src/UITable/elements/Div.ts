@@ -9,7 +9,8 @@ export type DivStyle = ContainerStyle & TapProps;
 
 export type DivChild = ContainerChild | Falsy;
 
-const Div = (children: DivChild[], opts: DivStyle = {}) => {
+export type DivSignature = (children: DivChild[], opts?: DivStyle) => Container;
+const Div: DivSignature = (children, opts = {}) => {
   const realChildren = children.filter(ExcludeFalsy);
   const el = new Container(realChildren, opts, getTapProps(opts));
   el.setDescription(`DIV > shownCells: ${realChildren.length}`);
@@ -28,6 +29,10 @@ const onTapKeys: (keyof DivStyle)[] = [
   'dismissOnTap',
 ];
 
+export type NonCascadingDivSignature = (
+  children: DivChild[],
+  opts?: DivStyle
+) => Container;
 /**
  * This is for cases when you want to apply style to a Div, but don't want it to
  * cascade beyone that container. E.g. if you want margin for the Div to
@@ -39,7 +44,10 @@ const onTapKeys: (keyof DivStyle)[] = [
  * children have that same onTap logic. It would be possible to have e.g.
  * different onTap actions for padding vs content of a Div, for example.
  */
-export const NonCascadingDiv = (children: DivChild[], opts: DivStyle = {}) =>
+export const NonCascadingDiv: NonCascadingDivSignature = (
+  children,
+  opts = {}
+) =>
   Div(
     [
       Div(

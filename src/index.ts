@@ -32,3 +32,4 @@ export * from './UITable';
 export * from './views';
 export * from './WebView';
 export * from './types/utilTypes';
+export { default as storybook } from './storybook';

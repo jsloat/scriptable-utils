@@ -18,3 +18,4 @@ export * from './types';
 export * from './shapes';
 export * from './utils';
 export { default as presetStyles, FlavorKey } from './presetStyles';
+export { default as styled } from './styled';

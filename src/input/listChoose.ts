@@ -71,13 +71,8 @@ const listChoose: ListChoose = async <V>(
           action: noop,
         };
       }
-      const { label, flavor, icon } = option;
-      return {
-        label,
-        flavor,
-        icon: icon ?? fallbackIcon,
-        action: noop,
-      };
+      const { label, flavor, icon = fallbackIcon } = option;
+      return { label, flavor, icon, action: noop };
     })
   );
 

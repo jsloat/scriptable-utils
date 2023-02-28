@@ -81,6 +81,7 @@ export {
   H2Opts,
   IconOrSFKey,
   ToastProps,
+  styled,
 } from './elements';
 export { default as getTable } from './getTable';
 export * from './types';
