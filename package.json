@@ -32,5 +32,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
-  }
+  },
+  "homepage": "https://sloat.life/#/scriptable-utils"
 }

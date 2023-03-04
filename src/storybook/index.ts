@@ -64,7 +64,10 @@ const sortEntries = sortByComparison({
   shouldRaiseA: isParentEntry,
 });
 
-const showSubHierarchy = (title: string, subHierarchy: SubHierarchy): any => {
+const showSubHierarchy = (
+  title: string,
+  subHierarchy: SubHierarchy
+): Promise<void> => {
   const { present } = getTable({ name: `storybook_${title}` });
   const entries = objectEntries(subHierarchy).map<HierarchyEntry>(
     ([title, val]) => ({
