@@ -196,3 +196,5 @@ export default async () => {
     return getFontFamily({ family: fontSelection, size, weight });
   }
 };
+
+export { getFontFamily, getItalicFont, getStaticFont } from './fonts';

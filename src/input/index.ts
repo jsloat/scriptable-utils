@@ -20,7 +20,12 @@ export { default as alert } from './alert';
 export * from './chooseColor';
 export { default as chooseColor } from './chooseColor';
 export { default as chooseSFSymbol } from './chooseSFSymbol';
-export { default as chooseFont } from './chooseFont';
+export {
+  default as chooseFont,
+  getFontFamily,
+  getItalicFont,
+  getStaticFont,
+} from './chooseFont';
 export * from './confirm';
 export {
   default as fullscreenOpts,
