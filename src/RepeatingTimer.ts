@@ -21,6 +21,17 @@ const getTimer = (interval: number) => {
   return t;
 };
 
+const timerRegister: Record<string, RepeatingTimer> = {};
+/** Stops all timers and neuters the `onStop` function if it exists. This is
+ * meant to be used when cleaning up after a script is done to prevent errant
+ * timers continuing to run after the user has showed the intention of stopping
+ * the current script. */
+export const killAllRepeatingTimers = () =>
+  Object.values(timerRegister).forEach(timer => {
+    timer.onStop = undefined;
+    timer.stop();
+  });
+
 export default class RepeatingTimer {
   onFire?: () => any;
   onStop?: () => any;
@@ -30,6 +41,7 @@ export default class RepeatingTimer {
   maxRepeatCount: number | null;
   isRunning: boolean;
   fireImmediately: boolean;
+  private id = UUID.string();
 
   constructor({
     onFire,
@@ -46,6 +58,7 @@ export default class RepeatingTimer {
     this.maxRepeatCount = timeout ? timeout / interval : null;
     this.isRunning = false;
     this.fireImmediately = fireImmediately;
+    timerRegister[this.id] = this;
   }
 
   setOnFire(onFire: () => any) {

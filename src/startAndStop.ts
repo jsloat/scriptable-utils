@@ -1,4 +1,5 @@
 import { Config, setConfig } from './configRegister';
+import { killAllRepeatingTimers } from './RepeatingTimer';
 import { haltTintRequests } from './sfSymbols/preloadList';
 import { stopAllHeaderMenuTimers } from './UITable/Row/templates/_HeaderMenu/stateInterface';
 
@@ -11,4 +12,5 @@ export const setScriptConfig = (config: Partial<Config>) => {
 export const cleanup = () => {
   stopAllHeaderMenuTimers();
   haltTintRequests();
+  killAllRepeatingTimers();
 };

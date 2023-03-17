@@ -7,8 +7,8 @@ import {
   SortFn,
 } from './types/utilTypes';
 
-const RAISE_A = -1;
-const RAISE_B = 1;
+const MOVE_A_LEFT = -1;
+const MOVE_A_RIGHT = 1;
 const NO_CHANGE = 0;
 
 /**
@@ -48,8 +48,8 @@ export const sortByPredicates =
   <T>(...shouldRaisePreds: NewType<T>[]): SortFn<T> =>
   (a, b) => {
     for (const shouldRaise of shouldRaisePreds) {
-      if (shouldRaise(a) && !shouldRaise(b)) return RAISE_A;
-      if (shouldRaise(b) && !shouldRaise(a)) return RAISE_B;
+      if (shouldRaise(a) && !shouldRaise(b)) return MOVE_A_LEFT;
+      if (shouldRaise(b) && !shouldRaise(a)) return MOVE_A_RIGHT;
     }
     return NO_CHANGE;
   };
@@ -72,9 +72,9 @@ export const sortByComparison =
   (a, b) => {
     const aVal = getValue(a);
     const bVal = getValue(b);
-    if (shouldRaiseA(aVal, bVal)) return RAISE_A;
-    if (!shouldRaiseB) return RAISE_B;
-    return shouldRaiseB(aVal, bVal) ? RAISE_B : NO_CHANGE;
+    if (shouldRaiseA(aVal, bVal)) return MOVE_A_LEFT;
+    if (!shouldRaiseB) return MOVE_A_RIGHT;
+    return shouldRaiseB(aVal, bVal) ? MOVE_A_RIGHT : NO_CHANGE;
   };
 
 /** By default, sort ascending */
