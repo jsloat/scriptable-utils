@@ -40,3 +40,4 @@ export {
 export { default as quickOptions, quickActions } from './quickOptions';
 export { default as textInput } from './textInput';
 export * from './types';
+export { listChooseMany } from './listChooseMany';
