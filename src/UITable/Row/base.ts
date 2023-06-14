@@ -1,6 +1,6 @@
 import { ErrorWithPayload, isString } from '../../common';
 import { getConfig } from '../../configRegister';
-import { force, shortSwitch } from '../../flow';
+import { shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 import { Align } from '../../types/utilTypes';
 
@@ -101,6 +101,9 @@ export type BaseRowOpts = Partial<{
   onTap: () => any;
   onDoubleTap: () => any;
   onTripleTap: () => any;
+  /** For advanced usage, use `overrideClickMap` to add an unlimited number of
+   * click listeners (i.e. to have on4Taps, on5Taps... etc) */
+  overrideClickMap?: ClickMap;
   dismissTableOnTap?: boolean;
   cells: (UITableCell | BaseCellParams)[];
   isHeader: boolean;
@@ -108,8 +111,7 @@ export type BaseRowOpts = Partial<{
   bgColor: Color;
 }>;
 
-type ValidTapCount = 1 | 2 | 3;
-type ClickMap = Partial<Record<ValidTapCount, () => any>>;
+type ClickMap = Partial<Record<number, () => any>>;
 
 const executeTapListener = (() => {
   let tapCount = 0;
@@ -124,7 +126,7 @@ const executeTapListener = (() => {
     clickTimer.invalidate();
     const executeFn = async () => {
       try {
-        const action = clickMap[force<ValidTapCount>(String(tapCount))];
+        const action = clickMap[tapCount];
         if (!action) {
           throw new ErrorWithPayload('Action at index not found', {
             tapCount,
@@ -155,6 +157,7 @@ export const BaseRow = ({
   onTap = () => {},
   onDoubleTap,
   onTripleTap,
+  overrideClickMap,
   dismissTableOnTap = false,
   bgColor,
 }: BaseRowOpts = {}) => {
@@ -163,11 +166,13 @@ export const BaseRow = ({
   returnRow.dismissOnSelect = dismissTableOnTap;
 
   returnRow.onSelect = () =>
-    executeTapListener({
-      1: onTap,
-      ...(onDoubleTap && { 2: onDoubleTap }),
-      ...(onTripleTap && { 3: onTripleTap }),
-    });
+    executeTapListener(
+      overrideClickMap ?? {
+        1: onTap,
+        ...(onDoubleTap && { 2: onDoubleTap }),
+        ...(onTripleTap && { 3: onTripleTap }),
+      }
+    );
   if (height) returnRow.height = height;
   if (bgColor) returnRow.backgroundColor = bgColor;
   if (cells.length)

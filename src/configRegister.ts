@@ -1,5 +1,5 @@
 import type { TimePreset } from './input/date/presetDateTime';
-import { Percent } from './UITable/elements/types';
+import type { Percent } from './UITable/elements/types';
 
 /**
  * There are instances (for example, when private data is required) when the
