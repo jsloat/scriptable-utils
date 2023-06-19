@@ -1,5 +1,6 @@
 import { ScreenHeightMeasurements } from '../../configRegister';
-import { Align, NoParamFn } from '../../types/utilTypes';
+import { Align } from '../../types/utilTypes';
+import { BaseRowOpts } from '../Row';
 
 export type Percent = `${number}%`;
 
@@ -41,9 +42,9 @@ export type CellStyle = Partial<{
   width: Percent;
 }>;
 
-export type TapProps = Partial<{
-  onTap: NoParamFn;
-  onDoubleTap: NoParamFn;
-  onTripleTap: NoParamFn;
-  dismissOnTap: boolean;
-}>;
+export type TapProps = Partial<
+  Pick<
+    BaseRowOpts,
+    'overrideClickMap' | 'onTap' | 'onDoubleTap' | 'onTripleTap'
+  > & { dismissOnTap: boolean }
+>;

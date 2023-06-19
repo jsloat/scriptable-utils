@@ -181,4 +181,10 @@ export const numToPct = (num: number): Percent => `${num}%`;
 
 /** Used to only pick the tap props when passing a combination of other props. */
 export const getTapProps: Identity<TapProps> = props =>
-  pick(props, ['dismissOnTap', 'onDoubleTap', 'onTap', 'onTripleTap']);
+  pick(props, [
+    'dismissOnTap',
+    'onDoubleTap',
+    'onTap',
+    'onTripleTap',
+    'overrideClickMap',
+  ]);

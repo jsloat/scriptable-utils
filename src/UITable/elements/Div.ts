@@ -27,6 +27,7 @@ const onTapKeys: (keyof DivStyle)[] = [
   'onDoubleTap',
   'onTripleTap',
   'dismissOnTap',
+  'overrideClickMap',
 ];
 
 export type NonCascadingDivSignature = (
