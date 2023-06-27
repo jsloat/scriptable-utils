@@ -118,12 +118,12 @@ const COLOR_ALIASES = {
   primaryTextColor: getDynamicColorObj(COLORS.gray8, COLORS.gray1),
   secondaryTextColor: getDynamicColorObj(COLORS.gray5, COLORS.gray4),
   hr: getDynamicColorObj(COLORS.gray0, COLORS.gray7),
-  selectedBgColor: getDynamicColorObj(COLORS.gray1, COLORS.gray7),
+  selectedBgColor: getDynamicColorObj(COLORS.gray1, COLORS.gray6),
 };
 
 export const colorKeys = [...objectKeys(COLORS), ...objectKeys(COLOR_ALIASES)];
 
-export type ColorKey = typeof colorKeys[number];
+export type ColorKey = (typeof colorKeys)[number];
 
 const getKeyVal = (key: ColorKey) => {
   if (hasKey(COLORS, key)) return COLORS[key];
