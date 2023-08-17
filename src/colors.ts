@@ -4,21 +4,51 @@ import { shortSwitch } from './flow';
 import { hasKey, objectKeys, range } from './object';
 import { Domain, Omit_ } from './types/utilTypes';
 
-type DynamicColor = { color: Color; isDynamic: true };
-export type EnhancedColor = { color: Color; label: string; isDynamic: boolean };
+type EnhancedColorConstructorOpts = {
+  label: string;
+  lightColor?: Color;
+  darkColor?: Color;
+  staticColor?: Color;
+};
+
+export class EnhancedColor {
+  label: string;
+  isDynamic: boolean;
+  private colorObj: Partial<{ light: Color; dark: Color; static: Color }>;
+
+  constructor({
+    label,
+    lightColor,
+    darkColor,
+    staticColor,
+  }: EnhancedColorConstructorOpts) {
+    this.label = label;
+    this.isDynamic = Boolean(lightColor && darkColor);
+    if (!(staticColor || this.isDynamic)) {
+      throw new Error(`Color ${label}: must provide more color data`);
+    }
+    this.colorObj = { light: lightColor, dark: darkColor, static: staticColor };
+  }
+
+  get color() {
+    return this.isDynamic
+      ? Color.dynamic(this.lightColor!, this.colorObj.dark!)
+      : this.colorObj.static!;
+  }
+
+  get lightColor() {
+    return (this.colorObj.light || this.colorObj.static)!;
+  }
+
+  get darkColor() {
+    return (this.colorObj.dark || this.colorObj.static)!;
+  }
+}
 
 const c = ([hex]: TemplateStringsArray) => new Color(hex!);
 
-const getDynamicColorObj = (
-  lightColor: Color,
-  darkColor: Color
-): DynamicColor => {
-  const color = Color.dynamic(lightColor, darkColor);
-  return { color, isDynamic: true };
-};
-
-const isDynamicColor = (val: any): val is DynamicColor =>
-  Boolean(val && 'isDynamic' in val && val.isDynamic);
+const isEnhancedColor = (val: Color | EnhancedColor): val is EnhancedColor =>
+  val instanceof EnhancedColor;
 
 const COLORS = {
   white: c`ffffff`,
@@ -114,11 +144,31 @@ const COLOR_ALIASES = {
   danger: COLORS.red_500,
   success: COLORS.caribbean_green,
   warning: COLORS.jasmine,
-  bg: getDynamicColorObj(COLORS.white, COLORS.black),
-  primaryTextColor: getDynamicColorObj(COLORS.gray8, COLORS.gray1),
-  secondaryTextColor: getDynamicColorObj(COLORS.gray5, COLORS.gray4),
-  hr: getDynamicColorObj(COLORS.gray0, COLORS.gray7),
-  selectedBgColor: getDynamicColorObj(COLORS.gray1, COLORS.gray6),
+  bg: new EnhancedColor({
+    label: 'bg',
+    lightColor: COLORS.white,
+    darkColor: COLORS.black,
+  }),
+  primaryTextColor: new EnhancedColor({
+    label: 'primaryTextColor',
+    lightColor: COLORS.gray8,
+    darkColor: COLORS.gray1,
+  }),
+  secondaryTextColor: new EnhancedColor({
+    label: 'secondaryTextColor',
+    lightColor: COLORS.gray5,
+    darkColor: COLORS.gray4,
+  }),
+  hr: new EnhancedColor({
+    label: 'hr',
+    lightColor: COLORS.gray0,
+    darkColor: COLORS.gray7,
+  }),
+  selectedBgColor: new EnhancedColor({
+    label: 'selectedBgColor',
+    lightColor: COLORS.gray1,
+    darkColor: COLORS.gray6,
+  }),
 };
 
 export const colorKeys = [...objectKeys(COLORS), ...objectKeys(COLOR_ALIASES)];
@@ -133,7 +183,7 @@ const getKeyVal = (key: ColorKey) => {
 
 export const getColor = (key: ColorKey) => {
   const val = getKeyVal(key);
-  return isDynamicColor(val) ? val.color : val;
+  return isEnhancedColor(val) ? val.color : val;
 };
 
 export const getDynamicColor = (
@@ -154,12 +204,9 @@ export const getColors = () =>
 
 export const getEnhancedColor = (key: ColorKey): EnhancedColor => {
   const val = getKeyVal(key);
-  const isDynamic = isDynamicColor(val);
-  return {
-    color: isDynamicColor(val) ? val.color : val,
-    label: key,
-    isDynamic,
-  };
+  return isEnhancedColor(val)
+    ? val
+    : new EnhancedColor({ label: key, staticColor: val });
 };
 
 export const getDomainColor = (domain: Domain) =>

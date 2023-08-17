@@ -88,7 +88,7 @@ const ColorRows = connect(() =>
 
 //
 
-export default async () => {
+export default async (): Promise<EnhancedColor | null> => {
   const { selectedColor } = await present({
     defaultState: { selectedColor: null },
     render: () => [Title(), AddCustomCTA(), ColorRows()],
@@ -96,7 +96,7 @@ export default async () => {
   if (selectedColor === 'ADD_CUSTOM') {
     const hexStr = await textInput('Enter hex w/o #');
     return hexStr
-      ? { color: new Color(hexStr), label: hexStr, isDynamic: false }
+      ? new EnhancedColor({ label: hexStr, staticColor: new Color(hexStr) })
       : null;
   }
   return selectedColor;

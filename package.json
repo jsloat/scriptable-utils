@@ -10,6 +10,7 @@
   "scripts": {
     "test": "source ./scripts.sh; test",
     "tsc": "clear; tsc",
+    "tscw": "clear; tsc -w",
     "lint": "source ./scripts.sh; lint",
     "build": "rm -rf ./dist;tsc --declaration",
     "release": "yarn build; np"
