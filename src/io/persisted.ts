@@ -96,9 +96,7 @@ const willCacheChange = <T>(ioObj: IOObject<T>, newData: T) =>
 
 type GetData<T> = MaybePromiseWithoutPayload<T>;
 const getGetData = <T>(ioObj: IOObject<T>) =>
-  (async ({
-    useCache = USE_CACHE_DEFAULT,
-  }: { useCache?: boolean } = {}): Promise<unknown> => {
+  (({ useCache = USE_CACHE_DEFAULT }: { useCache?: boolean } = {}): unknown => {
     const { cache$, defaultData } = ioObj;
     if (useCache) {
       if (!cache$) {
@@ -108,14 +106,18 @@ const getGetData = <T>(ioObj: IOObject<T>) =>
       }
       return cache$.getData().data;
     }
-    const fetchedData = (await _getPersistedJson(ioObj)) ?? defaultData;
-    if (cache$) {
-      cache$.setData(
-        { data: fetchedData },
-        { suppressChangeTrigger: !willCacheChange(ioObj, fetchedData) }
-      );
-    }
-    return fetchedData;
+    return new Promise(resolve => {
+      _getPersistedJson(ioObj).then(persistedData => {
+        const parsedData = persistedData ?? defaultData;
+        if (cache$) {
+          cache$.setData(
+            { data: parsedData },
+            { suppressChangeTrigger: !willCacheChange(ioObj, parsedData) }
+          );
+        }
+        resolve(parsedData);
+      });
+    });
   }) as GetData<T>;
 
 const _fetchData = <T>(ioObj: IOObject<T>) => getGetData(ioObj)();
@@ -172,13 +174,16 @@ const fnWithCacheOpts = <T, R, P extends AnyObj = AnyObj>(
   ioObj: IOObject<T>,
   getResponse: (opts: { currData: T } & P) => R
 ) =>
-  (async ({ useCache = USE_CACHE_DEFAULT, ...payload }: any) => {
-    if (useCache === false) {
-      const currData = await _fetchData(ioObj);
+  (({ useCache = USE_CACHE_DEFAULT, ...payload }: any) => {
+    if (useCache) {
+      const currData = _getCachedData(ioObj);
       return getResponse({ currData, ...payload });
     }
-    const currData = _getCachedData(ioObj);
-    return getResponse({ currData, ...payload });
+    return new Promise(resolve =>
+      _fetchData(ioObj).then(currData =>
+        resolve(getResponse({ currData, ...payload }))
+      )
+    );
   }) as MaybePromiseWithPayload<R, P>;
 
 // Array/set functions
