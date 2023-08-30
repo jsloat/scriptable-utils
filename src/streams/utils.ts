@@ -104,7 +104,9 @@ export const combineStreams = <
 }: CombinedStreamOpts<StreamDict>) => {
   const defaultState = objectFromEntries(
     objectEntries(streamDict).map(([namespace, $]) => [namespace, $.getData()])
-  ) as StreamDataType<StreamDict>;
+  ) as {
+    [K in keyof StreamDict]: StreamDataType<StreamDict[K]>;
+  };
   const combined$ = new Stream({
     defaultState,
     name,
