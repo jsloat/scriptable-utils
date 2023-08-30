@@ -192,9 +192,7 @@ export const findIndexFromIndex = <T>(
   fromIndex: number,
   predicate: ArrCallback<T>
 ) => {
-  if (fromIndex > arr.length - 1 || fromIndex < 0) {
-    throw new Error(`Invalid fromIndex ${fromIndex}, arr len: ${arr.length}`);
-  }
+  if (fromIndex > arr.length - 1 || fromIndex < 0) return -1;
   const segment = arr.slice(fromIndex);
   const indexInSegment = segment.findIndex(predicate);
   return indexInSegment === -1 ? -1 : indexInSegment + fromIndex;
