@@ -102,7 +102,7 @@ export default ({
       ThreeCol({
         ...composedButtonStyle,
         text,
-        metadata: icon,
+        metadataIcon: icon,
         borderBottom: 0,
         /** In the case of transparent buttons, this is needed to delineate the
          * top of the button. */
