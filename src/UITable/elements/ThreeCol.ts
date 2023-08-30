@@ -11,7 +11,8 @@ import { numToPct } from './utils';
 type ThreeColOwnOpts = {
   icon?: IconOrSFKey;
   text: string;
-  metadata?: string | number | IconOrSFKey;
+  metadata?: string | number;
+  metadataIcon?: IconOrSFKey;
 };
 
 type ThreeColOpts = ThreeColOwnOpts & ContainerStyle & TapProps;
@@ -23,12 +24,15 @@ const METADATA_TEXT_WIDTH = 20;
 
 const getMetadataCell = (
   metadata: ThreeColOwnOpts['metadata'],
+  metadataIcon: ThreeColOwnOpts['metadataIcon'],
   cascadedStyle: ContainerStyle & TapProps
 ): MetadataCellData => {
-  if (metadata === undefined) return { metadataCell: null, width: 0 };
-  if (isString(metadata) && (isIconKey(metadata) || isSFSymbolKey(metadata))) {
+  if (
+    isString(metadataIcon) &&
+    (isIconKey(metadataIcon) || isSFSymbolKey(metadataIcon))
+  ) {
     return {
-      metadataCell: Icon(metadata, {
+      metadataCell: Icon(metadataIcon, {
         ...cascadedStyle,
         width: numToPct(ICON_WIDTH),
         align: 'center',
@@ -36,20 +40,31 @@ const getMetadataCell = (
       width: ICON_WIDTH,
     };
   }
-  return {
-    metadataCell: P(String(metadata), {
-      width: numToPct(METADATA_TEXT_WIDTH),
-      align: 'right',
-      font: Font.thinSystemFont,
-      fontSize: 15,
-    }),
-    width: METADATA_TEXT_WIDTH,
-  };
+  if (metadata) {
+    return {
+      metadataCell: P(String(metadata), {
+        width: numToPct(METADATA_TEXT_WIDTH),
+        align: 'right',
+        font: n => Font.thinSystemFont(n),
+        fontSize: 15,
+      }),
+      width: METADATA_TEXT_WIDTH,
+    };
+  }
+
+  return { metadataCell: null, width: 0 };
 };
 
-export default ({ icon, text, metadata, ...cascadingProps }: ThreeColOpts) => {
+export default ({
+  icon,
+  text,
+  metadata,
+  metadataIcon,
+  ...cascadingProps
+}: ThreeColOpts) => {
   const { metadataCell, width: metadataCellWidth } = getMetadataCell(
     metadata,
+    metadataIcon,
     cascadingProps
   );
   const el = Div(

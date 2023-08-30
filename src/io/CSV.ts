@@ -21,7 +21,7 @@ export default (filename: string, data: AnyObj[]) => {
       const colRow = colNames.join(',');
       const dataRows = data.map(row =>
         colNames
-          .map(colName => String(row[colName]).replace(/"/g, "'"))
+          .map(colName => String(row[colName]).replaceAll('"', "'"))
           .join(',')
       );
       return io.write({ data: [colRow, ...dataRows].join('\n') });

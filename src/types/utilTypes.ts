@@ -12,7 +12,7 @@ export type RecordOfMap<T extends Map<any, any>> = T extends Map<
   infer V
 >
   ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     Record<U, V>
   : unknown;
 
@@ -32,7 +32,7 @@ export type LabeledValue<Value, Label extends string = string> = {
 //
 
 type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
-  T
+  T,
 >() => T extends Y ? 1 : 2
   ? A
   : B;
@@ -61,6 +61,7 @@ export type EmptyObject = {
   [K in any]: never;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 export type Falsy = false | null | undefined | '' | void | 0;
 
 export type NotFalsy<T> = Exclude<T, Falsy>;
@@ -120,7 +121,7 @@ export type NotUndefined<T> = Exclude<T, undefined>;
 
 export type ObjKey = string | number | symbol;
 
-export type AnyObj = Record<ObjKey, any>;
+export type AnyObj = Record<ObjKey, unknown>;
 
 export type ObjComparison<T, R = boolean> = (a: T, b: T) => R;
 
@@ -171,14 +172,14 @@ export type MakeSomeReqd<
   Source extends Record<string, any>,
   // Keys to convert to required
   MakeReqKeys extends keyof Source = never,
-  ExcludeKeys extends keyof Source = never
+  ExcludeKeys extends keyof Source = never,
 > = Omit<Source, ExcludeKeys | MakeReqKeys> &
   Pick<Required<Source>, MakeReqKeys>;
 
 export type MakeSomeOptional<
   T extends AnyObj,
   OptionalKeys extends keyof T,
-  ExcludeKeys extends keyof T = never
+  ExcludeKeys extends keyof T = never,
 > = Omit<T, ExcludeKeys | OptionalKeys> & Pick<Partial<T>, OptionalKeys>;
 
 /** Map obj values to different key names. Optional properties in NewKeyMap will
@@ -189,7 +190,7 @@ export type MakeSomeOptional<
  */
 export type MapKeys<
   Source extends Record<string, any>,
-  NewKeyMap extends Record<string, any> = never
+  NewKeyMap extends Record<string, any> = never,
 > = NewKeyMap extends never
   ? Source
   : {
@@ -210,7 +211,7 @@ export type MapVals<
   Source extends AnyObj,
   PartialNewVals extends {
     [key in keyof Source]?: any;
-  }
+  },
 > = Omit<Source, keyof PartialNewVals> & PartialNewVals;
 
 export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -237,7 +238,7 @@ export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
 export type IfHasAtLeastOneReq<
   T extends AnyObj,
   IfTrue,
-  IfFalse
+  IfFalse,
 > = Partial<T> extends T ? IfFalse : IfTrue;
 
 export type ArrCallback<T, R = unknown> = (
@@ -256,7 +257,7 @@ export type ReduceCallback<SourceArrEl, Final, Return = Final> = (
 export type StreamCallback = { remove: () => void };
 
 type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
-  SubSubKeyOrVal extends void
+  SubSubKeyOrVal extends undefined
     ? SubKeyOrVal
     : SubKeyOrVal extends ObjKey
     ? Record<SubKeyOrVal, SubSubKeyOrVal>
@@ -274,10 +275,10 @@ type _subrecordOrValue<SubKeyOrVal, SubSubKeyOrVal> =
 export type Index<
   A extends ObjKey,
   B,
-  C = void,
-  D = void,
-  E = void,
-  F = void
+  C = undefined,
+  D = undefined,
+  E = undefined,
+  F = undefined,
 > = Record<
   A,
   _subrecordOrValue<

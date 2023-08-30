@@ -15,7 +15,7 @@ type CellOpts = { isComplete: boolean; completeColor: Color };
 const cell = ({ isComplete, completeColor }: CellOpts) =>
   P(PROGRESS_ICON, {
     color: isComplete ? completeColor : INCOMPLETE_COLOR,
-    font: Font.ultraLightSystemFont,
+    font: n => Font.ultraLightSystemFont(n),
     fontSize: 10,
   });
 

@@ -3,7 +3,7 @@
 // I haven't dug too far into the code so it may be able to be improved. I found
 // settings that work pretty well through experimentation.
 
-import { clamp, ExcludeFalsy, isNumber } from '../common';
+import { clamp, ExcludeFalsy, isNumber, isString } from '../common';
 
 /**
  * @param {Image} image The image from the SFSymbol
@@ -347,6 +347,8 @@ export default async (
   const js = getJS(newColor, parseOpts(flavors[flavor]));
   const w = new WebView();
   await w.loadHTML(html);
-  const base64 = await w.evaluateJavaScript(js);
+  const base64 = (await w.evaluateJavaScript(js)) as unknown;
+  if (!isString(base64))
+    throw new Error('Base64 conversion result is not a string');
   return Image.fromData(Data.fromBase64String(base64));
 };

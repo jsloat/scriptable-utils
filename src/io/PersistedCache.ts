@@ -32,7 +32,7 @@ type Opts<Combined, InMemory, InPersisted> = {
 export default class PersistedCache<
   CombinedData,
   InMemoryData extends AnyObj,
-  InPersistedData
+  InPersistedData,
 > {
   private splitData: SplitData<CombinedData, InMemoryData, InPersistedData>;
   private joinData: JoinData<CombinedData, InMemoryData, InPersistedData>;

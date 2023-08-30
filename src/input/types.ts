@@ -25,7 +25,7 @@ export type AlertButton = {
 
 export type AlertOpts<
   TextFieldKey extends string = string,
-  ButtonKey extends string = string
+  ButtonKey extends string = string,
 > = {
   title: string;
   message?: string;

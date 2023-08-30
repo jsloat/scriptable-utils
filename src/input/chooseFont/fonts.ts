@@ -2,57 +2,57 @@ import { objectKeys } from '../../object';
 import { FontFamily, FontFamilyName, FontGetter, FontWeight } from './types';
 
 const staticFonts = {
-  largeTitle: Font.largeTitle,
-  title1: Font.title1,
-  title2: Font.title2,
-  title3: Font.title3,
-  headline: Font.headline,
-  subheadline: Font.subheadline,
-  body: Font.body,
-  callout: Font.callout,
-  footnote: Font.footnote,
-  caption1: Font.caption1,
-  caption2: Font.caption2,
+  largeTitle: () => Font.largeTitle(),
+  title1: () => Font.title1(),
+  title2: () => Font.title2(),
+  title3: () => Font.title3(),
+  headline: () => Font.headline(),
+  subheadline: () => Font.subheadline(),
+  body: () => Font.body(),
+  callout: () => Font.callout(),
+  footnote: () => Font.footnote(),
+  caption1: () => Font.caption1(),
+  caption2: () => Font.caption2(),
 };
 
 export const STATIC_FONT_LABELS = objectKeys(staticFonts);
 
-export type StaticFontLabel = typeof STATIC_FONT_LABELS[number];
+export type StaticFontLabel = (typeof STATIC_FONT_LABELS)[number];
 
 const systemFont: FontFamily = {
-  100: Font.ultraLightSystemFont,
-  200: Font.thinSystemFont,
-  300: Font.lightSystemFont,
-  400: Font.regularSystemFont,
-  500: Font.mediumSystemFont,
-  600: Font.semiboldSystemFont,
-  700: Font.boldSystemFont,
-  800: Font.heavySystemFont,
-  900: Font.blackSystemFont,
+  100: n => Font.ultraLightSystemFont(n),
+  200: n => Font.thinSystemFont(n),
+  300: n => Font.lightSystemFont(n),
+  400: n => Font.regularSystemFont(n),
+  500: n => Font.mediumSystemFont(n),
+  600: n => Font.semiboldSystemFont(n),
+  700: n => Font.boldSystemFont(n),
+  800: n => Font.heavySystemFont(n),
+  900: n => Font.blackSystemFont(n),
 };
 
 const monospacedFont: FontFamily = {
-  100: Font.ultraLightMonospacedSystemFont,
-  200: Font.thinMonospacedSystemFont,
-  300: Font.lightMonospacedSystemFont,
-  400: Font.regularMonospacedSystemFont,
-  500: Font.mediumMonospacedSystemFont,
-  600: Font.semiboldMonospacedSystemFont,
-  700: Font.boldMonospacedSystemFont,
-  800: Font.heavyMonospacedSystemFont,
-  900: Font.blackMonospacedSystemFont,
+  100: n => Font.ultraLightMonospacedSystemFont(n),
+  200: n => Font.thinMonospacedSystemFont(n),
+  300: n => Font.lightMonospacedSystemFont(n),
+  400: n => Font.regularMonospacedSystemFont(n),
+  500: n => Font.mediumMonospacedSystemFont(n),
+  600: n => Font.semiboldMonospacedSystemFont(n),
+  700: n => Font.boldMonospacedSystemFont(n),
+  800: n => Font.heavyMonospacedSystemFont(n),
+  900: n => Font.blackMonospacedSystemFont(n),
 };
 
 const roundedFont: FontFamily = {
-  100: Font.ultraLightRoundedSystemFont,
-  200: Font.thinRoundedSystemFont,
-  300: Font.lightRoundedSystemFont,
-  400: Font.regularRoundedSystemFont,
-  500: Font.mediumRoundedSystemFont,
-  600: Font.semiboldRoundedSystemFont,
-  700: Font.boldRoundedSystemFont,
-  800: Font.heavyRoundedSystemFont,
-  900: Font.blackRoundedSystemFont,
+  100: n => Font.ultraLightRoundedSystemFont(n),
+  200: n => Font.thinRoundedSystemFont(n),
+  300: n => Font.lightRoundedSystemFont(n),
+  400: n => Font.regularRoundedSystemFont(n),
+  500: n => Font.mediumRoundedSystemFont(n),
+  600: n => Font.semiboldRoundedSystemFont(n),
+  700: n => Font.boldRoundedSystemFont(n),
+  800: n => Font.heavyRoundedSystemFont(n),
+  900: n => Font.blackRoundedSystemFont(n),
 };
 
 const fontFamilies: Record<FontFamilyName, FontFamily> = {
@@ -87,7 +87,7 @@ type GetItalicFont = {
 /** This font is sort of unique in that it has no weight variations, but can
  * vary in size. */
 export const getItalicFont: GetItalicFont = (size): any =>
-  size ? Font.italicSystemFont(size) : Font.italicSystemFont;
+  size ? Font.italicSystemFont(size) : (n: number) => Font.italicSystemFont(n);
 
 export const getStaticFont = (fontLabel: StaticFontLabel) =>
   staticFonts[fontLabel];

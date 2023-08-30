@@ -15,7 +15,7 @@ const multipartRequest: MultipartRequestFn = async ({
   boundary = 'batch_boundary',
   parseResponse = true,
   ...restPostOpts
-}: any): Promise<any> => {
+}: MultipartOpts): Promise<any> => {
   const body = getMultipartBody({ requests, boundary });
   const response = await postString({
     ...restPostOpts,

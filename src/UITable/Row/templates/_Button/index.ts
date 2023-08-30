@@ -2,7 +2,7 @@ import { conditionalArr } from '../../../../array';
 import { ExcludeFalsy } from '../../../../common';
 import { Falsy } from '../../../../types/utilTypes';
 import { Button as NewButton, Div } from '../../../elements';
-import presetStyles, { FlavorKey } from '../../../elements/presetStyles';
+import presetStyles from '../../../elements/presetStyles';
 import { ButtonOpts, ButtonStackOpt } from './types';
 
 export const Button = ({
@@ -20,7 +20,7 @@ export const Button = ({
   onTripleTap,
 }: ButtonOpts) =>
   NewButton({
-    ...(flavor && presetStyles().flavors[flavor as FlavorKey]),
+    ...(flavor && presetStyles().flavors[flavor]),
     text: conditionalArr([text, metadata && `(${metadata})`]).join(' '),
     icon,
     isDisabled,

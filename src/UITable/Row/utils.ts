@@ -18,7 +18,7 @@ const heightPercentToNumber = (
   if (!numberStr) {
     throw new Error(`Incorrectly formatted percent value: ${percent}`);
   }
-  const number = parseInt(numberStr, 10);
+  const number = Number.parseInt(numberStr, 10);
   if (number < 1 || number > 100) {
     throw new Error(`Percent value must be between 1-100: ${percent}`);
   }

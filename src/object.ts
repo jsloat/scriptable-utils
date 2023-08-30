@@ -6,7 +6,7 @@ import { AnyObj, PrimitiveType } from './types/utilTypes';
  * NB: doesn't take into account order of elements in an array
  * Could be useful if inserting an existing row in table into a different position.
  */
-export const isEqual = (el1: any, el2: any): boolean => {
+export const isEqual = (el1: unknown, el2: unknown): boolean => {
   const el1Type = getType(el1);
   const el2Type = getType(el2);
   if (el1Type !== el2Type) return false;
@@ -17,13 +17,22 @@ export const isEqual = (el1: any, el2: any): boolean => {
   // Simple return if not obj/array. Not dealing w/ Sets or Map
   if (!['object', 'array'].includes(el1Type)) return el1 === el2;
 
-  // Array or obj, compare deep equality
-  // Key for array = index
-  const el1Keys = Object.keys(el1);
-  const el2Keys = Object.keys(el2);
-  if (el1Keys.length !== el2Keys.length) return false;
+  if (
+    (typeof el1 === 'object' &&
+      typeof el2 === 'object' &&
+      el1 !== null &&
+      el2 !== null) ||
+    (Array.isArray(el1) && Array.isArray(el2))
+  ) {
+    // Array or obj, compare deep equality
+    // Key for array = index
+    const el1Keys = objectKeys(el1);
+    const el2Keys = objectKeys(el2);
+    if (el1Keys.length !== el2Keys.length) return false;
+    return el1Keys.every(key => isEqual(el1[key], el2[key]));
+  }
 
-  return el1Keys.every(key => isEqual(el1[key], el2[key]));
+  return false;
 };
 
 /** Do arrays have same values, in any order? isEqual requires same order */
@@ -58,34 +67,31 @@ export const uniqueBy = <T, CompareVal extends PrimitiveType>(
   arr: T[],
   getCompareVal: (el: T) => CompareVal
 ) => {
-  const { uniqueArr } = arr.reduce<{
+  const resultMetadata: {
     uniqueArr: T[];
     includedCompareVals: CompareVal[];
-  }>(
-    (acc, el) => {
-      const compareVal = getCompareVal(el);
-      const isUnique = !acc.includedCompareVals.includes(compareVal);
-      if (isUnique) {
-        acc.includedCompareVals.push(compareVal);
-        acc.uniqueArr.push(el);
-      }
-      return acc;
-    },
-    { uniqueArr: [], includedCompareVals: [] }
-  );
-  return uniqueArr;
+  } = { uniqueArr: [], includedCompareVals: [] };
+  for (const el of arr) {
+    const compareVal = getCompareVal(el);
+    const isUnique = !resultMetadata.includedCompareVals.includes(compareVal);
+    if (isUnique) {
+      resultMetadata.includedCompareVals.push(compareVal);
+      resultMetadata.uniqueArr.push(el);
+    }
+  }
+  return resultMetadata.uniqueArr;
 };
 
 /** Inclusive on both start and end */
 export const range = (start: number, end: number) =>
-  [...new Array(end - start + 1).keys()].map(i => i + start);
+  [...Array.from({ length: end - start + 1 }).keys()].map(i => i + start);
 
 export const filterJoin = (arr: any[], joinChar = '') =>
   arr.filter(Boolean).join(joinChar);
 
-export const objectEntries = <T extends AnyObj>(
-  obj: T
-): { [K in keyof T]: [K, T[K]] }[keyof T][] => Object.entries(obj) as any;
+type ObjectEntriesReturn<T> = { [K in keyof T]: [K, T[K]] }[keyof T][];
+export const objectEntries = <T extends AnyObj>(obj: T) =>
+  Object.entries(obj) as ObjectEntriesReturn<T>;
 
 export const objectKeys = <T extends Record<string, any>>(obj: T) =>
   Object.keys(obj) as (keyof T)[];
@@ -102,17 +108,19 @@ export const hasKey = <O extends AnyObj>(obj: O, key: any): key is keyof O =>
 export const spreadIgnoreUndefined = <T extends AnyObj>(
   obj: T,
   updater: Partial<T>
-): T =>
-  Object.entries(updater).reduce(
-    (acc, [key, val]) => (val === undefined ? acc : { ...acc, [key]: val }),
-    Object.assign({}, obj)
-  );
+): T => {
+  const result = Object.assign({}, obj) as T;
+  for (const [key, val] of objectEntries(updater)) {
+    if (val !== undefined) result[key] = val as T[keyof T];
+  }
+  return result;
+};
 
 type Apportion = {
-  <T extends AnyObj, K1 extends keyof T>(obj: T, keys1: K1[]): [
-    group1: Pick<T, K1>,
-    remainder: Omit<T, K1>
-  ];
+  <T extends AnyObj, K1 extends keyof T>(
+    obj: T,
+    keys1: K1[]
+  ): [group1: Pick<T, K1>, remainder: Omit<T, K1>];
 
   <T extends AnyObj, K1 extends keyof T, K2 extends keyof T>(
     obj: T,
@@ -124,7 +132,7 @@ type Apportion = {
     T extends AnyObj,
     K1 extends keyof T,
     K2 extends keyof T,
-    K3 extends keyof T
+    K3 extends keyof T,
   >(
     obj: T,
     keys1: K1[],
@@ -134,7 +142,7 @@ type Apportion = {
     group1: Pick<T, K1>,
     group2: Pick<T, K2>,
     group4: Pick<T, K3>,
-    remainder: Omit<T, K1 | K2 | K3>
+    remainder: Omit<T, K1 | K2 | K3>,
   ];
 };
 
@@ -157,23 +165,19 @@ export const apportion: Apportion = <T extends AnyObj>(
   // Add to this array to extend supported arity
   const keySets = [new Set(k1), k2 && new Set(k2), k2 && new Set(k3)];
   const numSegments = 1 + (k2 ? 1 : 0) + (k3 ? 1 : 0);
-  return objectEntries(obj).reduce<Partial<T>[]>(
-    (results, [key, val]) => {
-      const updater = { [key]: val } as Partial<T>;
-      const addedToASegment = toFind(
-        keySets,
-        compose(
-          map(
-            (set, i) => set?.has(key) && updateObjAtIndex(results, i, updater)
-          ),
-          filter(ExcludeFalsy)
-        ),
-        Boolean
-      );
-      if (addedToASegment) return addedToASegment;
-      return updateObjAtIndex(results, numSegments, updater);
-    },
-    // +1 for the "remainder"
-    Array(numSegments + 1).fill({})
-  );
+
+  let result = Array.from({ length: numSegments + 1 }).fill({}) as Partial<T>[];
+  for (const [key, val] of objectEntries(obj)) {
+    const updater = { [key]: val } as Partial<T>;
+    const addedToASegment = toFind(
+      keySets,
+      compose(
+        map((set, i) => set?.has(key) && updateObjAtIndex(result, i, updater)),
+        filter(ExcludeFalsy)
+      ),
+      Boolean
+    );
+    result = addedToASegment ?? updateObjAtIndex(result, numSegments, updater);
+  }
+  return result;
 };

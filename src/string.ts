@@ -18,16 +18,17 @@ export const trimLines = <T extends string>(
   lines: T[],
   { onlyTop, onlyBottom }: TrimLinesOpts = {}
 ) => {
-  const { firstContentLine, lastContentLine } = lines.reduce(
-    (acc, line, i) => {
-      const lineHasContent = Boolean(line.trim().length);
-      if (acc.firstContentLine === -1 && lineHasContent)
-        acc.firstContentLine = i;
-      if (lineHasContent) acc.lastContentLine = i;
-      return acc;
-    },
-    { firstContentLine: -1, lastContentLine: -1 }
-  );
+  const linePositions = { firstContentLine: -1, lastContentLine: -1 };
+  let i = 0;
+  for (const line of lines) {
+    const lineHasContent = line.trim().length > 0;
+    if (linePositions.firstContentLine === -1 && lineHasContent) {
+      linePositions.firstContentLine = i;
+    }
+    if (lineHasContent) linePositions.lastContentLine = i;
+    i++;
+  }
+  const { firstContentLine, lastContentLine } = linePositions;
   if (lastContentLine === -1) return [];
   if (onlyTop) return lines.slice(firstContentLine);
   if (onlyBottom) return lines.slice(0, lastContentLine + 1);
@@ -55,20 +56,18 @@ export const lowerIncludes = (
   containingStringOrArr: string | string[],
   query: string
 ) => {
-  if (isString(containingStringOrArr)) {
-    return containingStringOrArr.toLowerCase().includes(query.toLowerCase());
-  } else {
-    return containingStringOrArr.some(
-      arrVal => arrVal.toLowerCase() === query.toLowerCase()
-    );
-  }
+  return isString(containingStringOrArr)
+    ? containingStringOrArr.toLowerCase().includes(query.toLowerCase())
+    : containingStringOrArr.some(
+        arrVal => arrVal.toLowerCase() === query.toLowerCase()
+      );
 };
 
 export const lowerEquals = (s1: string, s2: string) =>
   s1.toLowerCase() === s2.toLowerCase();
 
 export const escapeQuotesHTML = (str: string) =>
-  str.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+  str.replaceAll("'", '&apos;').replaceAll('"', '&quot;');
 
 export const splitByRegex = (str: string, regex: RegExp) => {
   const uniqueRegexReplacer = UUID.string();
@@ -86,7 +85,7 @@ export const tidyLog = (message: any) =>
 
 export const extractLinks = (text: string) => {
   const matches = text.match(/[a-z-]+:\/\/\S*/gim);
-  return matches ? Array.from(matches) : [];
+  return matches ? [...matches] : [];
 };
 
 /** `Array.splice` mutates the source array and returns the spliced elements.

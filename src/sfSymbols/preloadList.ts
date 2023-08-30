@@ -67,7 +67,7 @@ const removeExistingKeys = (
 const addRequestKeyQueue = new ThrottledBatchQueue<TintRequestKey>({
   batchOperation: async keys => {
     const newKeys = removeExistingKeys(keys, await getIO().getData());
-    if (newKeys.length) {
+    if (newKeys.length > 0) {
       await getIO().reduce(composeIdentities(...newKeys.map(getAddKeyReducer)));
     }
   },
@@ -81,7 +81,8 @@ export const getCurrScriptPreloadIconKeys = async (): Promise<
   TintRequestKey[]
 > => {
   const { script, mode } = getDataPath();
-  return (await getIO().getData())[script]?.[mode] ?? [];
+  const data = await getIO().getData();
+  return data[script]?.[mode] ?? [];
 };
 
 export const initPreloadListCache = () => getIO().getData();
@@ -91,12 +92,12 @@ export const getScriptNamesInFile = () =>
   Object.keys(getIO().getData({ useCache: true }));
 
 export const deleteScriptNameData = (...scriptNamesToDelete: string[]) =>
+  // eslint-disable-next-line unicorn/no-array-reduce
   getIO().reduce(data => {
     const keysInData = Object.keys(data);
     const newData: IconPreloadListData = {};
-    keysInData.forEach(
-      key => !scriptNamesToDelete.includes(key) && (newData[key] = data[key]!)
-    );
+    for (const key of keysInData)
+      !scriptNamesToDelete.includes(key) && (newData[key] = data[key]!);
     return newData;
   });
 

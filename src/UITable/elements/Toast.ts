@@ -41,7 +41,7 @@ export default ({
         P(String(metadata), { align: 'center', width: '15%' }),
       showCloseIcon && Icon('x_in_circle', { width: '8%' }),
     ],
-    { font: Font.footnote, align: 'center', isFaded: true }
+    { font: () => Font.footnote(), align: 'center', isFaded: true }
   );
 
   const mainRow = Div([
@@ -57,7 +57,7 @@ export default ({
 
   const descriptionRow =
     description &&
-    Div([HSpace('10%'), P(description, { font: Font.footnote })], {
+    Div([HSpace('10%'), P(description, { font: () => Font.footnote() })], {
       height: 14,
     });
 

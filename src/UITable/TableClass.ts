@@ -67,16 +67,16 @@ class CallbackRegister {
     this.register[key].cleanup = cleanup;
   }
   start(key: CallbackKey) {
-    this.register[key]?.start?.();
+    this.register[key].start?.();
   }
   cleanupAll() {
-    Object.values(this.register).forEach(({ cleanup }) => cleanup?.());
+    for (const { cleanup } of Object.values(this.register)) cleanup?.();
   }
 }
 
 //
 
-export class Table<State, Props, $Data extends AnyObj | void> {
+export class Table<State, Props, $Data extends AnyObj | undefined> {
   private table: UITable;
   // Don't store connected$ props in this stream, since  we will be duplicating
   // potentially huge amounts of data in the table. Rather, update the
@@ -142,7 +142,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
           connected$ChangeCount: (connected$ChangeCount || 0) + 1,
           ...rest,
         }));
-        this.onConnected$Update?.(updated$Data);
+        this.onConnected$Update?.(updated$Data as $Data);
       });
       this.connected$Poller = connected$Poller.timer;
       this.callbackRegister.set(
@@ -296,7 +296,7 @@ export class Table<State, Props, $Data extends AnyObj | void> {
         this.isActive = true;
         this.callbackRegister.start('connected$Poller');
         await this.table.present(this.fullscreen);
-        const finalState = this.payload$?.getData().state as State;
+        const finalState = this.payload$.getData().state as State;
         await this.cleanup();
         return finalState;
       }

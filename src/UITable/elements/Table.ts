@@ -52,12 +52,19 @@ const Header = <ColumnLabel extends string>({
         objectEntries(columns).map(([columnLabel, { width }]) =>
           P(columnLabel, { width })
         ),
-        { bgColor: getColor('hr'), font: Font.semiboldSystemFont, fontSize: 16 }
+        {
+          bgColor: getColor('hr'),
+          font: n => Font.semiboldSystemFont(n),
+          fontSize: 16,
+        }
       ),
   ]);
 
 const Cell = (value: string, { isRowValueBold, width }: TableColumnData) =>
-  P(value, { width, ...(isRowValueBold && { font: Font.semiboldSystemFont }) });
+  P(value, {
+    width,
+    ...(isRowValueBold && { font: n => Font.semiboldSystemFont(n) }),
+  });
 
 const Row = <ColumnLabel extends string>(
   { cellValues, onTap }: RowData<ColumnLabel>,

@@ -4,7 +4,7 @@ export default async (initDate = new Date()) => {
     dp.initialDate = initDate;
     const result = await dp.pickDateAndTime();
     return result;
-  } catch (e) {
+  } catch {
     return null;
   }
 };

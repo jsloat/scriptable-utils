@@ -32,6 +32,7 @@ const confirmClearValue = (onChange: MapFn<undefined, any>) =>
   destructiveConfirm('Clear value?', {
     confirmButtonTitle: 'Clear',
     dontShowAgainKey: 'form-clear-value',
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     onConfirm: () => onChange(undefined),
   });
 
@@ -344,7 +345,7 @@ export const SelectMultiField = <T extends string | number>(
   const { onChange, selectedOptions, label, options } = opts;
   const getOnTap = (value: T) => () =>
     onChange(toggleArrayItem(selectedOptions, value));
-  const hasValue = Boolean(selectedOptions.length);
+  const hasValue = selectedOptions.length > 0;
   const errorMessage = getErrorMessage(opts, hasValue);
   return MultiOptionRow({
     labelOpts: { fieldLabel: label, rowOpts: { isFaded: !hasValue } },
@@ -472,7 +473,7 @@ export const NumberField = (opts: NumberOpts) => {
         ...(isNumber(currValue) && { initValue: String(currValue) }),
         placeholder: isNumber(currValue) ? String(currValue) : '42',
       });
-      const parsed = newVal && parseInt(newVal);
+      const parsed = newVal && Number.parseInt(newVal);
       if (isNumber(parsed) && parsed !== currValue) onChange(parsed);
     },
     isFaded: !isNumber(currValue),

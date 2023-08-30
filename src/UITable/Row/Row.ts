@@ -45,7 +45,7 @@ const getCell = (
     isEmpty,
     image,
     color = getColor('primaryTextColor'),
-    fontConstructor = Font.regularRoundedSystemFont,
+    fontConstructor = n => Font.regularRoundedSystemFont(n),
     textSize = 'sm',
     align = 'left',
     width,
@@ -127,7 +127,7 @@ export default (opts: RowOpts = {}) => {
     padding.paddingTop &&
       getPadding(padding.paddingTop, parsedOpts, commonArgs),
     BaseRow({
-      cells: cells.length ? cells : [BaseCell()],
+      cells: cells.length > 0 ? cells : [BaseCell()],
       height: rowHeight,
       ...commonArgs,
     }),

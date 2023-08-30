@@ -17,27 +17,25 @@ class Icon extends Cell {
         const {
           align = 'center',
           color = getColor('primaryTextColor'),
-          font = Font.boldSystemFont,
+          font = n => Font.boldSystemFont(n),
           fontSize = 20,
         } = inheritedStyle;
         const parsedColor = maybeFadeForegroundColor(color, inheritedStyle);
-        if (isSFSymbolKey(key)) {
-          return {
-            type: 'image',
-            value: getSfSymbolImg(key, doNotTint ? null : parsedColor),
-            align,
-            widthWeight,
-          };
-        } else {
-          return {
-            type: 'text',
-            value: ICONS[key],
-            align,
-            widthWeight,
-            color: parsedColor,
-            font: font(fontSize),
-          };
-        }
+        return isSFSymbolKey(key)
+          ? {
+              type: 'image',
+              value: getSfSymbolImg(key, doNotTint ? null : parsedColor),
+              align,
+              widthWeight,
+            }
+          : {
+              type: 'text',
+              value: ICONS[key],
+              align,
+              widthWeight,
+              color: parsedColor,
+              font: font(fontSize),
+            };
       },
     });
   }

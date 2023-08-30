@@ -62,10 +62,13 @@ export const combineRequestHandlers =
     const parsedHandlers = handlers.map<RequestHandler>(keyOrHandler =>
       isCustom(keyOrHandler) ? keyOrHandler : presetHandlers[keyOrHandler]
     );
-    return parsedHandlers.reduce((didPrevSucceed, handler) => {
-      const didCurrSucceed = handler(request, didPrevSucceed);
-      return joinWith === 'AND'
-        ? didPrevSucceed && didCurrSucceed
-        : didPrevSucceed || didCurrSucceed;
-    }, joinWith === 'AND');
+    let shouldAllow = joinWith === 'AND';
+    for (const handler of parsedHandlers) {
+      const didCurrSucceed = handler(request, shouldAllow);
+      shouldAllow =
+        joinWith === 'AND'
+          ? shouldAllow && didCurrSucceed
+          : shouldAllow || didCurrSucceed;
+    }
+    return shouldAllow;
   };

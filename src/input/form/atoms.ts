@@ -12,7 +12,7 @@ const { danger } = getColors();
 
 const LabelRow = ({ fieldLabel, rowOpts }: LabelRowOpts) => {
   if (!fieldLabel) return null;
-  return Div([P(fieldLabel, { font: Font.footnote })], {
+  return Div([P(fieldLabel, { font: () => Font.footnote() })], {
     height: 14,
     paddingTop: 10,
     ...rowOpts,
@@ -51,7 +51,7 @@ const ErrorRow = ({ rowOpts: { onTap }, errorMessage }: ErrorRowOpts) =>
   Div([P(errorMessage, { color: danger })], {
     marginBottom: 0,
     height: 14,
-    font: Font.footnote,
+    font: () => Font.footnote(),
     onTap,
     paddingBottom: 10,
   });

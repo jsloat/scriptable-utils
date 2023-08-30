@@ -1,7 +1,7 @@
 import { AnyObj, FunctionKeys, MakeSomeReqd } from '../types/utilTypes';
 import { CONTENT_TYPES } from './consts';
 
-export type ContentTypes = typeof CONTENT_TYPES[number];
+export type ContentTypes = (typeof CONTENT_TYPES)[number];
 
 export type DebugOpts = {
   enabled?: boolean;
@@ -10,7 +10,7 @@ export type DebugOpts = {
 };
 
 export type FetchOpts = Pick<Request, 'url' | 'headers' | 'method'> & {
-  contentType: ContentTypes;
+  contentType: string;
   fetchFnKey: FunctionKeys<Request>;
   body?: string | AnyObj;
   debug?: DebugOpts;

@@ -34,6 +34,18 @@ export type NonCascadingDivSignature = (
   children: DivChild[],
   opts?: DivStyle
 ) => Container;
+
+/** For applying to nested Div within a NonCascadingDiv. This ensures that the
+ * NonCascadingDiv's style attributes are all set to undefined, except for onTap
+ * keys.  */
+const zeroOutNonCascadingStyles = (style: DivStyle) => {
+  const zeroedOutStyle: DivStyle = {};
+  for (const key of objectKeys(style)) {
+    if (!onTapKeys.includes(key)) zeroedOutStyle[key] = undefined;
+  }
+  return zeroedOutStyle;
+};
+
 /**
  * This is for cases when you want to apply style to a Div, but don't want it to
  * cascade beyone that container. E.g. if you want margin for the Div to
@@ -48,17 +60,4 @@ export type NonCascadingDivSignature = (
 export const NonCascadingDiv: NonCascadingDivSignature = (
   children,
   opts = {}
-) =>
-  Div(
-    [
-      Div(
-        children,
-        objectKeys(opts).reduce(
-          (acc, key) =>
-            onTapKeys.includes(key) ? acc : { ...acc, [key]: undefined },
-          {} as DivStyle
-        )
-      ),
-    ],
-    opts
-  );
+) => Div([Div(children, zeroOutNonCascadingStyles(opts))], opts);

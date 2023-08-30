@@ -7,14 +7,14 @@ export const reloadTableRows = (
   rows: (UITableRow | Container)[]
 ) => {
   table.removeAllRows();
-  rows.forEach(row => {
+  for (const row of rows) {
     if (row instanceof Container) {
       const rowOpts = row.render();
-      rowOpts.forEach(rowOpts => table.addRow(BaseRow(rowOpts)));
+      for (const opts of rowOpts) table.addRow(BaseRow(opts));
     } else {
       table.addRow(row);
     }
-  });
+  }
   table.reload();
 };
 

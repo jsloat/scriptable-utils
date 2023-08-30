@@ -1,21 +1,23 @@
-import { ErrorWithPayload, isString } from '../../common';
+import { ErrorWithPayload, isObject, isString } from '../../common';
 import { getConfig } from '../../configRegister';
 import { shortSwitch } from '../../flow';
 import PersistedLog from '../../io/PersistedLog';
 import { Align } from '../../types/utilTypes';
 
-const warnError = async (error: any, context: string) => {
+const warnError = async (error: unknown, context: string) => {
   // eslint-disable-next-line no-console
   console.warn(error);
   const prompt = new Alert();
   prompt.title = `Error in ${context} (see log)`;
   prompt.message = String(error);
   prompt.addAction('OK');
+  const stacktrace =
+    isObject(error) && 'stack' in error ? error.stack : undefined;
   PersistedLog.log({
     type: 'Error',
     context,
     error: JSON.stringify(error),
-    stacktrace: error.stack,
+    stacktrace,
   });
   await prompt.present();
 };
@@ -41,20 +43,16 @@ export type BaseCellParams = {
   TextCellParams;
 
 type Cell = {
-  /** Image cell */
-  (params: CellParamsBase & { type: 'image'; value: Image }): UITableCell;
+  /** Image cell or no params */
+  (params?: CellParamsBase & { type: 'image'; value: Image }): UITableCell;
   /** Button or text cell */
   (
     params: CellParamsBase &
       TextCellParams & {
-        type: 'button' | 'text';
+        type?: 'button' | 'text'; // Default text
         value: string;
       }
   ): UITableCell;
-  /** Implied type text */
-  (params: CellParamsBase & TextCellParams & { value: string }): UITableCell;
-  /** No parameters provided. */
-  (): UITableCell;
 };
 
 export const BaseCell: Cell = ({
@@ -85,7 +83,7 @@ export const BaseCell: Cell = ({
     try {
       await onTap();
     } catch (e) {
-      await warnError(e, `table cell with label "${value}"`);
+      await warnError(e, `table cell with label "${String(value)}"`);
     }
   };
   if (color) cell.titleColor = color;
@@ -119,7 +117,7 @@ const executeTapListener = (() => {
   return (clickMap: ClickMap) => {
     clickTimer.timeInterval = getConfig('ON_TAP_CLICK_INTERVAL');
     const maxClicks = Math.max(
-      ...Object.keys(clickMap).map(numStr => parseInt(numStr, 10))
+      ...Object.keys(clickMap).map(numStr => Number.parseInt(numStr, 10))
     );
     // Every time a tap comes in, restart the timer & increment the counter
     tapCount++;
@@ -148,7 +146,7 @@ const executeTapListener = (() => {
 
 /** Base cell params must have a type, or must be an empty object. */
 const isCell = (x: UITableCell | BaseCellParams): x is UITableCell =>
-  Boolean(Object.keys(x).length && !('type' in x));
+  Boolean(Object.keys(x).length > 0 && !('type' in x));
 
 export const BaseRow = ({
   cells = [],
@@ -175,7 +173,8 @@ export const BaseRow = ({
     );
   if (height) returnRow.height = height;
   if (bgColor) returnRow.backgroundColor = bgColor;
-  if (cells.length)
-    cells.forEach(c => returnRow.addCell(isCell(c) ? c : BaseCell(c as any)));
+  if (cells.length > 0)
+    for (const c of cells)
+      returnRow.addCell(isCell(c) ? c : BaseCell(c as unknown as undefined));
   return returnRow;
 };

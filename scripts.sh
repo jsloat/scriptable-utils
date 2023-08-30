@@ -4,6 +4,10 @@ lint() {
   eslint "./src/**/*.{ts,js}" --fix
 }
 
+lint_compact() {
+  eslint "./src/**/*.{ts,js}" -f visualstudio
+}
+
 circDeps() {
   madge ./src/index.ts --circular --extensions ts
 }

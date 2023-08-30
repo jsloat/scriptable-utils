@@ -23,6 +23,7 @@ export type ListChooseOptionObj<L extends string, V> = {
 type AllOptionTypes<L extends string = string, V = string> =
   | ListChooseOptionObj<L, V>
   | string
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   | Falsy;
 
 type ListChoose = {
@@ -82,7 +83,7 @@ const listChoose: ListChoose = async <V>(
   }
 
   const selectedValue = findResultValue(tappedLabel, options);
-  await onOptionSelect?.(selectedValue as any);
+  await onOptionSelect?.(selectedValue as V);
   return selectedValue;
 };
 
@@ -109,7 +110,7 @@ export const listChooseWithCustom = async (
     ...options,
   ];
   const result = await listChoose<string>(
-    optionsWithCustom as any[],
+    optionsWithCustom as string[],
     restConfig
   );
 
@@ -118,12 +119,11 @@ export const listChooseWithCustom = async (
     return null;
   }
   if (result !== CUSTOM_OPTION_LABEL) {
-    await onOptionSelect?.(result as any);
+    await onOptionSelect?.(result);
     return result;
   }
 
   const customResponse = await textInput('Custom response');
-  if (customResponse) await onOptionSelect?.(customResponse);
-  else await onCancel?.();
-  return customResponse ? customResponse : null;
+  await (customResponse ? onOptionSelect?.(customResponse) : onCancel?.());
+  return customResponse ?? null;
 };

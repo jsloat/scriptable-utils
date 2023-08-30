@@ -260,7 +260,10 @@ export const getAllEventCals = () =>
   Promise.all(
     toArray(
       Object.values(getConfig('CALENDAR_TITLES')),
-      compose(filter(ExcludeFalsy), map(Calendar.forEventsByTitle))
+      compose(
+        filter(ExcludeFalsy),
+        map(title => Calendar.forEventsByTitle(title))
+      )
     )
   );
 
@@ -304,9 +307,9 @@ export const YYYYMMDDToDate = (dateString: string) => {
     );
   }
   const atoms = dateString.split('-');
-  const year = parseInt(atoms[0]!);
-  const month = parseInt(atoms[1]!);
-  const day = parseInt(atoms[2]!);
+  const year = Number.parseInt(atoms[0]!);
+  const month = Number.parseInt(atoms[1]!);
+  const day = Number.parseInt(atoms[2]!);
   const date = new Date();
   date.setFullYear(year, month - 1, day);
   return stripTime(date);

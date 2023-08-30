@@ -94,7 +94,7 @@ export default ({
         title,
         titleColor,
         titleIcon,
-        hasDetails: Boolean(validDetails.length),
+        hasDetails: validDetails.length > 0,
       }),
 
       ...validDetails.map((el, i, arr) => {

@@ -13,7 +13,7 @@ import {
 export const isLastArrIndex = (index: number, arr: any[]) =>
   index === arr.length - 1;
 
-export const last = <T>(arr: T[]) => arr[arr.length - 1];
+export const last = <T>(arr: T[]) => arr.at(-1);
 
 /**
  * Vaguely similar to Array.split(), but instead of converting to string, returns array.
@@ -26,8 +26,7 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
         isLastArrIndex(i, arr) ? item : [item, between]
       );
 
-export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] =>
-  Boolean(arr.length);
+export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] => arr.length > 0;
 
 export const isHomogeneous = <T>(
   arr: T[],
@@ -71,10 +70,10 @@ export const intersection2 = <T extends ObjKey, U extends ObjKey>(
   arrA: (T | U)[],
   arrB: (T | U)[]
 ) => {
-  const valueCount = [...arrA, ...arrB].reduce(
-    (acc, value) => ({ ...acc, [value]: (acc[value] ?? 0) + 1 }),
-    {} as Record<T | U, number>
-  );
+  const valueCount = {} as Record<T | U, number>;
+  for (const value of [...arrA, ...arrB]) {
+    valueCount[value] = ((valueCount[value] as number | undefined) ?? 0) + 1;
+  }
   return toArray(
     objectEntries(valueCount),
     compose(
@@ -103,10 +102,9 @@ export const toggleArrayItem = <T extends PrimitiveType>(
   forceInclude?: boolean
 ) => {
   const hasItem = arr.includes(item);
-  if (forceInclude === true) return hasItem ? arr : arr.concat(item);
+  if (forceInclude === true) return hasItem ? arr : [...arr, item];
   if (forceInclude === false) return hasItem ? removeFromArr(arr, item) : arr;
-  if (hasItem) return removeFromArr(arr, item);
-  else return arr.concat(item);
+  return hasItem ? removeFromArr(arr, item) : [...arr, item];
 };
 
 /** Used in cases where you want an array of all possible values in a
@@ -145,15 +143,21 @@ export const mapFind = <T, U>(
 export const without = <T extends PrimitiveType>(arr: T[], ...exclude: T[]) =>
   arr.filter(el => !exclude.includes(el));
 
-export const chunk = <T>(arr: T[], n: number): T[][] =>
-  arr.reduce<T[][]>((chunkedArrs, el) => {
+export const chunk = <T>(arr: T[], n: number): T[][] => {
+  let chunkedArrs = [] as T[][];
+  for (const el of arr) {
     const mostRecentChunk = last(chunkedArrs);
-    if (!mostRecentChunk) return [[el]];
+    if (!mostRecentChunk) {
+      chunkedArrs = [[el]];
+      continue;
+    }
     const isChunkFull = mostRecentChunk.length === n;
-    return isChunkFull
+    chunkedArrs = isChunkFull
       ? [...chunkedArrs, [el]]
       : [...chunkedArrs.slice(0, -1), [...mostRecentChunk, el]];
-  }, []);
+  }
+  return chunkedArrs;
+};
 
 // ts-unused-exports:disable-next-line
 export const padArrEnd = <T>(arr: T[], fillTo: number, fill: T) =>
@@ -169,7 +173,7 @@ export const findLastIndex = <T>(
   /** Search backwards from which index. Defaults to last */
   searchFromIndex = Math.max(arr.length - 1, 0)
 ): number => {
-  if (!arr.length) return -1;
+  if (arr.length === 0) return -1;
   if (searchFromIndex < 0) throw new Error('Invalid index');
   const isMatch = Boolean(
     callback(arr[searchFromIndex] as T, searchFromIndex, arr)

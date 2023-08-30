@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { RowOpts } from '../types';
 import { composeIdentities } from '../../../flow';
 import {
@@ -8,20 +9,19 @@ import {
 } from '../../../types/utilTypes';
 import Row from '../Row';
 
-type CombinedRowOpts<OwnOpts extends AnyObj | void> = OwnOpts extends void
-  ? RowOpts
-  : RowOpts & OwnOpts;
+type CombinedRowOpts<OwnOpts extends AnyObj | undefined> =
+  OwnOpts extends undefined ? RowOpts : RowOpts & OwnOpts;
 
 type GetRowConstructorReturn = ReturnType<typeof Row> | null;
 
 type GetRowContructorReturnedFn<
-  OwnOpts extends AnyObj | void,
-  TypeOpts extends { required: boolean }
+  OwnOpts extends AnyObj | undefined,
+  TypeOpts extends { required: boolean },
 > = TypeOpts extends { required: true }
   ? (combinedRowOpts: CombinedRowOpts<OwnOpts>) => GetRowConstructorReturn
   : (combinedRowOpts?: CombinedRowOpts<OwnOpts>) => GetRowConstructorReturn;
 
-type CombinedRowConstructor<OwnOpts extends AnyObj | void = void> =
+type CombinedRowConstructor<OwnOpts extends AnyObj | undefined = undefined> =
   OwnOpts extends AnyObj
     ? IfHasAtLeastOneReq<
         OwnOpts,
@@ -37,7 +37,7 @@ type GetRowConstructor = {
   (getReducer: (input?: never) => GetReducerReturn): CombinedRowConstructor;
 
   /** Opts required for getReducer */
-  <O extends AnyObj | void>(
+  <O extends AnyObj | undefined>(
     getReducer: MapFn<O, GetReducerReturn>
   ): CombinedRowConstructor<O>;
 };

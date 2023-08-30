@@ -1,11 +1,11 @@
 import { insertBetween } from '../../array';
 import { compose, filter, map, toArray } from '../../arrayTransducers';
-import { isNullish, isNumber } from '../../common';
+import { isNumber } from '../../common';
 import { splitByRegex } from '../../string';
 import { MultipartOpts } from './types';
 
 /** Response uses \r for linebreak (gmail API, at least), normalize all to be \n */
-const normalizeLineBreaks = (str: string) => str.replace(/\r/g, '\n');
+const normalizeLineBreaks = (str: string) => str.replaceAll('\r', '\n');
 
 /**
  * Each multipart response chunk has headers & JSON data returned.
@@ -15,13 +15,14 @@ const normalizeLineBreaks = (str: string) => str.replace(/\r/g, '\n');
  * which is is the case for Gmail at least.
  */
 const extractJSONDataFromMultipartChunk = <R>(lines: string[]) => {
-  const [firstOpen, lastClose] = lines.reduce<[number | null, number | null]>(
-    (acc, line, i) => [
-      isNullish(acc[0]) && line === '{' ? i : acc[0],
-      line === '}' ? i : acc[1],
-    ],
-    [null, null]
-  );
+  const multipartBrackets: [number | null, number | null] = [null, null];
+  let i = 0;
+  for (const line of lines) {
+    if (multipartBrackets[0] === null && line === '{') multipartBrackets[0] = i;
+    if (line === '}') multipartBrackets[1] = i;
+    i++;
+  }
+  const [firstOpen, lastClose] = multipartBrackets;
   if (!(isNumber(firstOpen) && isNumber(lastClose)))
     throw new Error('No JSON data to extract!');
   const jsonStr = lines.slice(firstOpen, lastClose + 1).join('\n');
@@ -38,7 +39,7 @@ export const extractMultipartResponseArray = <R>(response: string) => {
     compose(
       filter(Boolean),
       map(normalizeLineBreaks),
-      filter(chunk => Boolean(chunk.replace(/\n/g, ''))),
+      filter(chunk => Boolean(chunk.replaceAll('\n', ''))),
       map(chunk => extractJSONDataFromMultipartChunk<R>(chunk.split('\n')))
     )
   );

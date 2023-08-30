@@ -67,7 +67,8 @@ export default <E>({
         initValue: String(guardedCurrPage),
         name,
         rerenderParent,
-        onTabChange: ({ nextTab }) => setPageNr(name, parseInt(nextTab, 10)),
+        onTabChange: ({ nextTab }) =>
+          setPageNr(name, Number.parseInt(nextTab, 10)),
         subtle: true,
       }),
       _HR(),

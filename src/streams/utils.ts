@@ -1,3 +1,5 @@
+import { objectFromEntries } from '../common';
+import { objectEntries } from '../object';
 import { AnyObj, MaybePromise } from '../types/utilTypes';
 import Stream from './Stream';
 import { StreamConstructorOpts } from './types';
@@ -6,7 +8,7 @@ export type StreamDataType<S> = S extends Stream<infer D> ? D : never;
 
 type SubscriptionOpts<
   DependentState extends AnyObj,
-  SourceState extends AnyObj
+  SourceState extends AnyObj,
 > = {
   subscriptionName: string;
   dependent$: Stream<DependentState>;
@@ -48,7 +50,7 @@ const getUnsubscribe =
  */
 export const subscribe = <
   DependentState extends AnyObj,
-  SourceState extends AnyObj
+  SourceState extends AnyObj,
 >({
   subscriptionName,
   dependent$,
@@ -77,12 +79,14 @@ export const getSubscribeFns = <D extends AnyObj, S extends AnyObj>(
   opts: SubscriptionOpts<D, S>
 ) => ({ subscribe: () => subscribe(opts), unsubscribe: getUnsubscribe(opts) });
 
-type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
-  opts: {
-    streamDict: StreamDict;
-    name: string;
-  } & Pick<StreamConstructorOpts<any>, 'showStreamDataUpdateDebug'>
-) => Stream<{ [key in keyof StreamDict]: StreamDataType<StreamDict[key]> }>;
+type CombinedStreamOpts<StreamDict extends Record<string, Stream<AnyObj>>> = {
+  streamDict: StreamDict;
+  name: string;
+} & Pick<
+  StreamConstructorOpts<StreamDataType<StreamDict>>,
+  'showStreamDataUpdateDebug'
+>;
+
 /**
  * Create a new stream that combines the data of multiple streams. Combined
  * stream state data is namespaced as per the streamDict passed in.
@@ -91,29 +95,29 @@ type CombineStreams = <StreamDict extends Record<string, Stream<any>>>(
  *
  * The returned stream will update whwnever its combined streams do.
  */
-export const combineStreams: CombineStreams = ({
+export const combineStreams = <
+  StreamDict extends Record<string, Stream<AnyObj>>,
+>({
   streamDict,
   name,
   showStreamDataUpdateDebug,
-}) => {
-  const defaultState = Object.entries(streamDict).reduce(
-    (accState, [namespace, $]) => ({ ...accState, [namespace]: $.getData() }),
-    {} as any
-  );
+}: CombinedStreamOpts<StreamDict>) => {
+  const defaultState = objectFromEntries(
+    objectEntries(streamDict).map(([namespace, $]) => [namespace, $.getData()])
+  ) as StreamDataType<StreamDict>;
   const combined$ = new Stream({
     defaultState,
     name,
     showStreamDataUpdateDebug,
   });
-  Object.entries(streamDict).forEach(([namespace, $]) =>
+  for (const [namespace, $] of objectEntries(streamDict))
     $.registerUpdateCallback({
-      callbackId: `Combined stream: ${name}/${namespace}`,
+      callbackId: `Combined stream: ${name}/${String(namespace)}`,
       callback: (_, latestSourceState) =>
         combined$.updateData(latestCombinedState => ({
           ...latestCombinedState,
           [namespace]: latestSourceState,
         })),
-    })
-  );
+    });
   return combined$;
 };

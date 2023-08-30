@@ -16,13 +16,15 @@ import {
   TapProps,
 } from './types';
 
-type ValidatedCellWidth =
+type ValidateCellWidth = (
+  width: number | undefined
+) =>
   | { isValid: true; width: number }
   | { isValid: false; width: number | undefined };
 
-const validateCellWidth = (width: number | undefined): ValidatedCellWidth => ({
+const validateCellWidth: ValidateCellWidth = (width): any => ({
   isValid: Boolean(width && width > 0),
-  width: width as any,
+  width,
 });
 
 /** Cells are not required to have a specified width. This function fills in
@@ -36,14 +38,12 @@ export const fillInCellWidthBlanks = (
   ).length;
   if (!numInvalidWidths) return cellWidthPercentages as number[];
   const totalSpecifiedWidth = sum(
-    validatedWidths.map(({ width, isValid }) =>
-      isValid ? (width as number) : 0
-    )
+    validatedWidths.map(({ width, isValid }) => (isValid ? width : 0))
   );
   const remainingSpaceToAllot = 100 - totalSpecifiedWidth;
   return validatedWidths.map(({ width, isValid }) => {
     // Leave valid widths untouched
-    if (isValid) return width as number;
+    if (isValid) return width;
     // If specified cell widths add up to >= 100, use fallback percentage
     if (remainingSpaceToAllot <= 0)
       return getConfig('UI_TABLE_DEFAULT_CELL_WIDTH_PERCENT');
@@ -67,7 +67,7 @@ export const normalizeCellWidthPercentages = (
 };
 
 export const parsePercent = (percent: Percent) =>
-  parseInt(percent.replace(/%/g, ''));
+  Number.parseInt(percent.replaceAll('%', ''));
 
 /** Converts border prop to a height and color. If the calling row has no
  * inherited color to use for the border (if the border doesn't specify its own
@@ -105,7 +105,10 @@ export const parseColor = (color: Color, { isFaded }: CascadingStyle) =>
   isFaded ? new Color(color.hex, 0.6) : color;
 
 /** Attempts to fade the foreground color into the background color. */
-export const maybeFadeForegroundColor = (color: Color, style: CascadingStyle) =>
+export const maybeFadeForegroundColor = (
+  color: Color,
+  style: CascadingStyle
+) =>
   style.isFaded ? fadeIntoColor(color, style.bgColor ?? getColor('bg')) : color;
 
 export const tapPropsToBaseRowOpts = ({

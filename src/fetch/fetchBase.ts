@@ -16,7 +16,7 @@ const getRequestAttributes = (opts: ParsedFetchOpts) => ({
   body: getBody(opts),
   headers: {
     'Content-Type': opts.contentType,
-    ...(opts.headers || {}),
+    ...opts.headers,
   },
 });
 
@@ -35,7 +35,7 @@ const getRequest = (opts: ParsedFetchOpts) => {
   const { body, headers } = getRequestAttributes(opts);
   const req = new Request(url);
   req.method = method;
-  if (headers) req.headers = headers;
+  req.headers = headers;
   if (body) req.body = body;
   return req;
 };
@@ -45,7 +45,7 @@ const parseFetchOpts = ({
   ...restOpts
 }: FetchOpts): ParsedFetchOpts => ({ debug, ...restOpts });
 
-const isStatusCodeError = (code: number) => {
+const isStatusCodeError = (code: unknown) => {
   const str = String(code);
   return !(str.startsWith('1') || str.startsWith('2'));
 };
@@ -56,10 +56,15 @@ const possibleErrorKeys = ['message', 'errorMessages', 'error'];
 const getResponseError = (response: unknown): string | null => {
   // In case the response is a stringified object/arr
   try {
-    const parsed = JSON.parse(response as any);
+    if (!isString(response)) {
+      throw new Error('Response not a string');
+    }
+    const parsed = JSON.parse(response) as unknown;
     return getResponseError(parsed);
-  } catch (e) {
-    if (Array.isArray(response)) return response.find(getResponseError);
+  } catch {
+    if (Array.isArray(response)) {
+      return response.find(getResponseError) as string | null;
+    }
     if (isObject(response)) {
       const keyError = mapFind(Object.entries(response), ([key, val]) =>
         possibleErrorKeys.includes(key) ? getResponseError(val) : null
@@ -74,16 +79,17 @@ const getResponseError = (response: unknown): string | null => {
 export default async <Returns = unknown>(opts: FetchOpts) => {
   const parsedOpts = parseFetchOpts(opts);
   const log = (message: any, isVerbose = false) =>
-    fetchDebug({ message, parsedOpts, isVerbose });
+    fetchDebug({ message: String(message), parsedOpts, isVerbose });
   await log(`Initiating request to "${opts.url}"...`);
   log(getRequestLogMessage(parsedOpts));
   const requestObj = getRequest(parsedOpts);
 
   // Intentionally not trying or catching here -- this is the responsibility of
   // the calling function.
-  const response = await requestObj[opts.fetchFnKey]();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const response = (await requestObj[opts.fetchFnKey]()) as unknown;
   await log({ response }, true);
-  const { statusCode } = requestObj.response!;
+  const { statusCode } = requestObj.response;
   const isErrorCode = isStatusCodeError(statusCode);
   if (isErrorCode) {
     const error = new ErrorWithPayload(

@@ -14,11 +14,11 @@ import { Container } from './elements/shapes';
 /** Falsy values will be filtered out, arrays will be flattened.  */
 export type ValidTableEl = MaybeArray<UITableRow | Container | Falsy>;
 
-export type CombineProps<Props, $Data> = Props extends void
-  ? $Data extends void
-    ? void
+export type CombineProps<Props, $Data> = Props extends undefined
+  ? $Data extends undefined
+    ? undefined
     : $Data
-  : $Data extends void
+  : $Data extends undefined
   ? Props
   : Props & $Data;
 
@@ -30,9 +30,10 @@ export type CombineProps<Props, $Data> = Props extends void
 //
 //
 
-export type Connected$Opts<$Data extends AnyObj | void> = $Data extends AnyObj
-  ? { $: Stream<$Data> } & Pick<RepeatingTimerOpts, 'interval' | 'timeout'>
-  : undefined;
+export type Connected$Opts<$Data extends AnyObj | undefined> =
+  $Data extends AnyObj
+    ? { $: Stream<$Data> } & Pick<RepeatingTimerOpts, 'interval' | 'timeout'>
+    : undefined;
 
 export type LoadProps<Props> = NoParamFn<MaybePromise<Props>>;
 
@@ -40,7 +41,7 @@ export type Payload$<State, Props> = Stream<
   Partial<{ state: State; ownProps: Props; connected$ChangeCount: number }>
 >;
 
-export type TableOpts<State, Props, $Data extends AnyObj | void> = {
+export type TableOpts<State, Props, $Data extends AnyObj | undefined> = {
   name: string;
   showSeparators?: boolean;
   fullscreen?: boolean;
@@ -51,7 +52,7 @@ export type TableOpts<State, Props, $Data extends AnyObj | void> = {
 };
 
 /** Everything in TableOpts except `payload$`, which is created within `getTable` */
-export type GetTableOpts<State, Props, $Data extends AnyObj | void> = Pick<
+export type GetTableOpts<State, Props, $Data extends AnyObj | undefined> = Pick<
   TableOpts<State, Props, $Data>,
   // Always present
   'name' | 'showSeparators' | 'fullscreen' | 'beforeEveryRender'
@@ -74,7 +75,7 @@ export type SetState<State> = MapFn<Partial<State>, void>;
 
 /** If null/void is returned, do not update state. */
 export type UpdateState<State> = (
-  updater: MapFn<State, State | null | void>
+  updater: MapFn<State, State | null | undefined>
 ) => void;
 
 type GetProps<Props, $Data> = NoParamFn<CombineProps<Props, $Data>>;

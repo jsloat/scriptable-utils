@@ -16,18 +16,23 @@ type GetNotificationOpts = Exclude<
 > &
   Pick<Notification, 'title'>;
 
+const assignNotificationAttribute = <K extends SettableKeys<Notification>>(
+  key: K,
+  opts: GetNotificationOpts,
+  notification: Notification
+) => {
+  const val = opts[key] as Notification[K];
+  if (isNotUndefined(val)) notification[key] = val;
+};
+
 const createNotification = (
   opts: GetNotificationOpts,
   actions: NotificationAction[] = []
 ) => {
   const n = new Notification();
-  objectKeys(opts).forEach(<K extends SettableKeys<Notification>>(key: K) => {
-    const val = opts[key] as Notification[K];
-    if (isNotUndefined(val)) n[key] = val;
-  });
-  actions.forEach(({ title, url, destructive = false }) =>
-    n.addAction(title, url, destructive)
-  );
+  for (const key of objectKeys(opts)) assignNotificationAttribute(key, opts, n);
+  for (const { title, url, destructive = false } of actions)
+    n.addAction(title, url, destructive);
   return n;
 };
 

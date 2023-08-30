@@ -135,7 +135,7 @@ const safelyMoveFile = async ({
     fileExtension: targetFileExtension,
   });
   if (didRename) {
-    const newFilename = safeTargetFilePath.split('/').slice(-1)[0];
+    const newFilename = safeTargetFilePath.split('/').at(-1);
     const approved =
       silentlyRename ||
       (await confirm('Rename to avoid naming conflict', {
@@ -176,9 +176,7 @@ export const renameFile = (
   silentlyRename = false
 ) => {
   const pathComponents = filePath.split('/');
-  const targetParentDirPath = pathComponents
-    .slice(0, pathComponents.length - 1)
-    .join('/');
+  const targetParentDirPath = pathComponents.slice(0, -1).join('/');
   return safelyMoveFile({
     sourceFilePath: filePath,
     targetParentDirPath,

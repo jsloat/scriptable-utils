@@ -26,8 +26,9 @@ const _setIsOpen = (
   if (isTableActive()) rerenderParent();
 };
 
-export const stopAllHeaderMenuTimers = () =>
-  Object.values(stateRegister).forEach(({ timer }) => timer.invalidate());
+export const stopAllHeaderMenuTimers = () => {
+  for (const { timer } of Object.values(stateRegister)) timer.invalidate();
+};
 
 /** When the menu is expanded, after some period of inactivity, close it
  * automatically. */

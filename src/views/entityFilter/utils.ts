@@ -46,13 +46,17 @@ export const enhanceFilterWithState = <E>(
 
 export const getAppliedFiltersPredicate =
   <E>(appliedFilters: FilterWithState<E>[]) =>
-  (entity: E) =>
-    appliedFilters.reduce((acc, filter) => {
+  (entity: E) => {
+    let result: boolean = true;
+    for (const filter of appliedFilters) {
       const shouldInclude = filter.includeEntity(entity);
-      return (
-        acc && (filter.state === 'INCLUDE' ? shouldInclude : !shouldInclude)
-      );
-    }, true);
+      result =
+        (result as boolean) &&
+        (filter.state === 'INCLUDE' ? shouldInclude : !shouldInclude);
+      if (!result) break;
+    }
+    return result;
+  };
 
 export const getInitFilterState = <E>(
   filters: FilterWithState<E>[]
@@ -64,7 +68,7 @@ export const getInitFilterState = <E>(
 };
 
 export const areFiltersApplied = ({ filterState }: State) =>
-  Boolean([...filterState.values()].filter(Boolean).length);
+  [...filterState.values()].some(Boolean);
 
 export const getFilterIcon = <E>({
   state,

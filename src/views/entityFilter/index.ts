@@ -132,7 +132,7 @@ export default async <E>(opts: Opts<E>) => {
       .map(filter => enhanceFilterWithState(filter, state))
       .map(getFilterRowOpts)
       .filter(ExcludeFalsy);
-    if (!filterButtonOpts.length) return null;
+    if (filterButtonOpts.length === 0) return null;
     return conditionalArr([
       FilterCategoryHeader(category, isCollapsed),
       !isCollapsed && Div(filterButtonOpts.map(Button)),

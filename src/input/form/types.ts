@@ -1,6 +1,7 @@
 import { EnhancedColor } from '../../colors';
 import { SFSymbolKey } from '../../sfSymbols';
 import {
+  AnyObj,
   Falsy,
   MapFn,
   NotUndefined,
@@ -44,13 +45,14 @@ type Options<T> = NotUndefined<T> extends any[]
 export type FieldOpts<
   T extends FieldType,
   FormState extends FormStateShape,
-  K extends keyof FormState
+  K extends keyof FormState,
 > = {
   type: T;
   /** Default false. Not applicable to all field types. */
   isClearable?: boolean;
   label?: string;
   shouldHide?: Predicate<Editing<FormState>>;
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   getErrorMessage?: MapFn<Editing<FormState>, string | Falsy>;
   /** Required for some types (e.g. cycle), not used for others. */
   options?: Options<FormState[K]>;
@@ -68,7 +70,7 @@ export type FieldOpts<
 };
 
 export type FieldRenderOpts<T extends FieldType> = Pick<
-  FieldOpts<T, any, any>,
+  FieldOpts<T, AnyObj, string>,
   | 'isClearable'
   | 'label'
   | 'options'

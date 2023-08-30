@@ -11,7 +11,7 @@ export class P extends Cell {
         {
           align = 'left',
           color = getColor('primaryTextColor'),
-          font = Font.regularRoundedSystemFont,
+          font = n => Font.regularRoundedSystemFont(n),
           fontSize = 20,
         },
         widthWeight

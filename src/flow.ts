@@ -26,6 +26,7 @@ export const identity = <T>(input: T) => input;
 export const composeIdentities =
   <D>(...identities: Identity<D>[]): Identity<D> =>
   (initData: D) =>
+    // eslint-disable-next-line unicorn/no-array-reduce
     identities.reduce((currData, identity) => identity(currData), initData);
 
 export const combineReducers = composeIdentities;
@@ -54,7 +55,7 @@ export const not = (val: any) => !val;
 
 /** Given current value & cycle options, return the next option in the cycle */
 export const cycle = <T>(
-  currentValue: any,
+  currentValue: T,
   cycleOptions: T[],
   isEqual: ObjComparison<T> = (a, b) => a === b
 ) => {
@@ -62,7 +63,9 @@ export const cycle = <T>(
   if (currIndex === -1) {
     // eslint-disable-next-line no-console
     console.warn(
-      `Current value ${currentValue} not found in cycle options, returning first option`
+      `Current value ${String(
+        currentValue
+      )} not found in cycle options, returning first option`
     );
     return safeArrLookup(cycleOptions, 0, 'cycle.1');
   }
@@ -79,13 +82,8 @@ export const lookup = <K extends string, V>(
 /** More succinct version of writing out an immediately-executing switch block */
 export const shortSwitch = <Input extends string | number, Return = Input>(
   input: Input,
-  returnMap: Record<Input, Return | undefined>
-) => {
-  const matchingReturn = returnMap[input];
-  if (matchingReturn === undefined)
-    throw new Error('No matching value in shortSwitch!');
-  return matchingReturn as Return;
-};
+  returnMap: Record<Input, Return>
+) => returnMap[input] as Return;
 
 export const wait = (ms: number, callback?: () => any) => {
   const t = new Timer();
@@ -123,7 +121,7 @@ const getPerformanceMeasurers = ({
     if (!startDate) {
       throw new Error(`Performance timer ${name} stopped before starting.`);
     }
-    const duration = new Date().getTime() - startDate.getTime();
+    const duration = Date.now() - startDate.getTime();
     if (duration < threshold && !logAllMeasurements) return;
     // eslint-disable-next-line no-console
     console.warn(
@@ -244,5 +242,5 @@ export const isIn = <T>(
 
 // https://stackoverflow.com/questions/39419170/how-do-i-check-that-a-switch-block-is-exhaustive-in-typescript/39419171#39419171
 export const assertUnreachable = (x: never): never => {
-  throw new Error(`Unexpectedly received value ${x}`);
+  throw new Error(`Unexpectedly received value ${String(x as unknown)}`);
 };

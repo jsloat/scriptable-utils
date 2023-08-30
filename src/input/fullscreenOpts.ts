@@ -67,7 +67,7 @@ export default async (initNodes: FullscreenOptNode[]) => {
         [
           Icon(icon, { width: '10%' }),
           HSpace('10%'),
-          P(label, { font: Font.title1 }),
+          P(label, { font: () => Font.title1() }),
         ],
         {
           color,

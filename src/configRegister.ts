@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 import type { TimePreset } from './input/date/presetDateTime';
 import type { Percent } from './UITable/elements/types';
 

@@ -23,9 +23,9 @@ const getTmpFilePaths = () => {
  * - this is a custom directory that I use for persisted data files. These
  *   temporary files are used by things like `PersistedCache` to temporarily
  *   store data.  */
-export const cleanupTemporaryFiles = () => {
+export const cleanupTemporaryFiles = async () => {
   const tempFilenames = getTmpFilePaths();
-  tempFilenames.forEach(async ({ filenameNoExtension }) => {
+  for (const { filenameNoExtension } of tempFilenames) {
     const io = persisted<any>({
       filename: filenameNoExtension,
       defaultData: null,
@@ -33,7 +33,7 @@ export const cleanupTemporaryFiles = () => {
     // Ensure file is downloaded first, otherwise may not be deleted.
     await io.getData();
     io.deleteFile();
-  });
+  }
   return { numDeletedTempFiles: tempFilenames.length };
 };
 
@@ -71,7 +71,7 @@ const robustCleanupRecur = async (i = 0) => {
     return;
   }
   const filePathsToDelete = getTmpFilePaths();
-  if (!filePathsToDelete.length) {
+  if (filePathsToDelete.length === 0) {
     update$Attrs(() => ({ status: 'SUCCESS', numRemainingTmpFiles: 0 }));
     return;
   }

@@ -24,6 +24,7 @@ const tintAndCacheImage = async (
 
 const getUntintedImage = (key: SFSymbolKey) => {
   const symbol = SFSymbol.named(symbolsMap[key]);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!symbol) {
     throw new Error(`Invalid SFSymbol key: ${key}`);
   }

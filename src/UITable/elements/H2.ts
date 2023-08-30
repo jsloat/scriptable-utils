@@ -11,7 +11,7 @@ export default (text: string, { icon, ...restOpts }: H2Opts = {}) => {
     [
       Div(
         [
-          P(text, { font: Font.mediumSystemFont, fontSize: 20 }),
+          P(text, { font: n => Font.mediumSystemFont(n), fontSize: 20 }),
           icon && Icon(icon, { width: '10%' }),
         ],
         restOpts

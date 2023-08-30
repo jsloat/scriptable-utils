@@ -33,11 +33,15 @@ const NO_CHANGE = 0;
  */
 export const combineSortFunctions =
   <T>(...sortFns: SortFn<T>[]): SortFn<T> =>
-  (a, b) =>
-    sortFns.reduce((prevValue, sortFn) => {
+  (a, b) => {
+    let sortInstruction = NO_CHANGE;
+    for (const sortFn of sortFns) {
       const sortFnResult = sortFn(a, b);
-      return sortFnResult === NO_CHANGE ? prevValue : sortFnResult;
-    }, NO_CHANGE);
+      sortInstruction =
+        sortFnResult === NO_CHANGE ? sortInstruction : sortFnResult;
+    }
+    return sortInstruction;
+  };
 
 type NewType<T> = Predicate<T>;
 
@@ -102,8 +106,8 @@ const getPrimitiveSorter =
       shouldRaiseB: (a, b) => (a && b ? (isDesc ? a < b : b < a) : false),
     });
 
-export const sortByString = getPrimitiveSorter<string | null | undefined>(str =>
-  str?.toLowerCase()
+export const sortByString = getPrimitiveSorter<string | null | undefined>(
+  str => str?.toLowerCase()
 );
 
 export const sortByNumber = getPrimitiveSorter<number | null | undefined>();

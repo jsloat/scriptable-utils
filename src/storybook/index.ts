@@ -32,9 +32,12 @@ const ParentRow = ({
     [
       TitleRow([P(title), Icon('folder', { width: '10%' })]),
       parent.description &&
-        Div([P(parent.description, { font: Font.footnote })], { height: 14 }),
+        Div([P(parent.description, { font: () => Font.footnote() })], {
+          height: 14,
+        }),
     ],
     {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       onTap: () => onSelectChild(parent.children),
       borderTop: 1,
       borderBottom: 1,
@@ -49,7 +52,7 @@ const PreviewRow = ({
     [
       TitleRow([P(title), Icon('open_external', { width: '10%' })]),
       description &&
-        Div([P(description, { font: Font.footnote })], { height: 14 }),
+        Div([P(description, { font: () => Font.footnote() })], { height: 14 }),
     ],
     { onTap: showPreview, borderTop: 1, borderBottom: 1 }
   );

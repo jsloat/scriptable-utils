@@ -24,29 +24,35 @@ const applyTextFieldFlavor = (
     case 'url':
       return field.setURLKeyboard();
     default:
-      throw new Error(`Unmapped flavor ${flavor}`);
+      throw new Error(`Unmapped flavor ${String(flavor)}`);
   }
 };
 
-const addTextFields = (textFields: TextFieldConfigOpts[], alert: Alert) =>
-  textFields.forEach(
-    ({ placeholder = '', initValue, flavor = 'default', font, textColor }) => {
-      const field = alert.addTextField(placeholder, initValue);
-      applyTextFieldFlavor(flavor, field);
-      if (font) field.font = font;
-      if (textColor) field.textColor = textColor;
-    }
-  );
+const addTextFields = (textFields: TextFieldConfigOpts[], alert: Alert) => {
+  for (const {
+    placeholder = '',
+    initValue,
+    flavor = 'default',
+    font,
+    textColor,
+  } of textFields) {
+    const field = alert.addTextField(placeholder, initValue);
+    applyTextFieldFlavor(flavor, field);
+    if (font) field.font = font;
+    if (textColor) field.textColor = textColor;
+  }
+};
 
 const addButtons = (
   buttons: (AlertButton & { text: string })[],
   alert: Alert
-) =>
-  buttons.forEach(({ text, isCancel, isRed }) => {
+) => {
+  for (const { text, isCancel, isRed } of buttons) {
     if (isCancel) alert.addCancelAction(text);
     else if (isRed) alert.addDestructiveAction(text);
     else alert.addAction(text);
-  });
+  }
+};
 
 // RESULT PARSING
 
@@ -86,7 +92,7 @@ const getTextFieldResponse = <TextFieldKey extends string>(
 
 export default async <
   TextFieldKey extends string = string,
-  ButtonKey extends string = string
+  ButtonKey extends string = string,
 >({
   title,
   message,

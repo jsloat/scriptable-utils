@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { isString } from '../common';
 import { getConfig } from '../configRegister';
 import { isEqual, objectKeys } from '../object';
@@ -84,20 +86,19 @@ type MaybePromiseWithPayload<R, P extends AnyObj> = {
 
 type MaybePromiseWithoutPayload<R> = {
   /** Do not use cache, fetch fresh (default) */
-  (): Promise<R>;
+  (opts?: { useCache?: false }): Promise<R>;
   /** Use cache */
   (opts: { useCache: true }): R;
-  /** Do not use cache, fetch fresh (default) */
-  (opts: { useCache?: false }): Promise<R>;
 };
 
 const willCacheChange = <T>(ioObj: IOObject<T>, newData: T) =>
   Boolean(ioObj.cache$ && !isEqual(ioObj.cache$.getData().data, newData));
 
 type GetData<T> = MaybePromiseWithoutPayload<T>;
-const getGetData =
-  <T>(ioObj: IOObject<T>): GetData<T> =>
-  ({ useCache = USE_CACHE_DEFAULT }: { useCache?: boolean } = {}): any => {
+const getGetData = <T>(ioObj: IOObject<T>) =>
+  (async ({
+    useCache = USE_CACHE_DEFAULT,
+  }: { useCache?: boolean } = {}): Promise<unknown> => {
     const { cache$, defaultData } = ioObj;
     if (useCache) {
       if (!cache$) {
@@ -107,17 +108,15 @@ const getGetData =
       }
       return cache$.getData().data;
     }
-    return new Promise<T>(async resolve => {
-      const fetchedData = (await _getPersistedJson(ioObj)) ?? defaultData;
-      if (ioObj.cache$) {
-        ioObj.cache$.setData(
-          { data: fetchedData },
-          { suppressChangeTrigger: !willCacheChange(ioObj, fetchedData) }
-        );
-      }
-      resolve(fetchedData);
-    });
-  };
+    const fetchedData = (await _getPersistedJson(ioObj)) ?? defaultData;
+    if (cache$) {
+      cache$.setData(
+        { data: fetchedData },
+        { suppressChangeTrigger: !willCacheChange(ioObj, fetchedData) }
+      );
+    }
+    return fetchedData;
+  }) as GetData<T>;
 
 const _fetchData = <T>(ioObj: IOObject<T>) => getGetData(ioObj)();
 const _getCachedData = <T>(ioObj: IOObject<T>) =>
@@ -128,15 +127,15 @@ const getWrite =
   <T>(ioObj: IOObject<T>): Write<T> =>
   async ({ data }) => {
     await _download(ioObj);
-    const { path, prettify, io, defaultData } = ioObj;
+    const { path, prettify, io, defaultData, cache$ } = ioObj;
     io.writeString(
       path,
       isString(defaultData)
         ? (data as unknown as string)
         : JSON.stringify(data, null, prettify ? 2 : undefined)
     );
-    if (ioObj.cache$) {
-      ioObj.cache$.setData(
+    if (cache$) {
+      cache$.setData(
         { data },
         { suppressChangeTrigger: !willCacheChange(ioObj, data) }
       );
@@ -169,21 +168,18 @@ const getReduce =
 
 //
 
-const fnWithCacheOpts =
-  <T, R, P extends AnyObj = AnyObj>(
-    ioObj: IOObject<T>,
-    getResponse: (opts: { currData: T } & P) => R
-  ): MaybePromiseWithPayload<R, P> =>
-  ({ useCache = USE_CACHE_DEFAULT, ...payload }: any): any => {
+const fnWithCacheOpts = <T, R, P extends AnyObj = AnyObj>(
+  ioObj: IOObject<T>,
+  getResponse: (opts: { currData: T } & P) => R
+) =>
+  (async ({ useCache = USE_CACHE_DEFAULT, ...payload }: any) => {
     if (useCache === false) {
-      return new Promise<R>(async resolve => {
-        const currData = await _fetchData(ioObj);
-        resolve(getResponse({ currData, ...payload }));
-      });
+      const currData = await _fetchData(ioObj);
+      return getResponse({ currData, ...payload });
     }
     const currData = _getCachedData(ioObj);
     return getResponse({ currData, ...payload });
-  };
+  }) as MaybePromiseWithPayload<R, P>;
 
 // Array/set functions
 
@@ -209,7 +205,7 @@ const getAdd =
   async ({ item }) => {
     const currData = await _fetchData(ioObj);
     if (arrHasItem(currData, item, ioObj)) return;
-    await _write(ioObj, currData.concat(item));
+    await _write(ioObj, [...currData, item]);
   };
 
 type Concat<T> = (opts: { items: T[] | T }) => Promise<void>;
@@ -221,8 +217,8 @@ const getConcat =
     const newItems = parsedArr.filter(
       item => !arrHasItem(currData, item, ioObj)
     );
-    if (!newItems.length) return;
-    await _write(ioObj, currData.concat(newItems));
+    if (newItems.length === 0) return;
+    await _write(ioObj, [...currData, ...newItems]);
   };
 
 type Delete<T> = (opts: ItemPayload<T>) => Promise<void>;
@@ -296,6 +292,7 @@ const getObjKeyDelete =
   <T, K extends keyof T>(ioObj: IOObject<T>): ObjKeyDelete<T, K> =>
   async key => {
     const currData = await _fetchData(ioObj);
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete currData[key];
     await _write(ioObj, currData);
   };

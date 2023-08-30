@@ -31,7 +31,8 @@ type QuickOptions = {
 };
 
 const quickOptions: QuickOptions = async (
-  listOptions: (string | LabeledValue<any> | Falsy)[],
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  listOptions: (string | LabeledValue<unknown> | Falsy)[],
   {
     title = 'Select option',
     onOptionSelect,
@@ -41,11 +42,11 @@ const quickOptions: QuickOptions = async (
   }: SharedOpts<any> = {}
 ): Promise<any> => {
   const validListOptions = listOptions.filter(ExcludeFalsy);
-  if (!validListOptions.length) return null;
+  if (validListOptions.length === 0) return null;
   const optionButtonEntries = validListOptions.map<[string, AlertButton]>(
     strOrLV => [isString(strOrLV) ? strOrLV : strOrLV.label, {}]
   );
-  if (!optionButtonEntries.length) return null;
+  if (optionButtonEntries.length === 0) return null;
   const { tappedButtonText } = await alert({
     title,
     presentAsSheet,
@@ -55,6 +56,7 @@ const quickOptions: QuickOptions = async (
       [CANCEL_BUTTON_TEXT]: { isCancel: true },
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const cancelled = tappedButtonText === CANCEL_BUTTON_TEXT;
 
   if (cancelled) {

@@ -3,20 +3,19 @@ import { Omit_ } from '../types/utilTypes';
 import { AttrDictionary, Child, Element, PageStyle } from './types';
 
 const getStyleString = (styleDefinition: AttrDictionary) => {
-  if (!Object.keys(styleDefinition).length) return '';
+  if (Object.keys(styleDefinition).length === 0) return '';
   return Object.entries(styleDefinition)
     .map(([key, val]) => `${key}:${val};`)
     .join('');
 };
 
 export const getPageStyleString = (style: PageStyle) => {
-  if (!Object.keys(style).length) return '';
-  const declarations = Object.entries(style).reduce(
-    (acc, [selector, styleDict]) =>
-      acc.concat(`${selector} {${getStyleString(styleDict)}}`),
-    [] as string[]
-  );
-  return declarations.join('');
+  if (Object.keys(style).length === 0) return '';
+  let styleString = '';
+  for (const [selector, styleDict] of Object.entries(style)) {
+    styleString += `${selector} {${getStyleString(styleDict)}}`;
+  }
+  return styleString;
 };
 
 export const getElement = (
@@ -48,9 +47,9 @@ export const getElementHTML = (el: Element): string => {
   } = el;
   const allAttrs: AttrDictionary = {
     ...attributes,
-    ...(Object.keys(style).length && { style: getStyleString(style) }),
+    ...(Object.keys(style).length > 0 && { style: getStyleString(style) }),
     ...(id && { id }),
-    ...(classList.length && { class: classList.join(' ') }),
+    ...(classList.length > 0 && { class: classList.join(' ') }),
   };
   const attrsStr = Object.entries(allAttrs)
     .map(([key, val]) => `${key}="${val}"`)
@@ -60,14 +59,14 @@ export const getElementHTML = (el: Element): string => {
   const closeTag = `</${tagName}>`;
 
   if (prettify) {
-    const indentedChildrenString = (children ?? [])
+    const indentedChildrenString = children
       .map(parseChild)
       .filter(Boolean)
       .join('\n');
     return [openTag, indentedChildrenString, closeTag].join('\n');
   }
 
-  if (children.length)
+  if (children.length > 0)
     return [openTag, ...children.map(childToHTML), closeTag].join('');
   return `${openTag}${closeTag}`;
 };

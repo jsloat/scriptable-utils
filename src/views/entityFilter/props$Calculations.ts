@@ -31,11 +31,11 @@ const addFilterMatchData = <E>(
   { getEntityId: getUniqueEntityId }: Props<E>
 ): FilterMatchData => {
   const matchingEntityIDs = new Set<EntityId>();
-  entities.forEach(entity => {
+  for (const entity of entities) {
     const id = getUniqueEntityId(entity);
     filterMatchData.allEntityIDs.add(id);
     if (filter.includeEntity(entity)) matchingEntityIDs.add(id);
-  });
+  }
   filterMatchData.filterKeyToMatchingIDs.set(
     getFilterKey(filter),
     matchingEntityIDs
@@ -50,17 +50,14 @@ const getFilterMatchData = async <E>(
   props: Props<E>
 ): Promise<FilterMatchData> => {
   const entities = await props.getEntities();
-  const seed: FilterMatchData = {
+  let result: FilterMatchData = {
     allEntityIDs: new Set(),
     filterKeyToMatchingIDs: new Map(),
   };
-  return Object.values(props.filters)
-    .flat()
-    .reduce(
-      (filterMatchData, filter) =>
-        addFilterMatchData(filterMatchData, filter, entities, props),
-      seed
-    );
+  for (const filter of Object.values(props.filters).flat()) {
+    result = addFilterMatchData(result, filter, entities, props);
+  }
+  return result;
 };
 
 //
@@ -76,20 +73,22 @@ const buildFilteredEntityIDsFromState = <E>(
   { filters }: Props<E>
 ) => {
   const appliedFilters = getAppliedFilters(state, filters);
-  return appliedFilters.reduce((acc, filter) => {
-    const accArr = [...acc];
+  let filteredIDsArr = [...allEntityIDs];
+  for (const filter of appliedFilters) {
     const matchingIDsArr = [
       ...filterKeyToMatchingIDs.get(getFilterKey(filter))!,
     ];
     switch (filter.state) {
       case null:
-        return acc;
+        continue;
       case 'INCLUDE':
-        return new Set(intersection(accArr, matchingIDsArr));
+        filteredIDsArr = intersection(filteredIDsArr, matchingIDsArr);
+        break;
       case 'EXCLUDE':
-        return new Set(inANotB(accArr, matchingIDsArr));
+        filteredIDsArr = inANotB(filteredIDsArr, matchingIDsArr);
     }
-  }, allEntityIDs);
+  }
+  return new Set(filteredIDsArr);
 };
 
 /** Calculate how many entities will be present if a given filter is applied */
@@ -98,18 +97,17 @@ const getFilterKeyToFilteredCount = <E>(
   { filters }: Props<E>,
   filterKeyToMatchingIDs: FilterKeyToMatchingIDs
 ) => {
-  return Object.values(filters)
-    .flat()
-    .reduce((acc, filter) => {
-      const key = getFilterKey(filter);
-      const matchingIDs = filterKeyToMatchingIDs.get(key);
-      if (!matchingIDs) throw new Error('asujdhdueiwef');
-      acc.set(
-        key,
-        [...filteredEntityIDs].filter(id => matchingIDs.has(id)).length
-      );
-      return acc;
-    }, new Map() as FilterKeyToFilteredCount);
+  const result: FilterKeyToFilteredCount = new Map();
+  for (const filter of Object.values(filters).flat()) {
+    const key = getFilterKey(filter);
+    const matchingIDs = filterKeyToMatchingIDs.get(key);
+    if (!matchingIDs) throw new Error(`No matching IDs for key ${key}`);
+    result.set(
+      key,
+      [...filteredEntityIDs].filter(id => matchingIDs.has(id)).length
+    );
+  }
+  return result;
 };
 
 const getCounts = <E>(

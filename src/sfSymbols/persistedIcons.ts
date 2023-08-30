@@ -21,6 +21,7 @@ const downloadAndCacheImage = async (key: TintRequestKey, path: string) => {
   const io = FileManager.iCloud();
   if (!io.isFileDownloaded(path)) await io.downloadFileFromiCloud(path);
   const image = io.readImage(path);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!image) throw new Error(`Can not load icon ${key}`);
   cache.set(key, image);
 };
@@ -36,7 +37,7 @@ const saveImage = (key: TintRequestKey, image: Image) => {
  * to the icons or color palettes used in scripts. */
 export const deleteAllCachedIcons = async () => {
   const cachedIcons = getDirContents(getImgDirPath());
-  if (!cachedIcons.length) {
+  if (cachedIcons.length === 0) {
     OK('No icons to delete');
     return;
   }
@@ -46,9 +47,8 @@ export const deleteAllCachedIcons = async () => {
   );
   if (!confirmed) return;
   const io = FileManager.iCloud();
-  cachedIcons.forEach(({ filepath: cachedIconPath }) =>
-    io.remove(cachedIconPath)
-  );
+  for (const { filepath: cachedIconPath } of cachedIcons)
+    io.remove(cachedIconPath);
 };
 
 type GetCachedImageReturn = Image | 'FILE_DOES_NOT_EXIST' | 'LOADING_FILE';

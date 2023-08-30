@@ -29,8 +29,9 @@ const toggleValueItem = <Value>(
   areValuesEqual: ObjComparison<Value>
 ) => {
   const hasValue = arr.some(v => areValuesEqual(v, value));
-  if (hasValue) return arr.filter(v => !areValuesEqual(v, value));
-  else return [...arr, value];
+  return hasValue
+    ? arr.filter(v => !areValuesEqual(v, value))
+    : [...arr, value];
 };
 
 export const listChooseMany = async <Label extends string, Value = Label>(
@@ -86,10 +87,9 @@ export const listChooseMany = async <Label extends string, Value = Label>(
 
   //
 
-  return (
-    await present({
-      defaultState: { selectedValues: initValues.map(getValue) },
-      render: () => [Title(), Div(options.map(OptionRow) as Container[])],
-    })
-  ).selectedValues;
+  const { selectedValues } = await present({
+    defaultState: { selectedValues: initValues.map(getValue) },
+    render: () => [Title(), Div(options.map(OptionRow) as Container[])],
+  });
+  return selectedValues;
 };

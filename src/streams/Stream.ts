@@ -48,9 +48,6 @@ export default class Stream<DataType extends AnyObj> {
       interval: 0,
       maxEntitiesPerOperation: 1,
       batchOperation: ([{ reducer, suppressChangeTrigger }]) => {
-        if (!this.data) {
-          throw new Error('Attempting to update stream data with no data');
-        }
         const oldData = { ...this.data };
         const newData = reducer(oldData);
         this.data = newData;
@@ -71,9 +68,10 @@ export default class Stream<DataType extends AnyObj> {
       callbackIdAlreadyRegistered && !overwriteExistingCallback;
 
     if (!overwriteDisallowed)
-      this.updateCallbacks = this.updateCallbacks
-        .filter(({ id }) => id !== callbackId)
-        .concat({ callback, id: callbackId });
+      this.updateCallbacks = [
+        ...this.updateCallbacks.filter(({ id }) => id !== callbackId),
+        { callback, id: callbackId },
+      ];
 
     return { remove: () => this.unregisterUpdateCallback(callbackId) };
   }
@@ -85,14 +83,14 @@ export default class Stream<DataType extends AnyObj> {
   }
 
   private runCallbacks(previousData: DataType, updatedData: DataType) {
-    this.updateCallbacks.forEach(({ callback, id }) => {
+    for (const { callback, id } of this.updateCallbacks) {
       if (this.showStreamDataUpdateDebug)
         // eslint-disable-next-line no-console
         console.log(
           `Running stream "${this.name}" update callback with ID "${id}"`
         );
       callback(previousData, updatedData);
-    });
+    }
   }
 
   /** Reduce stream data */
@@ -125,10 +123,6 @@ export default class Stream<DataType extends AnyObj> {
   }
 
   getData() {
-    if (!this.data)
-      throw new Error(
-        'Attempting to get stream data before initializing stream.'
-      );
     return this.data;
   }
 

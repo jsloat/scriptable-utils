@@ -14,13 +14,16 @@ const getUrlEncodedParam = (key: ObjKey, val: unknown) => {
 };
 
 /** Returns encoded params w/o ? at beginning, e.g. a=1&b=2&c=3 */
-export const getUrlEncodedParams = (params: AnyObj) =>
-  Object.entries(params).reduce((params, [key, value]) => {
-    const encodedParam = getUrlEncodedParam(key, value);
-    if (!encodedParam) return params;
-    const joiner = params.length ? '&' : '';
-    return [params, encodedParam].join(joiner);
-  }, '');
+export const getUrlEncodedParams = (params: AnyObj): string => {
+  let encodedParams = '';
+  for (const [key, value] of Object.entries(params)) {
+    const paramStr = getUrlEncodedParam(key, value);
+    if (!paramStr) continue;
+    const joiner = encodedParams.length > 0 ? '&' : '';
+    encodedParams = [encodedParams, paramStr].join(joiner);
+  }
+  return encodedParams;
+};
 
 const appendParamReducer = (
   currUrl: string,
@@ -31,8 +34,13 @@ const appendParamReducer = (
   return encodedParam ? [currUrl, encodedParam].join(joiner) : currUrl;
 };
 
-export const url = (url: string, params: AnyObj = {}) =>
-  Object.entries(params).reduce(appendParamReducer, url);
+export const url = (url: string, params: AnyObj = {}): string => {
+  let constructedUrl = url;
+  for (const entry of Object.entries(params)) {
+    constructedUrl = appendParamReducer(constructedUrl, entry);
+  }
+  return constructedUrl;
+};
 
 export const openUrl = (url: string) => Safari.open(url);
 
@@ -41,10 +49,10 @@ export const openCallbackUrl = async <ExpectedReturn = void>(
   params: AnyObj = {}
 ) => {
   const cb = new CallbackURL(baseUrl);
-  Object.entries(params).forEach(([key, val]) => {
+  for (const [key, val] of Object.entries(params)) {
     // Params need to be explicitly added like this on CallbackURL objects.
     if (val !== undefined) cb.addParameter(key, getValAsString(val));
-  });
+  }
   try {
     const result = await cb.open();
     return result as unknown as ExpectedReturn;
@@ -54,7 +62,7 @@ export const openCallbackUrl = async <ExpectedReturn = void>(
     prompt.message = String(e);
     prompt.addAction('OK');
     await prompt.present();
-    throw new Error(e as any);
+    throw new Error(e as string | undefined);
   }
 };
 
@@ -74,11 +82,13 @@ export const getGoogleSearchUrl = (query: string) =>
   url('https://www.google.com/search', { q: query });
 
 export const getForumSearchUrl = (query: string) => {
-  const siteSearchText = FORUMS.reduce(
-    (acc, forum, i) =>
-      [acc, encodeURIComponent(i ? ' OR site:' : ' site:'), forum].join(''),
-    ''
-  );
+  let siteSearchText = '';
+  for (const forum of FORUMS) {
+    const joiner = encodeURIComponent(
+      siteSearchText.length > 0 ? ' OR site:' : ' site:'
+    );
+    siteSearchText = [siteSearchText, joiner, forum].join('');
+  }
   return `${getGoogleSearchUrl(query)}${siteSearchText}`;
 };
 

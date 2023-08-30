@@ -1,7 +1,7 @@
 import { getSegmentConsts, getSegmentReducer, SegmentRules } from './common';
 import { MapFn, PrimitiveType, Typeguard } from './types/utilTypes';
 
-type Reducer<Result, Input> = (
+type Reducer<Input, Result> = (
   result: Result,
   input: Input,
   index: number
@@ -9,11 +9,11 @@ type Reducer<Result, Input> = (
 
 type ArrCallbackNoArr<Val, Result> = (value: Val, index: number) => Result;
 
-type Joiner<Result, Item> = Reducer<Result, Item>;
+type Joiner<Item, Result> = Reducer<Item, Result>;
 
 type Transducer<InitVal = unknown, FinalVal = InitVal> = <Result = unknown>(
-  joinData: Joiner<Result, FinalVal>
-) => Reducer<Result, InitVal>;
+  joinData: Joiner<FinalVal, Result>
+) => Reducer<InitVal, Result>;
 
 type Compose = {
   /** 1 operator */
@@ -73,6 +73,7 @@ type Compose = {
 export const compose: Compose =
   (...transducers: Transducer[]): Transducer =>
   joinData =>
+    // eslint-disable-next-line unicorn/no-array-reduce
     transducers.reduceRight(
       (accJoinData, transducer) => transducer(accJoinData),
       joinData
@@ -132,43 +133,45 @@ export const take =
 
 const joinUnique = <T, U extends PrimitiveType>(
   getCompareVal: MapFn<T, U>
-): Joiner<T[], T> => {
+): Joiner<T, T[]> => {
   const hasSeen = new Set<U>();
   return (acc, val) => {
     const compareVal = getCompareVal(val);
     if (hasSeen.has(compareVal)) return acc;
     hasSeen.add(compareVal);
-    return acc.concat(val);
+    return [...acc, val];
   };
 };
 
-const joinSum = (): Joiner<number, number> => (sum, val) => sum + val;
+const sum = (i: number, j: number) => i + j;
+const joinSum = (): Joiner<number, number> => sum;
 
-const joinCount = (): Joiner<number, any> => count => count + 1;
+const inc = (i: number) => i + 1;
+const joinCount = (): Joiner<any, number> => inc;
 
 const joinReduce = <Result, Value>(
-  reduce: Reducer<Result, Value>
-): Joiner<Result, Value> => reduce;
+  reduce: Reducer<Value, Result>
+): Joiner<Value, Result> => reduce;
 
-const joinSet =
-  <T>(): Joiner<Set<T>, T> =>
-  (set, val) =>
-    set.add(val);
+const setAdd = <T>(set: Set<T>, val: T) => set.add(val);
+const joinSet = <T>(): Joiner<T, Set<T>> => setAdd;
 
 const joinFind =
-  <T>(isMatch: MapFn<T, any>): Joiner<T | undefined, T> =>
+  <T>(isMatch: MapFn<T, any>): Joiner<T, T | undefined> =>
   (acc, val) =>
     acc || (isMatch(val) ? val : acc);
 
-const joinConcat =
-  <T>(): Joiner<T[], T | T[]> =>
-  (acc, val) =>
-    acc.concat(val);
+const concat = <T>(arr: T[], val: T | T[]) => [
+  ...arr,
+  ...(Array.isArray(val) ? val : [val]),
+];
+const joinConcat = <T>(): Joiner<T | T[], T[]> => concat;
 
-const joinFlat =
-  <T>(): Joiner<T[], (T | T[])[]> =>
-  (acc, val) =>
-    acc.concat(val.flat() as T[]);
+const flat = <T>(acc: T[], val: (T | T[])[]) => [
+  ...acc,
+  ...(val.flat() as T[]),
+];
+const joinFlat = <T>(): Joiner<(T | T[])[], T[]> => flat;
 
 // EXECUTORS
 
@@ -198,7 +201,7 @@ export const toCount = <T>(sourceData: T[], xform: Transducer<T, any>) =>
 export const toReduce = <Init, Final, ReduceResult>(
   sourceData: Init[],
   xform: Transducer<Init, Final>,
-  reduce: Reducer<ReduceResult, Final>,
+  reduce: Reducer<Final, ReduceResult>,
   reduceSeed: ReduceResult
 ) => sourceData.reduce(xform(joinReduce(reduce)), reduceSeed);
 

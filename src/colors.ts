@@ -32,7 +32,7 @@ export class EnhancedColor {
 
   get color() {
     return this.isDynamic
-      ? Color.dynamic(this.lightColor!, this.colorObj.dark!)
+      ? Color.dynamic(this.lightColor, this.colorObj.dark!)
       : this.colorObj.static!;
   }
 
@@ -178,7 +178,7 @@ export type ColorKey = (typeof colorKeys)[number];
 const getKeyVal = (key: ColorKey) => {
   if (hasKey(COLORS, key)) return COLORS[key];
   if (hasKey(COLOR_ALIASES, key)) return COLOR_ALIASES[key];
-  throw new Error(`No color found for key ${key}`);
+  throw new Error(`No color found for key ${String(key)}`);
 };
 
 export const getColor = (key: ColorKey) => {
@@ -218,15 +218,15 @@ export const getDomainColor = (domain: Domain) =>
 type FormattedHex = { r: string; g: string; b: string };
 const formatHex = (hexStr: string): FormattedHex => {
   if (hexStr.length !== 6) throw new Error('Must be 6 chars');
-  const [r, g, b] = chunk(hexStr.split(''), 2);
+  const [r, g, b] = chunk([...hexStr], 2);
   return { r: r!.join(''), g: g!.join(''), b: b!.join('') };
 };
 
 type FormattedInt = { r: number; g: number; b: number };
 const formattedHexToInt = ({ r, g, b }: FormattedHex): FormattedInt => ({
-  r: parseInt(r, 16),
-  g: parseInt(g, 16),
-  b: parseInt(b, 16),
+  r: Number.parseInt(r, 16),
+  g: Number.parseInt(g, 16),
+  b: Number.parseInt(b, 16),
 });
 
 const intToHex = (int: number): string =>
@@ -267,7 +267,7 @@ export const getGradientMidpoints: GetColorFadeMidpoints = ({
   from,
   to,
   numPoints,
-}) => {
+}): any => {
   const fromInt = formattedHexToInt(formatHex(hexOrColorToHex(from)));
   const toInt = formattedHexToInt(formatHex(hexOrColorToHex(to)));
   const stepPercent = 1 / (numPoints + 1);
@@ -282,7 +282,7 @@ export const getGradientMidpoints: GetColorFadeMidpoints = ({
       g: intToHex(Math.floor(g)),
       b: intToHex(Math.floor(b)),
     })
-  ) as any;
+  );
 };
 
 /** Get the color halfway between the 2 colors */

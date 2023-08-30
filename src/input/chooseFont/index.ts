@@ -35,7 +35,7 @@ const { getState, setState, present } = getTable<State>({
 
 const isStaticFontLabel = (
   label: FontFamilySelection
-): label is StaticFontLabel => STATIC_FONT_LABELS.includes(label as any);
+): label is StaticFontLabel => (STATIC_FONT_LABELS as string[]).includes(label);
 
 //
 
@@ -85,16 +85,16 @@ const InfoTable = () => {
       {
         cellValues: {
           Font: fontSelection ?? 'None',
-          Size: !fontSelection
-            ? ''
-            : isStaticFontLabel(fontSelection)
-            ? 'Static'
-            : String(size),
-          Weight: !fontSelection
-            ? ''
-            : isStaticFontLabel(fontSelection) || fontSelection === 'Italic'
-            ? 'N/A'
-            : String(weight),
+          Size: fontSelection
+            ? isStaticFontLabel(fontSelection)
+              ? 'Static'
+              : String(size)
+            : '',
+          Weight: fontSelection
+            ? isStaticFontLabel(fontSelection) || fontSelection === 'Italic'
+              ? 'N/A'
+              : String(weight)
+            : '',
         },
       },
     ],
@@ -105,13 +105,13 @@ const sampleText =
   'The quick brown fox jumps over the lazy dog. THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. 0123456789!@#$%^&*()';
 const FontPreview = () => {
   const { size, weight, fontSelection } = getState();
-  const fontGetter = !fontSelection
-    ? getFontFamily({ family: 'System', weight })
-    : fontSelection === 'Italic'
-    ? getItalicFont()
-    : isStaticFontLabel(fontSelection)
-    ? getStaticFont(fontSelection)
-    : getFontFamily({ family: fontSelection, weight });
+  const fontGetter = fontSelection
+    ? fontSelection === 'Italic'
+      ? getItalicFont()
+      : isStaticFontLabel(fontSelection)
+      ? getStaticFont(fontSelection)
+      : getFontFamily({ family: fontSelection, weight })
+    : getFontFamily({ family: 'System', weight });
   return Div([P(sampleText, { font: fontGetter, fontSize: size })], {
     borderTop: 1,
     borderBottom: 1,

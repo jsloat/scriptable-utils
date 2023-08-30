@@ -28,14 +28,16 @@ type StyleTree = {
 };
 const getNodeStyleTree = (node: AnyElement): StyleTree => ({
   DESCRIPTION: String(node),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   style: node.style,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   parent: node.parent ? getNodeStyleTree(node.parent) : null,
 });
 
 abstract class Element<
   ValidParentType extends Element<any, Style, any>,
   Style extends AnyObj,
-  Renders
+  Renders,
 > {
   parent: ValidParentType | null = null;
   style: Style;
@@ -154,7 +156,7 @@ export class Container extends Element<
     super(style);
     this.tapProps = tapProps;
     this.children = children;
-    this.children.forEach(element => element.setParent(this));
+    for (const element of this.children) element.setParent(this);
   }
 
   private getBgColor() {
@@ -197,7 +199,7 @@ export class Container extends Element<
     this.inheritStyle();
 
     // Treat it as a row with no cells
-    if (!this.children.length) {
+    if (this.children.length === 0) {
       return this.wrapRowsWithSpacingAndBorder([this.getPartialBaseRowOpts()]);
     }
 
@@ -251,7 +253,7 @@ export class CellContainer extends Element<
   constructor(children: Cell[], style: CellShapeStyle) {
     super(style);
     this.children = children;
-    this.children.forEach(cell => cell.setParent(this));
+    for (const cell of this.children) cell.setParent(this);
   }
 
   render() {

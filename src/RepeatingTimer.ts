@@ -26,11 +26,12 @@ const timerRegister: Record<string, RepeatingTimer> = {};
  * meant to be used when cleaning up after a script is done to prevent errant
  * timers continuing to run after the user has showed the intention of stopping
  * the current script. */
-export const killAllRepeatingTimers = () =>
-  Object.values(timerRegister).forEach(timer => {
+export const killAllRepeatingTimers = () => {
+  for (const timer of Object.values(timerRegister)) {
     timer.onStop = undefined;
     timer.stop();
-  });
+  }
+};
 
 export default class RepeatingTimer {
   onFire?: () => any;

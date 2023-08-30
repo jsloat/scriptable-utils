@@ -100,7 +100,13 @@ const selectBulkAction = async <E>(
         ({ label, onTap, shouldHide, icon }) =>
           shouldHide?.(entities)
             ? null
-            : { label, icon, value: () => onTap(entities) }
+            : {
+                label,
+                icon,
+                value: async () => {
+                  await onTap(entities);
+                },
+              }
       )
       .filter(ExcludeFalsy)
   );
@@ -116,14 +122,16 @@ const getDefaultProps$State = <E>(): $Props<E> => ({
 const generateProps = <E>(
   entities: E[],
   getEntityId: SelectableEntityBrowserOpts<E>['getEntityId']
-) =>
-  entities.reduce((acc, entity) => {
+) => {
+  const result = getDefaultProps$State<E>();
+  for (const entity of entities) {
     const id = getEntityId(entity);
-    acc.entityMap.set(id, entity);
-    acc.allEntityIds.push(id);
-    acc.allEntitiesCount++;
-    return acc;
-  }, getDefaultProps$State<E>());
+    result.entityMap.set(id, entity);
+    result.allEntityIds.push(id);
+    result.allEntitiesCount++;
+  }
+  return result;
+};
 
 type GetFilteredEntitiesOpts<E> = Pick<
   State<E>,
@@ -140,7 +148,8 @@ const getFilteredEntities = async <E>({
   filterBySearchQuery,
 }: GetFilteredEntitiesOpts<E>) => {
   const isShownWithCurrentFilters = getAppliedFiltersPredicate(appliedFilters);
-  return (await getEntities()).filter(entity => {
+  const entities = await getEntities();
+  return entities.filter(entity => {
     if (!isShownWithCurrentFilters(entity)) return false;
     return getSearchMatchPredicate && filterBySearchQuery
       ? getSearchMatchPredicate(filterBySearchQuery)(entity)
@@ -187,14 +196,14 @@ export default async <E>({
 
   const { present, connect, getProps, getState, setState, rerender } = getTable<
     State<E>,
-    void,
+    undefined,
     $Props<E>
   >({ name: ID, connected$: { $: props$ } });
 
   const reducer = getReducerCreator<State<E>>();
 
   const handleToggleEntitySelect = reducer((state, id: EntityId) => {
-    const clone = new Set([...state.selectedEntityIds]);
+    const clone = new Set(state.selectedEntityIds);
     clone.has(id) ? clone.delete(id) : clone.add(id);
     return { ...state, selectedEntityIds: clone };
   });
@@ -256,7 +265,7 @@ export default async <E>({
     return {
       text: 'Edit filters',
       icon: 'filter',
-      ...(appliedFilters.length && { metadata: appliedFilters.length }),
+      ...(appliedFilters.length > 0 && { metadata: appliedFilters.length }),
       onTap: async () => {
         const newFilters = await entityFilter({
           getEntities,
@@ -295,7 +304,7 @@ export default async <E>({
           })
         : []),
     ]).map<ButtonOpts>(opt => ({ ...opt }));
-    return stackOpts.length && Div(stackOpts.map(Button));
+    return stackOpts.length > 0 && Div(stackOpts.map(Button));
   });
 
   const EntityRow = (id: EntityId) => {
@@ -354,7 +363,9 @@ export default async <E>({
   await present({
     defaultState,
     beforeLoad: () => reloadEntities(defaultState),
-    onDismiss: () => onClose?.(props$.getData()),
+    onDismiss: async () => {
+      await onClose?.(props$.getData());
+    },
     render: () => [Header(), CTAs(), Spacer(), Pagination()],
   });
 };

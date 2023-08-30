@@ -37,7 +37,7 @@ const getTopRow = (
   return Div(
     conditionalArr([
       P(title, {
-        font: Font.boldSystemFont,
+        font: n => Font.boldSystemFont(n),
         fontSize: 25,
         width: textWidth,
         color: titleColor,
@@ -59,7 +59,7 @@ const getSubtitleRow = (
   { subtitleColor, icon, ...restProps }: H1Opts
 ) =>
   Div([P(subtitle)], {
-    font: Font.footnote,
+    font: () => Font.footnote(),
     color: subtitleColor,
     height: 14,
     ...NO_SPACING,

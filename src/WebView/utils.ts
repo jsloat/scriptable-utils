@@ -101,12 +101,14 @@ const parsePassedData = (requestUrl: string) => {
     'parsePassedData.1'
   );
   const keyValPairStrs = dataParamStr.split(/\?|&/g).filter(Boolean);
-  return keyValPairStrs.reduce<AnyObj>((acc, keyValPairStr) => {
+  const response: AnyObj = {};
+  for (const keyValPairStr of keyValPairStrs) {
     const splitArr = keyValPairStr.split('=');
     const key = safeArrLookup(splitArr, 0, 'parsePassedData.2');
     const encodedVal = safeArrLookup(splitArr, 1, 'parsePassedData.3');
-    return { ...acc, [key]: decodeURIComponent(encodedVal) };
-  }, {});
+    response[key] = decodeURIComponent(encodedVal);
+  }
+  return response;
 };
 
 export const setPassedDataFromUrl = (requestUrl: string) =>

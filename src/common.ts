@@ -69,6 +69,13 @@ export const getRandomArrayItem = <T>(arr: T[]) =>
     'getRandomArrayItem'
   );
 
+const to2DigitHex = (n: number) => {
+  const parsedN = clamp(Math.round(n), 0, 255);
+  const hexValue = parsedN.toString(16);
+  const prefix = hexValue.length < 2 ? '0' : '';
+  return prefix + hexValue;
+};
+
 /**
  * https://stackoverflow.com/questions/21034924/lighten-hex-code-in-javascript
  * When `change` is negative, the color is darkened; -1 always yields black.
@@ -76,16 +83,10 @@ export const getRandomArrayItem = <T>(arr: T[]) =>
  * Finally, 0 always yields the original color.
  */
 const shade = (colorObj: Color, change: number) => {
-  const to2DigitHex = (n: number) => {
-    const parsedN = clamp(Math.round(n), 0, 255);
-    const hexValue = parsedN.toString(16);
-    const prefix = hexValue.length < 2 ? '0' : '';
-    return prefix + hexValue;
-  };
   const { hex } = colorObj;
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
+  const r = Number.parseInt(hex.slice(0, 2), 16);
+  const g = Number.parseInt(hex.slice(2, 4), 16);
+  const b = Number.parseInt(hex.slice(4, 6), 16);
 
   const darkenTransform = (n: number) => to2DigitHex((1 + change) * n);
   const lightenTransform = (n: number) =>
@@ -145,7 +146,7 @@ export const safeArrLookup = <T extends NotUndefined<any>>(
 /** Get existent and not-undefined value from an object + key */
 export const safeObjLookup = <
   K extends string | number,
-  O extends Record<K, NotUndefined<any>>
+  O extends Record<K, NotUndefined<any>>,
 >(
   obj: O,
   key: K,
@@ -196,10 +197,10 @@ export const getSegmentReducer = <T, K extends string>(
       const segmentRule = segmentRules[key];
       return isFunc(segmentRule) ? segmentRule(item) : false;
     });
-    if (matchingRuleKeys.length) {
-      matchingRuleKeys.forEach(k => acc[k].push(item));
-    } else if (unmatchedRuleKeys.length) {
-      unmatchedRuleKeys.forEach(k => acc[k].push(item));
+    if (matchingRuleKeys.length > 0) {
+      for (const k of matchingRuleKeys) acc[k].push(item);
+    } else if (unmatchedRuleKeys.length > 0) {
+      for (const k of unmatchedRuleKeys) acc[k].push(item);
     }
     return acc;
   };
@@ -220,7 +221,10 @@ export const segment = <T, K extends string>(
   );
 
 type GroupBy = {
-  <ArrVal, Key>(arr: ArrVal[], getGroupKey: MapFn<ArrVal, Key>): {
+  <ArrVal, Key>(
+    arr: ArrVal[],
+    getGroupKey: MapFn<ArrVal, Key>
+  ): {
     key: Key;
     val: ArrVal[];
   }[];
@@ -259,18 +263,21 @@ type GroupBy = {
  */
 export const groupBy: GroupBy = <ArrVal, GroupedVal>(
   arr: ArrVal[],
-  getGroupKey: MapFn<ArrVal, any>,
+  getGroupKey: MapFn<ArrVal>,
   mapVal?: MapFn<ArrVal, GroupedVal>
-) =>
-  arr.reduce((acc, arrVal) => {
+) => {
+  let result: { key: unknown; val: unknown[] }[] = [];
+  for (const arrVal of arr) {
     const key = getGroupKey(arrVal);
     const val = mapVal ? mapVal(arrVal) : arrVal;
     let wasAlreadyInAcc = false;
-    const mappedAcc = acc.map(accVal => {
+    const mappedAcc = result.map(accVal => {
       if (accVal.key !== key) return accVal;
       wasAlreadyInAcc = true;
       return { key, val: [...accVal.val, val] };
     });
-    if (!wasAlreadyInAcc) mappedAcc.push({ key, val: [val] });
-    return mappedAcc;
-  }, [] as { key: any; val: any[] }[]);
+    if (!(wasAlreadyInAcc as boolean)) mappedAcc.push({ key, val: [val] });
+    result = mappedAcc;
+  }
+  return result;
+};

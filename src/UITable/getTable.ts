@@ -4,7 +4,6 @@ import { Table } from './TableClass';
 import {
   CombineProps,
   Connect,
-  Connected$Opts,
   ConnectPayload,
   GetTableOpts,
   Payload$,
@@ -39,9 +38,9 @@ TABLE
 */
 
 const getTable = <
-  State extends AnyObj | void = void,
-  Props extends AnyObj | void = void,
-  $Data extends AnyObj | void = void
+  State extends AnyObj | undefined = undefined,
+  Props extends AnyObj | undefined = undefined,
+  $Data extends AnyObj | undefined = undefined,
 >(
   tableOpts: GetTableOpts<State, Props, $Data>
 ) => {
@@ -67,7 +66,7 @@ const getTable = <
 
   const getProps = () => {
     const { ownProps } = payload$.getData();
-    const $: Connected$Opts<$Data> = (tableOpts as AnyObj).connected$;
+    const $ = tableOpts.connected$;
     const streamData = $?.$.getData();
     const combinedProps = { ...ownProps, ...streamData } as CombineProps<
       Props,

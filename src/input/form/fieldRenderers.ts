@@ -1,4 +1,5 @@
 import { getTypesafeArrOfType } from '../../array';
+import { isString } from '../../common';
 import { pick } from '../../object';
 import { HR } from '../../UITable/elements';
 import {
@@ -38,6 +39,11 @@ type FieldRenderers = {
   [key in FieldType]: FieldRenderer<key>;
 };
 
+const isArrOfStrOrNull = (arr: unknown[]): arr is (string | null)[] =>
+  arr.every(val => isString(val) || val === null);
+const isArrOfStrOrNum = (arr: unknown[]): arr is (string | number)[] =>
+  arr.every(val => isString(val) || Number.isFinite(val));
+
 /**
  * Note that field renderers provide their own HRs. In the current
  * implementation, each form field provides one bottom HR, while the default `form`
@@ -58,6 +64,9 @@ const fieldRenderers: FieldRenderers = {
     if (!options) throw new Error('Cycle requires options');
     if (currValue === undefined) {
       throw new Error('Cycle value must be a string or null');
+    }
+    if (!isArrOfStrOrNull(options)) {
+      throw new Error('Cycle options must be only string or null');
     }
     return [
       CycleField<string | null>({
@@ -117,6 +126,9 @@ const fieldRenderers: FieldRenderers = {
         'SelectMulti requires options, default selection, and label.'
       );
     }
+    if (!isArrOfStrOrNum(options)) {
+      throw new Error('SelectMulti options must be only string or number');
+    }
     return [
       SelectMultiField({
         ...commonOpts(opts),
@@ -134,6 +146,9 @@ const fieldRenderers: FieldRenderers = {
     if (!(options && label)) {
       throw new Error('Radio requires options and label.');
     }
+    if (!isArrOfStrOrNum(options)) {
+      throw new Error('Radio options must be only string or number');
+    }
     return [
       RadioField({ ...commonOpts(opts), onChange, options, currValue, label }),
       HR(),
@@ -143,6 +158,9 @@ const fieldRenderers: FieldRenderers = {
   dropdown: opts => {
     const { currValue, onChange, options } = opts;
     if (!options) throw new Error('Dropdown requires options.');
+    if (!isArrOfStrOrNum(options)) {
+      throw new Error('Dropdown options must be only string or number');
+    }
     return [
       DropdownField<string | number>({
         ...commonOpts(opts),
