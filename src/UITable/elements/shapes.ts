@@ -160,7 +160,7 @@ export class Container extends Element<
   }
 
   private getBgColor() {
-    return parseColor(this.style.bgColor ?? getColor('bg'), this.style);
+    return this.style.bgColor ?? getColor('bg');
   }
 
   private wrapRowsWithSpacingAndBorder(contents: BaseRowOpts[]) {
