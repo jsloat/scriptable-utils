@@ -147,7 +147,7 @@ const COLOR_ALIASES = {
   bg: new EnhancedColor({
     label: 'bg',
     lightColor: COLORS.white,
-    darkColor: COLORS.black,
+    darkColor: c`1c1c1e`,
   }),
   primaryTextColor: new EnhancedColor({
     label: 'primaryTextColor',
