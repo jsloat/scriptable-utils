@@ -15,7 +15,6 @@ import {
   fillInCellWidthBlanks,
   getContainerSurroundingRowsOpts,
   normalizeCellWidthPercentages,
-  parseColor,
   parsePercent,
   parseRowHeight,
   tapPropsToBaseRowOpts,
@@ -190,7 +189,7 @@ export class Container extends Element<
   private getPartialBaseRowOpts(): BaseRowOpts {
     return {
       height: parseRowHeight(this.style),
-      bgColor: parseColor(this.getBgColor(), this.style),
+      bgColor: this.getBgColor(),
       ...tapPropsToBaseRowOpts(this.tapProps),
     };
   }

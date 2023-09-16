@@ -6,7 +6,6 @@ import presetStyles, { FlavorKey } from './presetStyles';
 import { ContainerStyle } from './shapes';
 import ThreeCol from './ThreeCol';
 import { TapProps } from './types';
-import { parseColor } from './utils';
 
 type OwnButtonOpts = {
   icon: IconOrSFKey;
@@ -96,7 +95,6 @@ export default ({
     );
   }
 
-  const from = parseColor(bgColor, { isFaded: composedButtonStyle.isFaded });
   const el = NonCascadingDiv(
     [
       ThreeCol({
@@ -109,7 +107,7 @@ export default ({
         borderTop: bgColor.hex === getColor('bg').hex ? [1, getColor('hr')] : 0,
       }),
       Gradient({
-        from,
+        from: bgColor,
         mode: 'DOWN',
         ...(shouldFadeGradientToTextColor(flavor) && { to: color }),
       }),
