@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { isString } from '../common';
 import { getConfig } from '../configRegister';
-import { isEqual, objectKeys } from '../object';
+import { objectKeys } from '../object';
 import Stream from '../streams/Stream';
 import {
   AnyObj,
@@ -91,9 +91,6 @@ type MaybePromiseWithoutPayload<R> = {
   (opts: { useCache: true }): R;
 };
 
-const willCacheChange = <T>(ioObj: IOObject<T>, newData: T) =>
-  Boolean(ioObj.cache$ && !isEqual(ioObj.cache$.getData().data, newData));
-
 type GetData<T> = MaybePromiseWithoutPayload<T>;
 const getGetData = <T>(ioObj: IOObject<T>) =>
   (({ useCache = USE_CACHE_DEFAULT }: { useCache?: boolean } = {}): unknown => {
@@ -110,10 +107,7 @@ const getGetData = <T>(ioObj: IOObject<T>) =>
       _getPersistedJson(ioObj).then(persistedData => {
         const parsedData = persistedData ?? defaultData;
         if (cache$) {
-          cache$.setData(
-            { data: parsedData },
-            { suppressChangeTrigger: !willCacheChange(ioObj, parsedData) }
-          );
+          cache$.setData({ data: parsedData });
         }
         resolve(parsedData);
       });
@@ -137,10 +131,7 @@ const getWrite =
         : JSON.stringify(data, null, prettify ? 2 : undefined)
     );
     if (cache$) {
-      cache$.setData(
-        { data },
-        { suppressChangeTrigger: !willCacheChange(ioObj, data) }
-      );
+      cache$.setData({ data });
     }
     return data;
   };
