@@ -113,11 +113,8 @@ export const fade = (color: Color, change = 0.4) =>
 
 export const getBookmarkedPath = (bookmarkName: string) => {
   const f = FileManager.iCloud();
-  if (!f.bookmarkExists(bookmarkName))
-    throw new Error(
-      `File bookmark "${bookmarkName}" doesn't exist on this device.`
-    );
-  return f.bookmarkedPath(bookmarkName);
+  // File bookmark doesn't exist on this device.
+  return f.bookmarkExists(bookmarkName) ? f.bookmarkedPath(bookmarkName) : null;
 };
 
 export class ErrorWithPayload extends Error {
