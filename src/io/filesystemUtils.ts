@@ -8,15 +8,22 @@ import { DocumentsDir, DOCUMENTS_SUB_DIRECTORY_NAMES, FileInfo } from './types';
 export const PROJECT_ARCHIVE_DIR_NAME = '*Archive';
 
 /** Get the path to one of the 3 core subdirectories of Documents. */
-export const getDocumentsChildDirPath = (dirKey: DocumentsDir) =>
-  `${getBookmarkedPath('Documents')}/${DOCUMENTS_SUB_DIRECTORY_NAMES[dirKey]}`;
+export const getDocumentsChildDirPath = (dirKey: DocumentsDir) => {
+  const docsPath = getBookmarkedPath('Documents');
+  return docsPath
+    ? `${docsPath}/${DOCUMENTS_SUB_DIRECTORY_NAMES[dirKey]}`
+    : null;
+};
 
 export const getProjectsRootPath = () => getDocumentsChildDirPath('project');
 
 export const getDocumentsCategoryChildDirPath = (
   category: DocumentsDir,
   dirName: string
-) => `${getDocumentsChildDirPath(category)}/${dirName}`;
+) => {
+  const childDirPath = getBookmarkedPath('Documents');
+  return childDirPath ? `${childDirPath}/${dirName}` : null;
+};
 
 export const getProjectPath = (projName: string) =>
   getDocumentsCategoryChildDirPath('project', projName);
@@ -30,7 +37,10 @@ export const createDirIfNotExists = (dirPath: string) => {
 export const createDocumentsSubdirectoryIfNotExists = (
   category: DocumentsDir,
   dirName: string
-) => createDirIfNotExists(`${getDocumentsChildDirPath(category)}/${dirName}`);
+) => {
+  const childPath = getDocumentsChildDirPath(category);
+  return childPath ? createDirIfNotExists(`${childPath}/${dirName}`) : null;
+};
 
 /** Returns dir path for this month's archived files */
 export const getArchiveDir = () => {
@@ -38,7 +48,7 @@ export const getArchiveDir = () => {
   const year = String(now.getFullYear());
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const yearPath = createDocumentsSubdirectoryIfNotExists('archive', year);
-  return createDirIfNotExists(`${yearPath}/${month}`);
+  return yearPath ? createDirIfNotExists(`${yearPath}/${month}`) : null;
 };
 
 export const createFileDirForProjectIfNotExists = (projName: string) =>
@@ -64,11 +74,13 @@ export const getDirContents = (filePath: string) =>
     .listContents(filePath)
     .map(childName => getFileInfo(`${filePath}/${childName}`));
 
-const getActiveFileProjectsInfo = () =>
-  getDirContents(getProjectsRootPath()).filter(
+const getActiveFileProjectsInfo = () => {
+  const projectPath = getProjectsRootPath();
+  return (projectPath ? getDirContents(projectPath) : []).filter(
     ({ isDirectory, filenameNoExtension }) =>
       isDirectory && filenameNoExtension !== PROJECT_ARCHIVE_DIR_NAME
   );
+};
 
 export const getProjectDirContents = (projName: string) => {
   const allProjectFolders = getActiveFileProjectsInfo();
@@ -78,13 +90,16 @@ export const getProjectDirContents = (projName: string) => {
   if (!match) {
     throw new Error(`Project ${projName} not found in projects folder`);
   }
-  return getDirContents(getProjectPath(match.filenameNoExtension));
+  const projPath = getProjectPath(match.filenameNoExtension);
+  return projPath ? getDirContents(projPath) : null;
 };
 
-export const getArchivedProjectFilepath = (projName: string) =>
-  `${getBookmarkedPath('Documents')}/${
-    DOCUMENTS_SUB_DIRECTORY_NAMES.project
-  }/${PROJECT_ARCHIVE_DIR_NAME}/${projName}`;
+export const getArchivedProjectFilepath = (projName: string) => {
+  const docsPath = getBookmarkedPath('Documents');
+  return docsPath
+    ? `${docsPath}/${DOCUMENTS_SUB_DIRECTORY_NAMES.project}/${PROJECT_ARCHIVE_DIR_NAME}/${projName}`
+    : null;
+};
 
 type GetSafeFilePathOpts = {
   parentDirPath: string;
@@ -163,12 +178,15 @@ export const moveFile = (
   });
 };
 
-export const archiveProject = (projName: string, silentlyRename = false) =>
-  moveFile(
-    getProjectPath(projName),
-    getProjectPath(PROJECT_ARCHIVE_DIR_NAME),
-    silentlyRename
-  );
+export const archiveProject = async (
+  projName: string,
+  silentlyRename = false
+) => {
+  const sourcePath = getProjectPath(projName);
+  const targetPath = getProjectPath(PROJECT_ARCHIVE_DIR_NAME);
+  if (!(sourcePath && targetPath)) return false;
+  return await moveFile(sourcePath, targetPath, silentlyRename);
+};
 
 export const renameFile = (
   filePath: string,
