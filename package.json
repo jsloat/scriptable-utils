@@ -1,6 +1,6 @@
 {
   "name": "scriptable-utils",
-  "version": "2.1.1",
+  "version": "2.1.2-candidate",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,6 +14,7 @@
     "lint": "source ./scripts.sh; lint",
     "lint_compact": "source ./scripts.sh; lint_compact",
     "build": "rm -rf ./dist;tsc --declaration",
+    "prepare": "npm run build",
     "release": "yarn build; np"
   },
   "repository": {
