@@ -30,7 +30,7 @@ export const getProjectPath = (projName: string) =>
 
 export const createDirIfNotExists = (dirPath: string) => {
   const f = FileManager.iCloud();
-  if (!f.fileExists(dirPath)) f.createDirectory(dirPath);
+  if (!f.fileExists(dirPath)) f.createDirectory(dirPath, true);
   return dirPath;
 };
 
