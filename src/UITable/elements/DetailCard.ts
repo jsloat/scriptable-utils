@@ -52,7 +52,7 @@ const CardTitle = ({
   Div(
     [
       P(title, { color: titleColor }),
-      Icon(titleIcon ?? 'arrow_right', { width: '10%' }),
+      titleIcon && Icon(titleIcon, { width: '10%' }),
     ],
     { paddingTop: 10, paddingBottom: hasDetails ? 0 : 10 }
   );

@@ -26,7 +26,9 @@ export const insertBetween = <T, U>(arr: T[], between: U) =>
         isLastArrIndex(i, arr) ? item : [item, between]
       );
 
-export const hasLength = <T>(arr: T[]): arr is [T, ...T[]] => arr.length > 0;
+export type LengthyArr<T> = [T, ...T[]];
+
+export const hasLength = <T>(arr: T[]): arr is LengthyArr<T> => arr.length > 0;
 
 export const isHomogeneous = <T>(
   arr: T[],
