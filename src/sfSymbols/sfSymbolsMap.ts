@@ -8,6 +8,7 @@ export default {
   arrow_right: 'arrow.right',
   arrow_up: 'arrow.up',
   arrow_uturn_down: 'arrow.uturn.down',
+  asterisk: 'asterisk',
   attachment: 'paperclip',
   backlog: 'arrowtriangle.left',
   bell_fill: 'bell.fill',
