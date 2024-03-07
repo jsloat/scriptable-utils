@@ -38,6 +38,7 @@ export {
   H2,
   HR,
   HSpace,
+  VSpace,
   Icon,
   Img,
   NonCascadingDiv,

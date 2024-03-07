@@ -202,11 +202,16 @@ export const getDynamicColor = (
 export const getColors = () =>
   objectFromEntries(colorKeys.map(key => [key, getColor(key)]));
 
-export const getEnhancedColor = (key: ColorKey): EnhancedColor => {
-  const val = getKeyVal(key);
+export const getEnhancedColor = (
+  keyOrColor: ColorKey | Color
+): EnhancedColor => {
+  const val = isString(keyOrColor) ? getKeyVal(keyOrColor) : keyOrColor;
   return isEnhancedColor(val)
     ? val
-    : new EnhancedColor({ label: key, staticColor: val });
+    : new EnhancedColor({
+        label: isString(keyOrColor) ? keyOrColor : UUID.string(),
+        staticColor: val,
+      });
 };
 
 export const getDomainColor = (domain: Domain) =>
