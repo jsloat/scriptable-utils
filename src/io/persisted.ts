@@ -12,7 +12,7 @@ import {
   UnwrapArr,
 } from '../types/utilTypes';
 
-type CreateIObjectOpts<T> = {
+export type CreateIObjectOpts<T> = {
   filename: string;
   defaultData: T;
   directory?: string;
