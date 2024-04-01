@@ -93,7 +93,10 @@ type MaybePromiseWithoutPayload<R> = {
 
 type GetData<T> = MaybePromiseWithoutPayload<T>;
 const getGetData = <T>(ioObj: IOObject<T>) =>
-  (({ useCache = USE_CACHE_DEFAULT }: { useCache?: boolean } = {}): unknown => {
+  (({
+    useCache = USE_CACHE_DEFAULT,
+    suppressChangeTrigger = false,
+  }: { useCache?: boolean; suppressChangeTrigger?: boolean } = {}): unknown => {
     const { cache$, defaultData } = ioObj;
     if (useCache) {
       if (!cache$) {
@@ -107,7 +110,7 @@ const getGetData = <T>(ioObj: IOObject<T>) =>
       _getPersistedJson(ioObj).then(persistedData => {
         const parsedData = persistedData ?? defaultData;
         if (cache$) {
-          cache$.setData({ data: parsedData });
+          cache$.setData({ data: parsedData }, { suppressChangeTrigger });
         }
         resolve(parsedData);
       });

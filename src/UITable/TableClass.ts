@@ -2,6 +2,7 @@ import { ExcludeFalsy } from '../common';
 import { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
 import { getIconPreloadHelpers } from '../sfSymbols';
+import { Stream } from '../streams';
 import { AnyObj, NoParamFn } from '../types/utilTypes';
 import {
   AfterFirstRender,
@@ -21,26 +22,49 @@ import {
 } from './types';
 import { catchTableError, reloadTableRows } from './utils';
 
-const getConnected$Poller = <$Data extends AnyObj>(
-  { $, ...timerOpts }: Connected$Opts<$Data>,
-  onUpdate: NoParamFn
-) => {
-  let hasQueuedUpdate = false;
-  const callbackId = UUID.string();
-  $.registerUpdateCallback({
-    callback: () => (hasQueuedUpdate = true),
-    callbackId,
-  });
-  const timer = new RepeatingTimer({
-    ...timerOpts,
-    onFire: () => {
-      if (!hasQueuedUpdate) return;
-      hasQueuedUpdate = false;
-      onUpdate();
-    },
-  });
-  return { timer, cleanup: () => $.unregisterUpdateCallback(callbackId) };
+type GetConnected$PollerOpts<$Data extends AnyObj> = {
+  connected$: Connected$Opts<$Data>;
+  onUpdate: NoParamFn;
+  tableName: string;
 };
+class Connected$Poller<$Data extends AnyObj> {
+  private connected$: Stream<$Data>;
+  private hasQueuedUpdate: boolean = false;
+  private timer: RepeatingTimer;
+  private callbackId: string;
+
+  constructor({
+    connected$,
+    onUpdate,
+    tableName,
+  }: GetConnected$PollerOpts<$Data>) {
+    const { $, ...timerOpts } = connected$;
+    this.connected$ = $ as Stream<$Data>;
+    this.callbackId = `Connected$ for table: ${tableName}`;
+    this.timer = new RepeatingTimer({
+      ...timerOpts,
+      onFire: () => {
+        if (this.hasQueuedUpdate) {
+          this.hasQueuedUpdate = false;
+          onUpdate();
+        }
+      },
+    });
+  }
+
+  start() {
+    this.connected$.registerUpdateCallback({
+      callbackId: this.callbackId,
+      callback: () => (this.hasQueuedUpdate = true),
+    });
+    this.timer.start();
+  }
+
+  cleanup() {
+    this.timer.stop();
+    this.connected$.unregisterUpdateCallback(this.callbackId);
+  }
+}
 
 //
 
@@ -77,14 +101,13 @@ class CallbackRegister {
 //
 
 export class Table<State, Props, $Data extends AnyObj | undefined> {
-  private table: UITable;
+  private table = new UITable();
   // Don't store connected$ props in this stream, since  we will be duplicating
   // potentially huge amounts of data in the table. Rather, update the
   // `connected$ChangeCount` attribute with any stream change, thus triggering
   // changes for any callbacks/subscriptions to this stream. Use `getProps` to
   // access the combined props.
   private payload$: Payload$<State, Props>;
-  private connected$Poller?: RepeatingTimer;
   private name: string;
   private callbackID: string;
   private isActive = false;
@@ -102,7 +125,7 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     props: boolean;
     runPrerenderCallbacks: boolean;
   };
-  private renderCount: RenderCount;
+  private renderCount: RenderCount = 'NONE';
   private defaultState?: State;
   private loadProps?: LoadProps<Props>;
   private getRows?: GetRows;
@@ -118,7 +141,6 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     syncedPersistedState,
     connected$,
   }: TableOpts<State, Props, $Data>) {
-    this.table = new UITable();
     this.table.showSeparators = showSeparators;
     this.name = name;
     this.fullscreen = fullscreen;
@@ -132,26 +154,25 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
       props: false,
       runPrerenderCallbacks: false,
     };
-    this.renderCount = 'NONE';
     this.callbackID = `Table: ${name}`;
 
     if (connected$) {
-      const connected$Poller = getConnected$Poller(connected$, () => {
-        const updated$Data = connected$.$.getData();
-        this.payload$.updateData(({ connected$ChangeCount, ...rest }) => ({
-          connected$ChangeCount: (connected$ChangeCount || 0) + 1,
-          ...rest,
-        }));
-        this.onConnected$Update?.(updated$Data as $Data);
+      const connected$Poller = new Connected$Poller({
+        connected$,
+        tableName: name,
+        onUpdate: () => {
+          const updated$Data = connected$.$.getData();
+          this.payload$.updateData(({ connected$ChangeCount, ...rest }) => ({
+            connected$ChangeCount: (connected$ChangeCount || 0) + 1,
+            ...rest,
+          }));
+          this.onConnected$Update?.(updated$Data as $Data);
+        },
       });
-      this.connected$Poller = connected$Poller.timer;
       this.callbackRegister.set(
         'connected$Poller',
-        () => this.connected$Poller!.start(),
-        () => {
-          this.connected$Poller!.stop();
-          connected$Poller.cleanup();
-        }
+        () => connected$Poller.start(),
+        () => connected$Poller.cleanup()
       );
     }
 
@@ -276,6 +297,8 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     this.isActive = false;
     await this.onDismiss?.();
     this.callbackRegister.cleanupAll();
+    this.has.runPrerenderCallbacks = false;
+    this.renderCount = 'NONE';
   }
 
   // This function, on paper, does not always return `Promise<State>`. However
