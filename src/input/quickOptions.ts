@@ -17,17 +17,17 @@ type SharedOpts<Returns> = Pick<
 > & { onOptionSelect?: MapFn<Returns, any>; onCancel?: NoParamFn };
 
 type QuickOptions = {
-  /** String options */
-  <Label extends string>(
-    listOptions: Label[],
-    opts?: SharedOpts<Label>
-  ): Promise<Label | null>;
-
   /** Labeled-value options */
   <Label extends string, Value>(
     listOptions: (LabeledValue<Value, Label> | Falsy)[],
     opts?: SharedOpts<Value>
   ): Promise<Value | null>;
+
+  /** String options */
+  <Label extends string>(
+    listOptions: Label[],
+    opts?: SharedOpts<Label>
+  ): Promise<Label | null>;
 };
 
 const quickOptions: QuickOptions = async (
