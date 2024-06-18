@@ -3,7 +3,7 @@ import { objectFromEntries } from '../common';
 import { isIn } from '../flow';
 import { objectEntries } from '../object';
 import { Percent } from './Row';
-import { parsePercent } from './elements';
+import { parsePercent } from './elements/utils';
 
 type GridKey = string | number | symbol;
 
