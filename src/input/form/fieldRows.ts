@@ -473,7 +473,7 @@ export const NumberField = (opts: NumberOpts) => {
         ...(isNumber(currValue) && { initValue: String(currValue) }),
         placeholder: isNumber(currValue) ? String(currValue) : '42',
       });
-      const parsed = newVal && Number.parseInt(newVal);
+      const parsed = newVal && Number.parseFloat(newVal);
       if (isNumber(parsed) && parsed !== currValue) onChange(parsed);
     },
     isFaded: !isNumber(currValue),
