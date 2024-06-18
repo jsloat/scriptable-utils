@@ -86,3 +86,4 @@ export {
 } from './elements';
 export { default as getTable } from './getTable';
 export * from './types';
+export * from './grid';

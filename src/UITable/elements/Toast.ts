@@ -1,5 +1,6 @@
 import { getColor, getDynamicColor } from '../../colors';
 import { isNumber } from '../../common';
+import { getGrid, Grid } from '../grid';
 import Div, { NonCascadingDiv } from './Div';
 import Gradient from './Gradient';
 import HSpace from './HSpace';
@@ -9,6 +10,17 @@ import presetStyles, { FlavorKey } from './presetStyles';
 import Span from './Span';
 import { TapProps } from './types';
 
+type ToastGrid = Grid<
+  'metadata' | 'metadataIcon' | 'leftIcon' | 'leftIconSpacing'
+>;
+
+const toastGrid: ToastGrid = getGrid({
+  metadata: '15%',
+  metadataIcon: '8%',
+  leftIcon: '10%',
+  leftIconSpacing: '3%',
+});
+
 export type ToastProps = {
   title: string;
   icon: IconOrSFKey;
@@ -16,6 +28,7 @@ export type ToastProps = {
   metadata?: number | string;
   showCloseIcon?: boolean;
   description?: string;
+  grid?: ToastGrid;
 } & TapProps;
 
 /** Flavors that shouldn't be used for the left icon's accent color, as they
@@ -29,6 +42,7 @@ export default ({
   flavor = 'secondary',
   metadata,
   description,
+  grid = toastGrid,
   ...tapProps
 }: ToastProps) => {
   const accentColor = presetStyles().flavors[flavor].bgColor;
@@ -38,19 +52,20 @@ export default ({
   const mainRowRightIcons = Span(
     [
       (metadata || isNumber(metadata)) &&
-        P(String(metadata), { align: 'center', width: '15%' }),
-      showCloseIcon && Icon('x_in_circle', { width: '8%' }),
+        P(String(metadata), { align: 'center', width: grid.metadata }),
+      showCloseIcon && Icon('x_in_circle', { width: grid.metadataIcon }),
     ],
     { font: () => Font.footnote(), align: 'center', isFaded: true }
   );
 
   const mainRow = Div([
     Icon(icon, {
-      width: '10%',
+      width: grid.leftIcon,
       ...(!BANNED_ICON_COLOR_FLAVORS.includes(flavor) && {
         color: accentColor,
       }),
     }),
+    HSpace(grid.leftIconSpacing),
     P(title),
     mainRowRightIcons,
   ]);
