@@ -102,8 +102,8 @@ const getPrimitiveSorter =
   }: SortByTypeOpts<T, Compare> = {}) =>
     sortByComparison({
       getValue: (entity: T) => mapValue(getValue(entity)),
-      shouldRaiseA: (a, b) => (a && b ? (isDesc ? a > b : b > a) : false),
-      shouldRaiseB: (a, b) => (a && b ? (isDesc ? a < b : b < a) : false),
+      shouldRaiseA: (a, b) => (a && b ? (isDesc ? a > b : b > a) : Boolean(a)),
+      shouldRaiseB: (a, b) => (a && b ? (isDesc ? a < b : b < a) : Boolean(b)),
     });
 
 export const sortByString = getPrimitiveSorter<string | null | undefined>(
