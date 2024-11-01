@@ -5,14 +5,14 @@ import { DEFAULT_DEBUG_OPTS, fetchDebug } from './debug';
 import { FetchOpts, ParsedFetchOpts } from './types';
 import { maybeCensorHeaders } from './utils';
 
-const getBody = ({ body, contentType }: ParsedFetchOpts) => {
+const getBody = <R>({ body, contentType }: ParsedFetchOpts<R>) => {
   if (!body) return null;
   if (isString(body)) return body;
   const isBodyUrlEncoded = contentType === 'application/x-www-form-urlencoded';
   return isBodyUrlEncoded ? getUrlEncodedParams(body) : JSON.stringify(body);
 };
 
-const getRequestAttributes = (opts: ParsedFetchOpts) => ({
+const getRequestAttributes = <R>(opts: ParsedFetchOpts<R>) => ({
   body: getBody(opts),
   headers: {
     'Content-Type': opts.contentType,
@@ -21,7 +21,7 @@ const getRequestAttributes = (opts: ParsedFetchOpts) => ({
 });
 
 /** Gets an object which describes the ongoing request for debug logging. */
-const getRequestLogMessage = (opts: ParsedFetchOpts) => {
+const getRequestLogMessage = <R>(opts: ParsedFetchOpts<R>) => {
   const { body, headers } = getRequestAttributes(opts);
   return {
     ...opts,
@@ -30,7 +30,7 @@ const getRequestLogMessage = (opts: ParsedFetchOpts) => {
   };
 };
 
-const getRequest = (opts: ParsedFetchOpts) => {
+const getRequest = <R>(opts: ParsedFetchOpts<R>) => {
   const { url, method } = opts;
   const { body, headers } = getRequestAttributes(opts);
   const req = new Request(url);
@@ -40,10 +40,10 @@ const getRequest = (opts: ParsedFetchOpts) => {
   return req;
 };
 
-const parseFetchOpts = ({
+const parseFetchOpts = <R>({
   debug = DEFAULT_DEBUG_OPTS,
   ...restOpts
-}: FetchOpts): ParsedFetchOpts => ({ debug, ...restOpts });
+}: FetchOpts<R>): ParsedFetchOpts<R> => ({ debug, ...restOpts });
 
 const isStatusCodeError = (code: unknown) => {
   const str = String(code);
@@ -76,19 +76,20 @@ const getResponseError = (response: unknown): string | null => {
   }
 };
 
-export default async <Returns = unknown>(opts: FetchOpts) => {
+export default async <Returns = unknown>(opts: FetchOpts<Returns>) => {
   const parsedOpts = parseFetchOpts(opts);
   const log = (message: any, isVerbose = false) =>
     fetchDebug({ message: String(message), parsedOpts, isVerbose });
-  await log(`Initiating request to "${opts.url}"...`);
+  const { url, fetchFnKey, responseValidator } = parsedOpts;
+
+  await log(`Initiating request to "${url}"...`);
   log(getRequestLogMessage(parsedOpts));
   const requestObj = getRequest(parsedOpts);
 
-  // Intentionally not trying or catching here -- this is the responsibility of
-  // the calling function.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const response = (await requestObj[opts.fetchFnKey]()) as unknown;
+  const response = (await requestObj[fetchFnKey]()) as unknown;
   await log({ response }, true);
+
   const { statusCode } = requestObj.response;
   const isErrorCode = isStatusCodeError(statusCode);
   if (isErrorCode) {
@@ -99,5 +100,20 @@ export default async <Returns = unknown>(opts: FetchOpts) => {
     log({ error });
     throw error;
   }
+
+  // Check that response type is as expected
+  if (responseValidator) {
+    try {
+      const { isValid, errorMessage } = responseValidator(response as Returns);
+      if (!isValid) throw new Error(errorMessage ?? 'validation failed');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'can not parse error';
+      throw new Error(
+        `Error during responseValidator execution: ${errorMessage}`
+      );
+    }
+  }
+
   return response as Returns;
 };

@@ -8,19 +8,19 @@ export const DEFAULT_DEBUG_OPTS: DebugOpts = {
   includeVerbose: false,
 };
 
-type FetchDebugOpts = {
+type FetchDebugOpts<R> = {
   message: any;
   /** Is the message being logged verbose? */
   isVerbose?: boolean;
-  parsedOpts: ParsedFetchOpts;
+  parsedOpts: ParsedFetchOpts<R>;
 };
-export const fetchDebug = ({
+export const fetchDebug = <R>({
   message,
   isVerbose = false,
   parsedOpts: {
     debug: { enabled, logToPersistedLog, includeVerbose },
   },
-}: FetchDebugOpts) => {
+}: FetchDebugOpts<R>) => {
   if (!enabled) return;
   if (isVerbose && !includeVerbose) return;
   return logToPersistedLog ? PersistedLog.log(message) : tidyLog(message);

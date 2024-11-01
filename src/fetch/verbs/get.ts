@@ -1,18 +1,18 @@
 import fetchBase from '../fetchBase';
 import { FetchImplementationOpts, FetchOpts } from '../types';
 
-const getArgs = (
-  contentType: FetchOpts['contentType'],
-  fetchFnKey: FetchOpts['fetchFnKey'],
-  opts: FetchImplementationOpts
-): FetchOpts => ({
+const getArgs = <R>(
+  contentType: FetchOpts<R>['contentType'],
+  fetchFnKey: FetchOpts<R>['fetchFnKey'],
+  opts: FetchImplementationOpts<R>
+): FetchOpts<R> => ({
   method: 'GET',
   contentType,
   fetchFnKey,
   ...opts,
 });
 
-export const getJson = <R>(opts: FetchImplementationOpts) =>
+export const getJson = <R>(opts: FetchImplementationOpts<R>) =>
   fetchBase<R>(getArgs('application/json', 'loadJSON', opts));
 
 // export const getString = <R>(opts: FetchImplementationOpts) =>

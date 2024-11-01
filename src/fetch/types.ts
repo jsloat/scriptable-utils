@@ -9,21 +9,25 @@ export type DebugOpts = {
   includeVerbose?: boolean;
 };
 
-export type FetchOpts = Pick<Request, 'url' | 'headers' | 'method'> & {
+export type FetchOpts<R> = Pick<Request, 'url' | 'headers' | 'method'> & {
   contentType: string;
   fetchFnKey: FunctionKeys<Request>;
   body?: string | AnyObj;
   debug?: DebugOpts;
+  responseValidator?: (response: R) => {
+    isValid: boolean;
+    errorMessage?: string;
+  };
 };
 
-export type ParsedFetchOpts = MakeSomeReqd<FetchOpts, 'debug'>;
+export type ParsedFetchOpts<R> = MakeSomeReqd<FetchOpts<R>, 'debug'>;
 
 /**
  * When implemented, the fetch fn and method are known, and content type
  * has a default value
  */
-export type FetchImplementationOpts = Omit<
-  FetchOpts,
+export type FetchImplementationOpts<R> = Omit<
+  FetchOpts<R>,
   'fetchFnKey' | 'method' | 'contentType'
 > &
-  Partial<Pick<FetchOpts, 'contentType'>>;
+  Partial<Pick<FetchOpts<R>, 'contentType'>>;

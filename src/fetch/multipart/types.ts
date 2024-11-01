@@ -7,7 +7,7 @@ export type MultipartRequest = Pick<Request, 'url' | 'method'> & {
 };
 
 export type MultipartOpts = Omit<
-  FetchImplementationOpts,
+  FetchImplementationOpts<string>,
   'body' | 'contentType'
 > & {
   requests: MultipartRequest[];
