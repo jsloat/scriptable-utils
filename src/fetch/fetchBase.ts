@@ -110,7 +110,7 @@ export default async <Returns = unknown>(opts: FetchOpts<Returns>) => {
       const errorMessage =
         error instanceof Error ? error.message : 'can not parse error';
       throw new Error(
-        `Error during responseValidator execution: ${errorMessage}`
+        `Validation error in ${fetchFnKey}(${url}): "${errorMessage}"`
       );
     }
   }
