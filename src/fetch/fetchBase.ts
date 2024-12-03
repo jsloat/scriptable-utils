@@ -78,8 +78,8 @@ const getResponseError = (response: unknown): string | null => {
 
 export default async <Returns = unknown>(opts: FetchOpts<Returns>) => {
   const parsedOpts = parseFetchOpts(opts);
-  const log = (message: any, isVerbose = false) =>
-    fetchDebug({ message: String(message), parsedOpts, isVerbose });
+  const log = (message: unknown, isVerbose = false) =>
+    fetchDebug({ message, parsedOpts, isVerbose });
   const { url, fetchFnKey, responseValidator } = parsedOpts;
 
   await log(`Initiating request to "${url}"...`);
