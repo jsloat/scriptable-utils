@@ -227,7 +227,7 @@ const hierarchyData: PreviewHierarchy = {
           listChooseWithCustom(
             ['First option', 'Second option', 'Third option'],
             {
-              fallbackIcon: 'task_incomplete',
+              fallbackIcon: 'square',
               onOptionSelect: opt => notifyNow(`Selected: ${opt}`),
             }
           ),
@@ -345,7 +345,7 @@ const hierarchyData: PreviewHierarchy = {
             Div([
               DetailCard({
                 title: 'Card 1',
-                titleIcon: 'go_forward',
+                titleIcon: 'arrow.right.circle',
                 containerStyle: { borderTop: 1, borderBottom: 1 },
                 details: [
                   { text: 'A fact', icon: 'person' },
@@ -354,7 +354,7 @@ const hierarchyData: PreviewHierarchy = {
               }),
               DetailCard({
                 title: 'Card 2',
-                titleIcon: 'go_forward',
+                titleIcon: 'arrow.right.circle',
                 containerStyle: { borderTop: 1, borderBottom: 1 },
                 details: [
                   { text: 'A fact', icon: 'person' },
@@ -370,7 +370,7 @@ const hierarchyData: PreviewHierarchy = {
           popup([
             H1('The table title'),
             H1('With customization', {
-              icon: 'edit',
+              icon: 'pencil',
               subtitle: 'A subtitle here, with custom color',
               subtitleColor: Color.blue(),
             }),
@@ -381,7 +381,7 @@ const hierarchyData: PreviewHierarchy = {
         showPreview: () =>
           popup([
             H2('A slightly smaller header'),
-            H2('An H2 with an optional icon', { icon: 'expand' }),
+            H2('An H2 with an optional icon', { icon: 'plus.square' }),
           ]),
       },
 
@@ -417,7 +417,7 @@ const hierarchyData: PreviewHierarchy = {
         showPreview: () =>
           popup(
             ThreeCol({
-              icon: 'undo',
+              icon: 'arrow.uturn.left',
               text: 'This is the main text',
               metadata: 4,
             })

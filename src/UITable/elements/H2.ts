@@ -1,10 +1,10 @@
 import Div, { NonCascadingDiv } from './Div';
-import Icon, { IconOrSFKey } from './Icon';
+import Icon from './Icon';
 import P from './P';
 import { ContainerStyle } from './shapes';
 import { TapProps } from './types';
 
-export type H2Opts = { icon?: IconOrSFKey } & ContainerStyle & TapProps;
+export type H2Opts = { icon?: string } & ContainerStyle & TapProps;
 
 export default (text: string, { icon, ...restOpts }: H2Opts = {}) => {
   const el = NonCascadingDiv(

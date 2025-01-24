@@ -1,18 +1,15 @@
-import { isString } from '../../common';
-import { isIconKey } from '../../icons';
-import { isSFSymbolKey } from '../../sfSymbols/utils';
 import Div from './Div';
-import Icon, { IconOrSFKey } from './Icon';
+import Icon from './Icon';
 import P from './P';
 import { Cell, ContainerStyle } from './shapes';
 import { TapProps } from './types';
 import { numToPct } from './utils';
 
 type ThreeColOwnOpts = {
-  icon?: IconOrSFKey;
+  icon?: string;
   text: string;
   metadata?: string | number;
-  metadataIcon?: IconOrSFKey;
+  metadataIcon?: string;
 };
 
 type ThreeColOpts = ThreeColOwnOpts & ContainerStyle & TapProps;
@@ -27,10 +24,7 @@ const getMetadataCell = (
   metadataIcon: ThreeColOwnOpts['metadataIcon'],
   cascadedStyle: ContainerStyle & TapProps
 ): MetadataCellData => {
-  if (
-    isString(metadataIcon) &&
-    (isIconKey(metadataIcon) || isSFSymbolKey(metadataIcon))
-  ) {
+  if (metadataIcon) {
     return {
       metadataCell: Icon(metadataIcon, {
         ...cascadedStyle,

@@ -17,7 +17,6 @@ import {
   Predicate,
 } from '../types/utilTypes';
 import { Button, ButtonOpts, Div } from '../UITable';
-import { IconOrSFKey } from '../UITable/elements/Icon';
 import { Container } from '../UITable/elements/shapes';
 import getTable from '../UITable/getTable';
 import { H1, PaginationController, Spacer } from '../UITable/Row/templates';
@@ -27,7 +26,7 @@ import { FilterRecord, FilterWithState } from './entityFilter/types';
 import { getAppliedFiltersPredicate } from './entityFilter/utils';
 
 export type BulkAction<E> = {
-  icon: IconOrSFKey;
+  icon: string;
   label: string;
   onTap: MapFn<E[], any>;
   shouldHide?: MapFn<E[], boolean>;
@@ -245,7 +244,7 @@ export default async <E>({
     return {
       text: query ? `"${query}" (tap to clear)` : 'Search',
       isFaded: !query,
-      icon: 'search',
+      icon: 'magnifyingglass',
       onTap: async () => {
         if (query) {
           await clearSearchQuery();
@@ -264,7 +263,7 @@ export default async <E>({
     const { appliedFilters } = getState();
     return {
       text: 'Edit filters',
-      icon: 'filter',
+      icon: 'line.horizontal.3.decrease.circle',
       ...(appliedFilters.length > 0 && { metadata: appliedFilters.length }),
       onTap: async () => {
         const newFilters = await entityFilter({
@@ -286,7 +285,7 @@ export default async <E>({
     const areAllSelected = selectedEntityIds.size === allEntitiesCount;
     return {
       text: areAllSelected ? 'Clear selection' : 'Select all',
-      icon: areAllSelected ? 'cancel' : 'select_all',
+      icon: areAllSelected ? 'xmark' : 'square.grid.3x2',
       onTap: () =>
         areAllSelected ? deselectAll() : setSelectedIds(allEntityIds),
     };

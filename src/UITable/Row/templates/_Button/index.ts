@@ -9,7 +9,7 @@ export const Button = ({
   flavor,
   text,
   dismissOnTap,
-  icon = 'dot_in_circle',
+  icon = 'smallcircle.fill.circle',
   isDisabled,
   isFaded,
   isLarge,

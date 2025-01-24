@@ -127,7 +127,7 @@ type IncButtonProps = {
   isDisabled?: boolean;
 };
 const IncButton = ({ direction, increment, isDisabled }: IncButtonProps) =>
-  Div([Icon(direction === 'DOWN' ? 'chevron_down' : 'chevron_up')], {
+  Div([Icon(direction === 'DOWN' ? 'chevron.down' : 'chevron.up')], {
     height: 30,
     borderTop: 1,
     borderBottom: 1,

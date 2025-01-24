@@ -80,7 +80,6 @@ export {
   presetStyles,
   GradientMode,
   H2Opts,
-  IconOrSFKey,
   ToastProps,
   styled,
 } from './elements';

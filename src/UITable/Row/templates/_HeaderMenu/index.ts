@@ -57,8 +57,8 @@ const getEnhancedSettingOpts = (
 
 export default ({
   name,
-  icon = 'hamburger',
-  iconWhileOpen = 'x_in_square',
+  icon = 'text.justify',
+  iconWhileOpen = 'xmark.square',
   text = '',
   textWhileOpen,
   settingOpts,

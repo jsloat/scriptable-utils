@@ -7,7 +7,7 @@ export { default as H2, H2Opts } from './H2';
 export { default as HR } from './HR';
 export { default as HSpace } from './HSpace';
 export { default as VSpace } from './VSpace';
-export { default as Icon, IconOrSFKey } from './Icon';
+export { default as Icon } from './Icon';
 export { default as Img } from './Img';
 export { default as P } from './P';
 export { default as ProgressBar } from './ProgressBar';

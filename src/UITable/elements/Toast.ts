@@ -4,7 +4,7 @@ import { getGrid, Grid } from '../grid';
 import Div, { NonCascadingDiv } from './Div';
 import Gradient from './Gradient';
 import HSpace from './HSpace';
-import Icon, { IconOrSFKey } from './Icon';
+import Icon from './Icon';
 import P from './P';
 import presetStyles, { FlavorKey } from './presetStyles';
 import Span from './Span';
@@ -23,7 +23,7 @@ const toastGrid: ToastGrid = getGrid({
 
 export type ToastProps = {
   title: string;
-  icon: IconOrSFKey;
+  icon: string;
   flavor?: FlavorKey;
   metadata?: number | string;
   showCloseIcon?: boolean;
@@ -53,7 +53,7 @@ export default ({
     [
       (metadata || isNumber(metadata)) &&
         P(String(metadata), { align: 'center', width: grid.metadata }),
-      showCloseIcon && Icon('x_in_circle', { width: grid.metadataIcon }),
+      showCloseIcon && Icon('xmark.circle', { width: grid.metadataIcon }),
     ],
     { font: () => Font.footnote(), align: 'center', isFaded: true }
   );

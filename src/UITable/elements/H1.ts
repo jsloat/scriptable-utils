@@ -1,6 +1,6 @@
 import { conditionalArr } from '../../array';
 import Div from './Div';
-import Icon, { IconOrSFKey } from './Icon';
+import Icon from './Icon';
 import P from './P';
 import { ContainerStyle } from './shapes';
 import { CascadingStyle, TapProps } from './types';
@@ -10,7 +10,7 @@ type H1Opts = Partial<{
   subtitle: string;
   titleColor: Color;
   subtitleColor: Color;
-  icon?: IconOrSFKey;
+  icon?: string;
 }> &
   Pick<CascadingStyle, 'isFaded' | 'marginBottom' | 'marginTop'> &
   TapProps;
@@ -31,8 +31,8 @@ const getTopRow = (
   const hasOnTap = Boolean(
     tapProps.onTap || tapProps.onDoubleTap || tapProps.onTripleTap
   );
-  const displayedIcon: IconOrSFKey | null =
-    icon ?? (hasOnTap ? 'ellipsis_circle' : null);
+  const displayedIcon: string | null =
+    icon ?? (hasOnTap ? 'ellipsis.circle' : null);
   const textWidth = numToPct(100 - (displayedIcon ? ICON_WIDTH : 0));
   return Div(
     conditionalArr([

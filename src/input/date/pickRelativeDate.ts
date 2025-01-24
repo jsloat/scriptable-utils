@@ -122,7 +122,7 @@ const PrevCTA = connect(({ setState }) => {
   const isDisabled = !canGoBack();
   return NavCTA({
     text: 'Earlier',
-    icon: 'arrow_left',
+    icon: 'arrow.left',
     onTap: () =>
       !isDisabled &&
       setState({ startDate: getAdjacentStartDate({ goBack: true }) }),
@@ -133,7 +133,7 @@ const PrevCTA = connect(({ setState }) => {
 const NextCTA = connect(({ setState }) =>
   NavCTA({
     text: 'Later',
-    icon: 'arrow_right',
+    icon: 'arrow.right',
     onTap: () =>
       setState({ startDate: getAdjacentStartDate({ goBack: false }) }),
   })

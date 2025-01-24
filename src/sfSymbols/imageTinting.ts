@@ -9,21 +9,20 @@ import {
   throttledLogTintRequest,
 } from './preloadList';
 import replaceColorInCanvas from './replaceColorInCanvas';
-import symbolsMap from './sfSymbolsMap';
-import { SFSymbolKey, TintRequestKey } from './types';
+import { TintRequestKey } from './types';
 import { parseTintRequestKey } from './utils';
 
 const tintAndCacheImage = async (
   sfSymbolImg: Image,
   color: Color,
-  iconKey: SFSymbolKey
+  iconKey: string
 ) => {
   const tintedImg = await replaceColorInCanvas(sfSymbolImg, color);
   cacheTintedImage(iconKey, color.hex, tintedImg);
 };
 
-const getUntintedImage = (key: SFSymbolKey) => {
-  const symbol = SFSymbol.named(symbolsMap[key]);
+const getUntintedImage = (key: string) => {
+  const symbol = SFSymbol.named(key);
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!symbol) {
     throw new Error(`Invalid SFSymbol key: ${key}`);
@@ -52,7 +51,7 @@ const getPreloadIconQueue = (onBatchOperationDone?: NoParamFn) =>
 //
 
 export const getSfSymbolImg = (
-  key: SFSymbolKey,
+  key: string,
   color: Color | null = getColor('primaryTextColor')
 ) => {
   const untintedImg = getUntintedImage(key);

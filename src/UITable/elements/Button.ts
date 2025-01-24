@@ -1,14 +1,13 @@
 import { getColor } from '../../colors';
 import { NonCascadingDiv } from './Div';
 import Gradient from './Gradient';
-import { IconOrSFKey } from './Icon';
 import presetStyles, { FlavorKey } from './presetStyles';
 import { ContainerStyle } from './shapes';
 import ThreeCol from './ThreeCol';
 import { TapProps } from './types';
 
 type OwnButtonOpts = {
-  icon: IconOrSFKey;
+  icon: string;
   text: string;
   isDisabled?: boolean;
   isLarge?: boolean;

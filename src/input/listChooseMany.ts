@@ -62,7 +62,7 @@ export const listChooseMany = async <Label extends string, Value = Label>(
       return Div(
         [
           P(label),
-          Icon(isSelected ? 'task_complete' : 'task_incomplete', {
+          Icon(isSelected ? 'checkmark.square' : 'square', {
             width: '7%',
           }),
         ],

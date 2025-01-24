@@ -1,7 +1,6 @@
 import { ExcludeFalsy, isString } from '../common';
 import { noop } from '../flow';
 import { Falsy, MapFn, NoParamFn } from '../types/utilTypes';
-import { IconOrSFKey } from '../UITable/elements/Icon';
 import { FlavorOption } from '../UITable/Row/flavors';
 import fullscreenOpts, { FullscreenOptNode } from './fullscreenOpts';
 import textInput from './textInput';
@@ -10,13 +9,13 @@ type Opts<V> = {
   onOptionSelect?: MapFn<V>;
   onCancel?: NoParamFn;
   /** If provided, use this icon as the default */
-  fallbackIcon?: IconOrSFKey;
+  fallbackIcon?: string;
 };
 
 export type ListChooseOptionObj<L extends string, V> = {
   label: L;
   value: V;
-  icon?: IconOrSFKey;
+  icon?: string;
   flavor?: FlavorOption;
 };
 
@@ -61,7 +60,11 @@ const findResultValue = <V>(
 
 const listChoose: ListChoose = async <V>(
   options: AllOptionTypes<string, V>[],
-  { fallbackIcon = 'dot_in_circle', onCancel, onOptionSelect }: Opts<V> = {}
+  {
+    fallbackIcon = 'smallcircle.fill.circle',
+    onCancel,
+    onOptionSelect,
+  }: Opts<V> = {}
 ) => {
   const tappedLabel = await fullscreenOpts(
     options.filter(ExcludeFalsy).map<FullscreenOptNode>(option => {
@@ -104,7 +107,7 @@ export const listChooseWithCustom = async (
     {
       label: CUSTOM_OPTION_LABEL,
       value: CUSTOM_OPTION_LABEL,
-      icon: 'add',
+      icon: 'plus',
       flavor: 'serene',
     },
     ...options,

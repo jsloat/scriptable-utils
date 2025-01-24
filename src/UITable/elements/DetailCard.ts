@@ -3,11 +3,11 @@ import { ExcludeFalsy } from '../../common';
 import { Falsy, NotFalsy } from '../../types/utilTypes';
 import Div, { DivChild, DivStyle, NonCascadingDiv } from './Div';
 import HSpace from './HSpace';
-import Icon, { IconOrSFKey } from './Icon';
+import Icon from './Icon';
 import P from './P';
 import Span from './Span';
 
-export type Detail = { text?: string; icon?: IconOrSFKey; color?: Color };
+export type Detail = { text?: string; icon?: string; color?: Color };
 
 /** Allow for n-col alignment of details using arrays. `null` values in the
  * row array will be interpreted as a blank column entry. */
@@ -15,7 +15,7 @@ type ValidDetailValue = Detail | (Detail | null)[] | Falsy;
 
 type DetailCardProps = {
   title: string;
-  titleIcon?: IconOrSFKey;
+  titleIcon?: string;
   details: ValidDetailValue[];
   titleColor?: Color;
   // These will NOT cascade down, except for onTap props, as designed.

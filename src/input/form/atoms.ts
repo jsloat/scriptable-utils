@@ -31,9 +31,9 @@ const ValueRow = ({
   return Div(
     [
       P(valueRowLabel),
-      showClearIndicator && Icon('x_in_circle', { width: '10%' }),
+      showClearIndicator && Icon('xmark.circle', { width: '10%' }),
       showErrorIndicator &&
-        Icon('circled_exclamation_filled', { width: '10%', doNotTint: true }),
+        Icon('exclamationmark.circle.fill', { width: '10%', doNotTint: true }),
       icon && Icon(icon, { width: '10%' }),
     ],
     {

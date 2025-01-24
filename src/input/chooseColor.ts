@@ -35,7 +35,7 @@ const Title = () => H1('Choose color');
 const AddCustomCTA = () =>
   Button({
     text: 'Add custom',
-    icon: 'add',
+    icon: 'plus',
     dismissOnTap: true,
     onTap: () => setState({ selectedColor: 'ADD_CUSTOM' }),
   });

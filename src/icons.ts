@@ -21,9 +21,3 @@ export const ICONS = {
   PLUS: '+',
   MINUS: '-',
 };
-
-export type IconKey = keyof typeof ICONS;
-
-const iconKeySet = new Set(Object.keys(ICONS));
-
-export const isIconKey = (str: string): str is IconKey => iconKeySet.has(str);

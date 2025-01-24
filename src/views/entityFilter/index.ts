@@ -91,7 +91,7 @@ export default async <E>(opts: Opts<E>) => {
     Div([
       Button({
         text: 'Clear filters',
-        icon: 'filter',
+        icon: 'line.horizontal.3.decrease.circle',
         onTap: clearFilters,
         isDisabled: !areFiltersApplied(state),
         flavor: 'transparentWithBorder',

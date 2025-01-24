@@ -50,7 +50,7 @@ const PreviewRow = ({
 }: HierarchyEntry<Preview>) =>
   EntryContainer(
     [
-      TitleRow([P(title), Icon('open_external', { width: '10%' })]),
+      TitleRow([P(title), Icon('arrow.up.right', { width: '10%' })]),
       description &&
         Div([P(description, { font: () => Font.footnote() })], { height: 14 }),
     ],

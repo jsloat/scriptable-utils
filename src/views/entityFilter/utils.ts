@@ -76,11 +76,11 @@ export const getFilterIcon = <E>({
 }: FilterWithState<E>): SFSymbolKey => {
   switch (state) {
     case null:
-      return icon ?? 'task_incomplete';
+      return icon ?? 'square';
     case 'INCLUDE':
       return 'checkmark';
     case 'EXCLUDE':
-      return 'cancel';
+      return 'xmark';
   }
 };
 

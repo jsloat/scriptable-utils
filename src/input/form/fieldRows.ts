@@ -62,7 +62,7 @@ export const CycleField = <T extends string | null>(
     labelOpts: { fieldLabel: label, rowOpts },
     errorOpts: { errorMessage, rowOpts },
     valueOpts: {
-      icon: customIcon ?? 'cycle',
+      icon: customIcon ?? 'arrow.3.trianglepath',
       rowOpts,
       valueRowLabel: mapLabel(opts, currValue) ?? 'Select option',
       showErrorIndicator: Boolean(errorMessage),
@@ -91,7 +91,7 @@ export const RadioField = <T extends string | number>(
     valueOpts: options.map<MultiOptionRowValueOpt>(valueLabel => {
       const isSelected = valueLabel === currValue;
       return {
-        icon: isSelected ? 'circle_filled' : 'circle',
+        icon: isSelected ? 'largecircle.fill.circle' : 'circle',
         rowOpts: { onTap: () => onChange(valueLabel), isFaded: !isSelected },
         size,
         valueRowLabel: mapLabel(opts, String(valueLabel)),
@@ -119,7 +119,7 @@ export const CheckboxField = (opts: CheckboxFieldOpts) => {
   return StandardFieldRow({
     errorOpts: { errorMessage, rowOpts },
     valueOpts: {
-      icon: currValue ? 'task_complete' : 'task_incomplete',
+      icon: currValue ? 'checkmark.square' : 'square',
       rowOpts,
       valueRowLabel: mapLabel(opts, label),
       showErrorIndicator: Boolean(errorMessage),
@@ -353,7 +353,7 @@ export const SelectMultiField = <T extends string | number>(
     valueOpts: options.map<MultiOptionRowValueOpt>(valueLabel => {
       const isSelected = selectedOptions.includes(valueLabel);
       return {
-        icon: isSelected ? 'task_complete' : 'task_incomplete',
+        icon: isSelected ? 'checkmark.square' : 'square',
         rowOpts: { onTap: getOnTap(valueLabel), isFaded: !isSelected },
         valueRowLabel: mapLabel(opts, String(valueLabel)),
       };
