@@ -119,7 +119,7 @@ export default async <E>(opts: Opts<E>) => {
     (_, category: string, isCollapsed: boolean) =>
       H2({
         label: category,
-        iconKey: isCollapsed ? 'expand' : 'collapse',
+        iconKey: isCollapsed ? 'plus.square' : 'minus.square',
         padding: { paddingBottom: 0, paddingTop: 0 },
         onTap: () => toggleFilterCategoryCollapse(category),
       })

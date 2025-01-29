@@ -29,7 +29,7 @@ export default async (initValue?: string) => {
       return [
         {
           text: currKey ? `Selected: ${currKey}` : 'No selection',
-          icon: currKey ?? 'dot_in_circle',
+          icon: currKey ?? 'smallcircle.fill.circle',
           isFaded: !currKey,
         },
       ];

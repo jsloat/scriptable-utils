@@ -425,7 +425,7 @@ export const DropdownField: DropdownFieldType = <T extends string>(
     labelOpts: { fieldLabel: label, rowOpts },
     errorOpts: { errorMessage, rowOpts },
     valueOpts: {
-      icon: 'expand_vertical_2',
+      icon: 'chevron.up.chevron.down',
       rowOpts,
       valueRowLabel: mapLabel(opts, currValue) ?? 'Select option',
       showErrorIndicator: Boolean(errorMessage),
