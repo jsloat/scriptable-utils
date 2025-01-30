@@ -105,11 +105,11 @@ export default class RepeatingTimer {
 
   async stop() {
     this.timer.invalidate();
+    this.isRunning = false;
     try {
       this.onStop && (await this.onStop());
     } catch (e) {
       alertAndLogError(e, 'RepeatingTimer/stop');
     }
-    this.isRunning = false;
   }
 }
