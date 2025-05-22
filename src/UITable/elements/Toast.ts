@@ -72,9 +72,13 @@ export default ({
 
   const descriptionRow =
     description &&
-    Div([HSpace('10%'), P(description, { font: () => Font.footnote() })], {
-      height: 14,
-    });
+    Div(
+      [
+        HSpace(grid.sum('leftIcon', 'leftIconSpacing')),
+        P(description, { font: () => Font.footnote() }),
+      ],
+      { height: 14 }
+    );
 
   const contents = Div(
     [Div([mainRow, descriptionRow], { paddingTop: 0, paddingBottom: 0 })],

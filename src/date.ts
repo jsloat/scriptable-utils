@@ -219,7 +219,7 @@ export const readableDaysBetween = (
   earlierDate: Date,
   abbreviate = false
 ) => {
-  const days = daysBetween(earlierDate, laterDate);
+  const days = daysBetween(laterDate, earlierDate);
   return getReadableDaysLabel(days, abbreviate) || `${days}d`;
 };
 
