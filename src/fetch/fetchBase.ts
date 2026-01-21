@@ -86,8 +86,33 @@ export default async <Returns = unknown>(opts: FetchOpts<Returns>) => {
   log(getRequestLogMessage(parsedOpts));
   const requestObj = getRequest(parsedOpts);
 
+  // When loadJSON returns non-JSON, parse manually so the raw response is
+  // surfaced in the thrown error instead of a generic JSON parse failure.
+  const loadJsonResponse = async () => {
+    const responseText = await requestObj.loadString();
+    const { statusCode } = requestObj.response;
+    const isErrorCode = isStatusCodeError(statusCode);
+    try {
+      return JSON.parse(responseText) as unknown;
+    } catch (error) {
+      const message = isErrorCode
+        ? `${statusCode}: ${responseText}`
+        : `Invalid JSON response from ${url}: ${responseText}`;
+      const errorWithPayload = new ErrorWithPayload(message, {
+        completedRequestDetails: requestObj.response,
+        response: responseText,
+        parseError: error instanceof Error ? error.message : error,
+      });
+      log({ error: errorWithPayload });
+      throw errorWithPayload;
+    }
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const response = (await requestObj[fetchFnKey]()) as unknown;
+  const response =
+    fetchFnKey === 'loadJSON'
+      ? await loadJsonResponse()
+      : ((await requestObj[fetchFnKey]()) as unknown);
   await log({ response }, true);
 
   const { statusCode } = requestObj.response;
