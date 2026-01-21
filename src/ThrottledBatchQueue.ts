@@ -73,7 +73,10 @@ class ThrottledBatchQueue<T> {
 
   private async run() {
     if (this.isRunning) throw new Error('Queue already running');
-    if (this.isPaused) throw new Error('Run called while paused');
+    if (this.isPaused) {
+      this.debugLog('Run called while paused.');
+      return;
+    }
     if (this.queue.length === 0) {
       this.debugLog('Nothing left in queue to run.');
       return;
@@ -84,13 +87,19 @@ class ThrottledBatchQueue<T> {
       `Running batch operation on ${batchEntities.length} entities, ${this.queue.length} remaining.`
     );
     if (this.queue.length > 0) this.snoozeRun();
-    if (batchEntities.length > 0)
-      await this.batchOperation(batchEntities as [T, ...T[]]);
-    // This smells, but I want to ensure that snoozeRun gets called ASAP, but
-    // also make sure that if the queue gets added to during the batch
-    // operation, that those entities get detected.
-    if (this.queue.length > 0) this.snoozeRun();
-    this.isRunning = false;
+    let runError: unknown;
+    try {
+      if (batchEntities.length > 0)
+        await this.batchOperation(batchEntities as [T, ...T[]]);
+    } catch (error) {
+      runError = error;
+      this.debugLog(error);
+    } finally {
+      // Batch may enqueue more items; ensure a follow-up run is scheduled.
+      if (this.queue.length > 0) this.snoozeRun();
+      this.isRunning = false;
+    }
+    if (runError) throw runError;
   }
 
   private snoozeRun() {
@@ -120,6 +129,10 @@ class ThrottledBatchQueue<T> {
     for (const entity of newEntities) this.queue.push(entity);
     // If the queue is already running, it should automatically include the
     // pushed entities
+    if (this.isPaused) {
+      this.debugLog('Push called while queue is paused.');
+      return;
+    }
     if (!this.isRunning) this.run();
   }
 
