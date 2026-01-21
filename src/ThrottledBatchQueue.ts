@@ -99,7 +99,11 @@ class ThrottledBatchQueue<T> {
       if (this.queue.length > 0) this.snoozeRun();
       this.isRunning = false;
     }
-    if (runError) throw runError;
+    if (runError) {
+      const error =
+        runError instanceof Error ? runError : new Error(String(runError));
+      throw error;
+    }
   }
 
   private snoozeRun() {

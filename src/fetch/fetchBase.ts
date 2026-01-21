@@ -108,11 +108,11 @@ export default async <Returns = unknown>(opts: FetchOpts<Returns>) => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const response =
     fetchFnKey === 'loadJSON'
       ? await loadJsonResponse()
-      : ((await requestObj[fetchFnKey]()) as unknown);
+      : // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        ((await requestObj[fetchFnKey]()) as unknown);
   await log({ response }, true);
 
   const { statusCode } = requestObj.response;
