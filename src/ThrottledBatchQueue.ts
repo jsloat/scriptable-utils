@@ -29,6 +29,7 @@ class ThrottledBatchQueue<T> {
   private isRunning = false;
   private isPaused = false;
   private interval: number;
+  private idleResolvers: Array<() => void> = [];
   /** When performing batch operations on the queue, only take a slice of this
    * length, if provided. */
   private maxEntitiesPerOperation: number | null;
@@ -98,6 +99,7 @@ class ThrottledBatchQueue<T> {
       // Batch may enqueue more items; ensure a follow-up run is scheduled.
       if (this.queue.length > 0) this.snoozeRun();
       this.isRunning = false;
+      if (this.queue.length === 0) this.resolveIdle();
     }
     if (runError) {
       const error =
@@ -150,6 +152,20 @@ class ThrottledBatchQueue<T> {
     this.debugLog('Resumed the queue');
     this.isPaused = false;
     if (!this.isRunning) this.snoozeRun();
+  }
+
+  flush() {
+    if (this.queue.length === 0 && !this.isRunning) return;
+    return new Promise<void>(resolve => {
+      this.idleResolvers.push(resolve);
+      if (!this.isPaused && !this.isRunning) this.run();
+    });
+  }
+
+  private resolveIdle() {
+    if (this.idleResolvers.length === 0) return;
+    for (const resolve of this.idleResolvers) resolve();
+    this.idleResolvers = [];
   }
 }
 

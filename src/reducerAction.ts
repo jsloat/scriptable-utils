@@ -8,6 +8,7 @@ import {
   MaybePromise,
   NoParamFn,
 } from './types/utilTypes';
+import { StreamReducer } from './streams/types';
 
 //
 // REDUCER CREATOR
@@ -68,7 +69,9 @@ export const getTableActionCreator =
 
 export const getStreamActionCreator =
   <T extends AnyObj>(stream: Stream<T>) =>
-  <A extends any[]>(reducerGetter: (...args: A) => MaybePromise<Identity<T>>) =>
+  <A extends any[]>(
+    reducerGetter: (...args: A) => MaybePromise<StreamReducer<T>>
+  ) =>
   async (...args: A) =>
     stream.updateData(await reducerGetter(...args));
 

@@ -1,16 +1,22 @@
 import { composeIdentities } from '../flow';
 import { Stream } from '../streams';
+import { StreamData } from '../streams/types';
 import { AnyObj, Identity } from '../types/utilTypes';
 import persisted, { Persisted } from './persisted';
 import { getTemporaryFilename } from './utils';
 
 type DataObj<M, P> = { inMemoryData: M; persistedData: P };
 
+type ReadonlyDataObj<M extends AnyObj, P> = {
+  inMemoryData: StreamData<M>;
+  persistedData: P;
+};
+
 type SplitData<C, M, P> = (combinedData: C) => DataObj<M, P>;
 
-type JoinData<C, M, P> = (data: DataObj<M, P>) => C;
+type JoinData<C, M extends AnyObj, P> = (data: ReadonlyDataObj<M, P>) => C;
 
-type Opts<Combined, InMemory, InPersisted> = {
+type Opts<Combined, InMemory extends AnyObj, InPersisted> = {
   defaultData: Combined;
   splitData: SplitData<Combined, InMemory, InPersisted>;
   joinData: JoinData<Combined, InMemory, InPersisted>;
@@ -70,7 +76,7 @@ export default class PersistedCache<
     return this.cache$;
   }
 
-  getInMemoryData() {
+  getInMemoryData(): StreamData<InMemoryData> {
     return this.cache$.getData();
   }
 

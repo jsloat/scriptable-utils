@@ -1,6 +1,6 @@
 import { objectFromEntries } from '../common';
 import { objectEntries } from '../object';
-import { AnyObj, MaybePromise } from '../types/utilTypes';
+import { AnyObj, DeepReadonly, MaybePromise } from '../types/utilTypes';
 import Stream from './Stream';
 import { StreamConstructorOpts } from './types';
 
@@ -14,9 +14,9 @@ type SubscriptionOpts<
   dependent$: Stream<DependentState>;
   source$: Stream<SourceState>;
   stateReducer?: (
-    latestDependentState: DependentState,
-    prevSourceState: SourceState,
-    updatedSourceState: SourceState
+    latestDependentState: DeepReadonly<DependentState>,
+    prevSourceState: DeepReadonly<SourceState>,
+    updatedSourceState: DeepReadonly<SourceState>
   ) => MaybePromise<DependentState | null>;
 };
 
@@ -55,7 +55,7 @@ export const subscribe = <
   subscriptionName,
   dependent$,
   source$,
-  stateReducer = state => state,
+  stateReducer = state => state as DependentState,
 }: SubscriptionOpts<DependentState, SourceState>) => {
   source$.registerUpdateCallback({
     callbackId: subscriptionName,

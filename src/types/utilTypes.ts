@@ -125,6 +125,18 @@ export type AnyObj = Record<ObjKey, unknown>;
 
 export type ObjComparison<T, R = boolean> = (a: T, b: T) => R;
 
+export type DeepReadonly<T> = T extends (...args: any[]) => any
+  ? T
+  : T extends ReadonlyArray<infer U>
+  ? ReadonlyArray<DeepReadonly<U>>
+  : T extends Map<infer K, infer V>
+  ? ReadonlyMap<DeepReadonly<K>, DeepReadonly<V>>
+  : T extends Set<infer U>
+  ? ReadonlySet<DeepReadonly<U>>
+  : T extends AnyObj
+  ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+  : T;
+
 /** Used to define possible actions based on entity type being actioned. */
 export type ConditionalAction<E> = {
   label: string;

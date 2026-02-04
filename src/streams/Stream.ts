@@ -1,15 +1,11 @@
 import ThrottledBatchQueue from '../ThrottledBatchQueue';
-import { AnyObj, Identity, StreamCallback } from '../types/utilTypes';
-import { StreamConstructorOpts } from './types';
+import { AnyObj, MaybePromise, StreamCallback } from '../types/utilTypes';
+import { StreamConstructorOpts, StreamData, StreamReducer } from './types';
 
 type UpdateCallback<D extends AnyObj> = (
-  previousData: D,
-  updatedData: D
-) => any;
-type CallbackWithOpts<D extends AnyObj> = {
-  id: string;
-  callback: UpdateCallback<D>;
-};
+  previousData: StreamData<D>,
+  updatedData: StreamData<D>
+) => MaybePromise<any>;
 
 type RegisterUpdateCallbackOpts<D extends AnyObj> = {
   callback: UpdateCallback<D>;
@@ -21,16 +17,18 @@ type RegisterUpdateCallbackOpts<D extends AnyObj> = {
   overwriteExistingCallback?: boolean;
 };
 
-type UpdateDataPayload<T> = {
-  reducer: Identity<T>;
+type UpdateDataPayload<T extends AnyObj> = {
+  reducer: StreamReducer<T>;
   suppressChangeTrigger: boolean;
 };
+
+type UpdateDataOpts = { suppressChangeTrigger?: boolean };
 
 export default class Stream<DataType extends AnyObj> {
   private name: string;
   private showStreamDataUpdateDebug: boolean;
   private data: DataType;
-  private updateCallbacks: CallbackWithOpts<DataType>[] = [];
+  private updateCallbacks = new Map<string, UpdateCallback<DataType>>();
   // Queue to sequentially update data
   private updateQueue: ThrottledBatchQueue<UpdateDataPayload<DataType>>;
 
@@ -42,17 +40,12 @@ export default class Stream<DataType extends AnyObj> {
     this.showStreamDataUpdateDebug = showStreamDataUpdateDebug;
     this.data = defaultState;
     this.name = name;
-    this.updateCallbacks = [];
 
     this.updateQueue = new ThrottledBatchQueue({
       interval: 0,
       maxEntitiesPerOperation: 1,
-      batchOperation: ([{ reducer, suppressChangeTrigger }]) => {
-        const oldData = { ...this.data };
-        const newData = reducer(oldData);
-        this.data = newData;
-        if (!suppressChangeTrigger) this.runCallbacks(oldData, newData);
-      },
+      batchOperation: ([{ reducer, suppressChangeTrigger }]) =>
+        this.applyUpdate(reducer, suppressChangeTrigger),
     });
   }
 
@@ -61,48 +54,75 @@ export default class Stream<DataType extends AnyObj> {
     callbackId,
     overwriteExistingCallback = true,
   }: RegisterUpdateCallbackOpts<DataType>): StreamCallback {
-    const callbackIdAlreadyRegistered = this.updateCallbacks.some(
-      ({ id }) => id === callbackId
-    );
+    const callbackIdAlreadyRegistered = this.updateCallbacks.has(callbackId);
     const overwriteDisallowed =
       callbackIdAlreadyRegistered && !overwriteExistingCallback;
 
-    if (!overwriteDisallowed)
-      this.updateCallbacks = [
-        ...this.updateCallbacks.filter(({ id }) => id !== callbackId),
-        { callback, id: callbackId },
-      ];
+    if (!overwriteDisallowed) this.updateCallbacks.set(callbackId, callback);
 
     return { remove: () => this.unregisterUpdateCallback(callbackId) };
   }
 
   unregisterUpdateCallback(callbackId: string) {
-    this.updateCallbacks = this.updateCallbacks.filter(
-      ({ id }) => id !== callbackId
-    );
+    this.updateCallbacks.delete(callbackId);
   }
 
-  private runCallbacks(previousData: DataType, updatedData: DataType) {
-    for (const { callback, id } of this.updateCallbacks) {
+  private async runCallbacks(
+    previousData: StreamData<DataType>,
+    updatedData: StreamData<DataType>
+  ) {
+    for (const [id, callback] of this.updateCallbacks.entries()) {
       if (this.showStreamDataUpdateDebug)
         // eslint-disable-next-line no-console
         console.log(
           `Running stream "${this.name}" update callback with ID "${id}"`
         );
-      callback(previousData, updatedData);
+      await callback(previousData, updatedData);
+    }
+  }
+
+  private async applyUpdate(
+    reducer: StreamReducer<DataType>,
+    suppressChangeTrigger: boolean
+  ) {
+    const oldData = { ...this.data };
+    const newData = reducer(oldData);
+    this.data = newData;
+    if (!suppressChangeTrigger) {
+      await this.runCallbacks(
+        oldData as StreamData<DataType>,
+        newData as StreamData<DataType>
+      );
     }
   }
 
   /** Reduce stream data */
-  updateData(
-    reducer: Identity<DataType>,
-    { suppressChangeTrigger = false } = {}
+  updateData(reducer: StreamReducer<DataType>, opts: UpdateDataOpts = {}) {
+    const { suppressChangeTrigger = false } = opts;
+    const payload: UpdateDataPayload<DataType> = {
+      reducer,
+      suppressChangeTrigger,
+    };
+    this.updateQueue.push(payload);
+  }
+
+  /** Apply an update immediately without queuing. */
+  async updateDataSync(
+    reducer: StreamReducer<DataType>,
+    opts: UpdateDataOpts = {}
   ) {
-    this.updateQueue.push({ reducer, suppressChangeTrigger });
+    const { suppressChangeTrigger = false } = opts;
+    await this.applyUpdate(reducer, suppressChangeTrigger);
+  }
+
+  /** Wait for queued updates to finish processing. */
+  async flush() {
+    await this.updateQueue.flush();
   }
 
   /** Set full stream data */
-  setData(data: DataType, { suppressChangeTrigger = false } = {}) {
+  setData(data: DataType, opts: UpdateDataOpts = {}) {
+    const { suppressChangeTrigger = false } = opts;
     return this.updateData(() => data, { suppressChangeTrigger });
   }
 
@@ -110,20 +130,24 @@ export default class Stream<DataType extends AnyObj> {
   updateAttr<K extends keyof DataType>(
     key: K,
     val: DataType[K],
-    { suppressChangeTrigger = false } = {}
+    opts: UpdateDataOpts = {}
   ) {
+    const { suppressChangeTrigger = false } = opts;
     return this.updateData(data => ({ ...data, [key]: val }), {
       suppressChangeTrigger,
     });
   }
 
   /** Used to trigger callbacks when no change has occurred */
-  triggerChange() {
-    return this.runCallbacks(this.data, this.data);
+  async triggerChange() {
+    await this.runCallbacks(
+      this.data as StreamData<DataType>,
+      this.data as StreamData<DataType>
+    );
   }
 
-  getData() {
-    return this.data;
+  getData(): StreamData<DataType> {
+    return this.data as StreamData<DataType>;
   }
 
   /** This is dangerous because a stream is assumed to never be empty. This

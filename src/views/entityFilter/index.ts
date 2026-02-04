@@ -48,7 +48,7 @@ export default async <E>(opts: Opts<E>) => {
     props$.setData(
       await recalculateProps$({
         loadFilterMatchData: true,
-        prev$Props: props$.getData(),
+        prev$Props: props$.getData() as $Props,
         props: opts,
         state,
       })
@@ -61,11 +61,15 @@ export default async <E>(opts: Opts<E>) => {
     stateReducer: (prev$Props, { state: oldState }, { state: newState }) => {
       if (!(oldState && newState)) return null;
       const haveFiltersChanged = !isEqual(
-        [...oldState.filterState.entries()],
-        [...newState.filterState.entries()]
+        [...(oldState as State).filterState.entries()],
+        [...(newState as State).filterState.entries()]
       );
       return haveFiltersChanged
-        ? recalculateProps$({ prev$Props, props: opts, state: newState })
+        ? recalculateProps$({
+            prev$Props: prev$Props as $Props,
+            props: opts,
+            state: newState as State,
+          })
         : null;
     },
   });

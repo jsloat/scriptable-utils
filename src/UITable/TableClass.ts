@@ -1,9 +1,9 @@
-import { ExcludeFalsy } from '../common';
 import { Persisted } from '../io/persisted';
 import RepeatingTimer from '../RepeatingTimer';
 import { getIconPreloadHelpers } from '../sfSymbols';
 import { Stream } from '../streams';
 import { AnyObj, NoParamFn } from '../types/utilTypes';
+import { Container } from './elements/shapes';
 import {
   AfterFirstRender,
   AfterPropsLoad,
@@ -19,6 +19,7 @@ import {
   RenderCount,
   SetRenderOpts,
   TableOpts,
+  ValidTableEl,
 } from './types';
 import { catchTableError, reloadTableRows } from './utils';
 
@@ -100,6 +101,14 @@ class CallbackRegister {
 
 //
 
+type RenderInput<State, Props> = {
+  state: State | undefined;
+  ownProps: Props | undefined;
+  connected$ChangeCount: number;
+};
+
+type RowEl = UITableRow | Container;
+
 export class Table<State, Props, $Data extends AnyObj | undefined> {
   private table = new UITable();
   // Don't store connected$ props in this stream, since  we will be duplicating
@@ -111,6 +120,11 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
   private name: string;
   private callbackID: string;
   private isActive = false;
+  private renderQueued = false;
+  private renderQueuedForce = false;
+  private shouldPreloadIcons = false;
+  private lastRenderInput?: RenderInput<State, Props>;
+  private lastRows?: RowEl[];
   private fullscreen: boolean;
   private callbackRegister = new CallbackRegister();
   private syncedPersistedState?: Persisted<State>;
@@ -180,7 +194,7 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
       'payload$',
       () =>
         this.payload$.registerUpdateCallback({
-          callback: () => this.renderTable(),
+          callback: () => this.requestRender(),
           callbackId: this.callbackID,
         }),
       () => {
@@ -195,7 +209,7 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
         this.syncedPersistedState?.cache$.registerUpdateCallback({
           callbackId: this.callbackID,
           callback: updatedData =>
-            this.payload$.updateAttr('state', updatedData.data),
+            this.payload$.updateAttr('state', updatedData.data as State),
         }),
       () =>
         this.syncedPersistedState?.cache$.unregisterUpdateCallback(
@@ -203,9 +217,9 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
         )
     );
 
-    const { preloadIcons, haltIconPreload } = getIconPreloadHelpers(
-      () => this.isActive && this.renderTable()
-    );
+    const { preloadIcons, haltIconPreload } = getIconPreloadHelpers(() => {
+      if (this.isActive) this.requestRender(true);
+    });
     this.callbackRegister.set('iconPreloading', preloadIcons, haltIconPreload);
   }
 
@@ -213,9 +227,29 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     return this.isActive;
   }
 
+  // Coalesce multiple render triggers into a single microtask so a burst of
+  // updates results in one refresh.
+  private requestRender(force = false) {
+    if (this.renderQueued) {
+      if (force) this.renderQueuedForce = true;
+      return;
+    }
+    this.renderQueued = true;
+    this.renderQueuedForce = force;
+    // Promise callbacks run in the microtask queue: after the current call
+    // stack, before the next macrotask.
+    Promise.resolve().then(() => {
+      const shouldForce = this.renderQueuedForce;
+      this.renderQueued = false;
+      this.renderQueuedForce = false;
+      void this.renderTable({ force: shouldForce });
+    });
+  }
+
   setState(partialState: Partial<State>) {
-    const currState = this.payload$.getData().state;
+    const currState = this.payload$.getData().state as State | undefined;
     if (!currState) throw new Error('Setting state without initialized state');
+    if (!hasStateChanges(partialState, currState)) return;
     const updatedState = { ...currState, ...partialState } as State;
     this.payload$.updateAttr('state', updatedState);
     this.syncedPersistedState?.reduce(data => ({ ...data, ...updatedState }));
@@ -244,10 +278,14 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     this.afterFirstRender = afterFirstRender;
     this.onSecondRender = onSecondRender;
     this.onConnected$Update = onConnected$Update;
+    this.shouldPreloadIcons = Boolean(shouldPreloadIcons);
     this.isActive = false;
     this.has.runPrerenderCallbacks = false;
     this.renderCount = 'NONE';
-    if (shouldPreloadIcons) this.callbackRegister.start('iconPreloading');
+    this.renderQueued = false;
+    this.renderQueuedForce = false;
+    this.lastRenderInput = undefined;
+    this.lastRows = undefined;
   }
 
   /** Set init props immediately before render */
@@ -267,6 +305,7 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     await this.beforeLoad?.();
     await this.initProps();
     this.callbackRegister.start('payload$');
+    if (this.shouldPreloadIcons) this.callbackRegister.start('iconPreloading');
     if (!(this.syncedPersistedState || this.defaultState)) return;
     if (this.syncedPersistedState) {
       this.callbackRegister.start('persistedState$Poller');
@@ -277,6 +316,16 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     this.payload$.updateAttr('state', initState, {
       suppressChangeTrigger: true,
     });
+  }
+
+  private getRenderInput(): RenderInput<State, Props> {
+    // Snapshot identity-based inputs so memoization stays conservative.
+    const { state, ownProps, connected$ChangeCount } = this.payload$.getData();
+    return {
+      state: state as State | undefined,
+      ownProps: ownProps as Props | undefined,
+      connected$ChangeCount: connected$ChangeCount ?? 0,
+    };
   }
 
   private incrementRenderCount() {
@@ -299,6 +348,10 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     this.callbackRegister.cleanupAll();
     this.has.runPrerenderCallbacks = false;
     this.renderCount = 'NONE';
+    this.renderQueued = false;
+    this.renderQueuedForce = false;
+    this.lastRenderInput = undefined;
+    this.lastRows = undefined;
   }
 
   // This function, on paper, does not always return `Promise<State>`. However
@@ -306,13 +359,29 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
   // because after the UITable instance is presented, and being awaited, we can
   // still modify its rows and refresh it, effectively "rerendering" it. This
   // concept is the key to a dynamic UITable.
-  async renderTable() {
+  async renderTable({ force = false }: { force?: boolean } = {}) {
     try {
       await this.beforeRender();
       await this.beforeEveryRender?.();
       await this.runOnRenderCount('ONCE', this.onSecondRender);
       if (!this.getRows) throw new Error('`beforeRender` must be called first');
-      reloadTableRows(this.table, this.getRows().flat().filter(ExcludeFalsy));
+      const renderInput = this.getRenderInput();
+      const prevRows = this.lastRows;
+      let rows: RowEl[];
+      if (
+        !force &&
+        prevRows &&
+        this.lastRenderInput &&
+        isSameRenderInput(renderInput, this.lastRenderInput)
+      ) {
+        rows = prevRows;
+      } else {
+        rows = normalizeRows(this.getRows());
+        this.lastRenderInput = renderInput;
+        this.lastRows = rows;
+      }
+      const shouldRebuild = shouldRebuildRows(prevRows, rows);
+      reloadTableRows(this.table, rows, { rebuild: shouldRebuild });
       await this.runOnRenderCount('NONE', this.afterFirstRender);
       this.incrementRenderCount();
       if (!this.isActive) {
@@ -328,3 +397,73 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
     }
   }
 }
+
+const isPrimitive = (value: unknown) =>
+  // Treat objects/functions as non-primitive so deep mutations still rerender.
+  value === null || (typeof value !== 'object' && typeof value !== 'function');
+
+const hasStateChanges = <State>(
+  partialState: Partial<State>,
+  currState: State
+) => {
+  // Only skip when all updated keys are primitive-equal; object refs always
+  // count as changes so complex state changes are never ignored.
+  for (const [key, value] of Object.entries(
+    partialState as Record<string, unknown>
+  )) {
+    const currValue = (currState as Record<string, unknown>)[key];
+    if (!isPrimitive(value) || !isPrimitive(currValue)) return true;
+    if (!Object.is(currValue, value)) return true;
+  }
+  return false;
+};
+
+const isSameRenderInput = <State, Props>(
+  nextInput: RenderInput<State, Props>,
+  prevInput: RenderInput<State, Props>
+) => {
+  // Identity equality only: safe memoization that won't miss deep changes.
+  return (
+    nextInput.state === prevInput.state &&
+    nextInput.ownProps === prevInput.ownProps &&
+    nextInput.connected$ChangeCount === prevInput.connected$ChangeCount
+  );
+};
+
+const normalizeRows = (rows: ValidTableEl[]) => {
+  // Normalize the render output into a flat list of concrete rows by removing
+  // falsy placeholders and unwrapping one level of nesting.
+  const normalized: RowEl[] = [];
+  for (const row of rows) {
+    if (Array.isArray(row)) {
+      for (const nested of row) {
+        if (!nested) continue;
+        normalized.push(nested as RowEl);
+      }
+    } else if (row) {
+      normalized.push(row as RowEl);
+    }
+  }
+  return normalized;
+};
+
+const containsContainer = (rows: RowEl[]) => {
+  // Containers can expand into multiple rows, so treat as always rebuild.
+  return rows.some(row => row instanceof Container);
+};
+
+const shouldRebuildRows = (
+  prevRows: RowEl[] | undefined,
+  nextRows: RowEl[]
+) => {
+  // Only skip rebuild when row identities are unchanged and no Containers.
+  if (!prevRows) return true;
+  if (prevRows.length !== nextRows.length) return true;
+  if (containsContainer(prevRows) || containsContainer(nextRows)) {
+    return true;
+  }
+  for (const [i, nextRow] of nextRows.entries()) {
+    if (nextRow !== prevRows[i]) return true;
+  }
+  return false;
+};

@@ -61,7 +61,7 @@ const getTable = <
   const getState = () => {
     const { state } = payload$.getData();
     if (!state) throw new Error('Getting state with no state present');
-    return state;
+    return state as State;
   };
 
   const getProps = () => {
@@ -73,7 +73,7 @@ const getTable = <
       $Data
     >;
     if (!combinedProps) throw new Error('Getting props with no props present');
-    return combinedProps;
+    return combinedProps as CombineProps<Props, $Data>;
   };
 
   const setState: SetState<State> = partialState =>
@@ -85,7 +85,7 @@ const getTable = <
     setState(updatedState);
   };
 
-  const rerender = () => table.renderTable();
+  const rerender = () => table.renderTable({ force: true });
 
   const connect: Connect<State, Props, $Data> =
     getTableEl =>

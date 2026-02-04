@@ -363,7 +363,7 @@ export default async <E>({
     defaultState,
     beforeLoad: () => reloadEntities(defaultState),
     onDismiss: async () => {
-      await onClose?.(props$.getData());
+      await onClose?.(props$.getData() as $Props<E>);
     },
     render: () => [Header(), CTAs(), Spacer(), Pagination()],
   });

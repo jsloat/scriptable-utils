@@ -4,15 +4,19 @@ import { BaseRow } from './Row/base';
 
 export const reloadTableRows = (
   table: UITable,
-  rows: (UITableRow | Container)[]
+  rows: (UITableRow | Container)[],
+  opts?: { rebuild?: boolean }
 ) => {
-  table.removeAllRows();
-  for (const row of rows) {
-    if (row instanceof Container) {
-      const rowOpts = row.render();
-      for (const opts of rowOpts) table.addRow(BaseRow(opts));
-    } else {
-      table.addRow(row);
+  const shouldRebuild = opts?.rebuild !== false;
+  if (shouldRebuild) {
+    table.removeAllRows();
+    for (const row of rows) {
+      if (row instanceof Container) {
+        const rowOpts = row.render();
+        for (const opts of rowOpts) table.addRow(BaseRow(opts));
+      } else {
+        table.addRow(row);
+      }
     }
   }
   table.reload();
