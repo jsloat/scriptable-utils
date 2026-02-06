@@ -37,6 +37,26 @@ type IOObject<T> = Pick<
 
 const USE_CACHE_DEFAULT = false;
 
+const hasFileManager =
+  (globalThis as { FileManager?: unknown }).FileManager !== undefined;
+
+const missingFileManagerHandler = () => {
+  throw new Error(
+    'FileManager is not available in this runtime. Persisted storage requires Scriptable.'
+  );
+};
+
+const createMissingFileManager = (): FileManager =>
+  new Proxy(
+    {},
+    {
+      get: () => missingFileManagerHandler,
+    }
+  ) as FileManager;
+
+const getFileManager = () =>
+  hasFileManager ? FileManager.iCloud() : createMissingFileManager();
+
 //
 
 const createIOObject = <T>({
@@ -48,7 +68,7 @@ const createIOObject = <T>({
   areEntitiesEqual = basicEquality,
   disableCache = false,
 }: CreateIObjectOpts<T>): IOObject<T> => ({
-  io: FileManager.iCloud(),
+  io: getFileManager(),
   path: `${directory}/${filename}.${fileExtension}`,
   prettify,
   defaultData,

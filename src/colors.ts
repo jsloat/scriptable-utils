@@ -31,6 +31,7 @@ export class EnhancedColor {
   }
 
   get color() {
+    ensureColor();
     return this.isDynamic
       ? Color.dynamic(this.lightColor, this.colorObj.dark!)
       : this.colorObj.static!;
@@ -45,7 +46,21 @@ export class EnhancedColor {
   }
 }
 
-const c = ([hex]: TemplateStringsArray) => new Color(hex!);
+const hasColor = () => (globalThis as { Color?: unknown }).Color !== undefined;
+
+const ensureColor = () => {
+  if (!hasColor()) {
+    throw new Error(
+      'Color is not available in this runtime. Color utilities require Scriptable.'
+    );
+  }
+};
+
+const c = ([hex]: TemplateStringsArray) => {
+  const safeHex = hex ?? '';
+  if (!hasColor()) return { hex: safeHex } as unknown as Color;
+  return new Color(safeHex);
+};
 
 const isEnhancedColor = (val: Color | EnhancedColor): val is EnhancedColor =>
   val instanceof EnhancedColor;
@@ -182,6 +197,7 @@ const getKeyVal = (key: ColorKey) => {
 };
 
 export const getColor = (key: ColorKey) => {
+  ensureColor();
   const val = getKeyVal(key);
   return isEnhancedColor(val) ? val.color : val;
 };
@@ -190,6 +206,7 @@ export const getDynamicColor = (
   lightColorOrKey: ColorKey | Color,
   darkColorOrKey: ColorKey | Color
 ) => {
+  ensureColor();
   const lightColor = isString(lightColorOrKey)
     ? getColor(lightColorOrKey)
     : lightColorOrKey;
@@ -237,8 +254,9 @@ const formattedHexToInt = ({ r, g, b }: FormattedHex): FormattedInt => ({
 const intToHex = (int: number): string =>
   Math.round(int).toString(16).padStart(2, '0');
 
-const formattedHexToColor = ({ r, g, b }: FormattedHex) =>
-  new Color([r, g, b].join(''));
+const formattedHexToColor = ({ r, g, b }: FormattedHex) => (
+  ensureColor(), new Color([r, g, b].join(''))
+);
 
 const hexOrColorToHex = (val: string | Color) =>
   isString(val) ? val : val.hex;

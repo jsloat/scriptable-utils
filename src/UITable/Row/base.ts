@@ -111,17 +111,19 @@ export type BaseRowOpts = Partial<{
 
 type ClickMap = Partial<Record<number, () => any>>;
 
+const getClickTimer = () =>
+  (globalThis as { Timer?: unknown }).Timer === undefined ? null : new Timer();
+
 const executeTapListener = (() => {
   let tapCount = 0;
-  const clickTimer = new Timer();
+  let clickTimer: Timer | null = null;
   return (clickMap: ClickMap) => {
-    clickTimer.timeInterval = getConfig('ON_TAP_CLICK_INTERVAL');
     const maxClicks = Math.max(
       ...Object.keys(clickMap).map(numStr => Number.parseInt(numStr, 10))
     );
     // Every time a tap comes in, restart the timer & increment the counter
     tapCount++;
-    clickTimer.invalidate();
+    if (!clickTimer) clickTimer = getClickTimer();
     const executeFn = async () => {
       try {
         const action = clickMap[tapCount];
@@ -140,7 +142,15 @@ const executeTapListener = (() => {
     };
     // The timer callback will only ever fire if a click timer reaches its full
     // duration
-    maxClicks <= tapCount ? executeFn() : clickTimer.schedule(executeFn);
+    if (clickTimer) {
+      clickTimer.timeInterval = getConfig('ON_TAP_CLICK_INTERVAL');
+      clickTimer.invalidate();
+      maxClicks <= tapCount ? executeFn() : clickTimer.schedule(executeFn);
+    } else {
+      throw new Error(
+        'Timer is not available in this runtime. UITable tap handlers require Scriptable.'
+      );
+    }
   };
 })();
 

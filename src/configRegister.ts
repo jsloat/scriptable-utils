@@ -57,20 +57,32 @@ type RequiredConfig = {
 
 export type Config = OptionalConfig & RequiredConfig;
 
-let config: OptionalConfig & Partial<RequiredConfig> = {
-  GET_PAGINATED_RESULTS_MAX_LOOPS_BEFORE_WARNING: 5,
-  SCREEN_HEIGHT_MEASUREMENTS: {
+const hasDevice = () =>
+  (globalThis as { Device?: unknown }).Device !== undefined;
+
+const screenHeightMeasurements: ScreenHeightMeasurements.Record = (() => {
+  if (!hasDevice()) {
+    return undefined as unknown as ScreenHeightMeasurements.Record;
+  }
+  const screenSize = Device.screenSize();
+  const screenHeight = screenSize.height;
+  return {
     [Device.model()]: {
       fullscreen: {
-        landscape: Device.screenSize().height,
-        portrait: Device.screenSize().height,
+        landscape: screenHeight,
+        portrait: screenHeight,
       },
       notFullscreen: {
-        landscape: Device.screenSize().height,
-        portrait: Device.screenSize().height,
+        landscape: screenHeight,
+        portrait: screenHeight,
       },
     },
-  },
+  };
+})();
+
+let config: OptionalConfig & Partial<RequiredConfig> = {
+  GET_PAGINATED_RESULTS_MAX_LOOPS_BEFORE_WARNING: 5,
+  SCREEN_HEIGHT_MEASUREMENTS: screenHeightMeasurements,
   FULLSCREEN_OPTS_MAX_ON_SCREEN: 7,
   SCRIPTABLE_STORE_PATH:
     '/var/mobile/Library/Mobile Documents/iCloud~dk~simonbs~Scriptable/Documents/store',
@@ -87,6 +99,11 @@ let config: OptionalConfig & Partial<RequiredConfig> = {
 export const getConfig = <K extends keyof Config>(key: K) => {
   const value = config[key];
   if (value === undefined) {
+    if (key === 'SCREEN_HEIGHT_MEASUREMENTS' && !hasDevice()) {
+      throw new Error(
+        'Device is not available in this runtime. Provide SCREEN_HEIGHT_MEASUREMENTS via setConfig or run in Scriptable.'
+      );
+    }
     throw new Error(
       `You must register "${key}" in your implementation before using functions that depend on it.`
     );

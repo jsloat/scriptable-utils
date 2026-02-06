@@ -23,6 +23,18 @@ import {
 } from './types';
 import { catchTableError, reloadTableRows } from './utils';
 
+const hasUITable = () =>
+  (globalThis as { UITable?: unknown }).UITable !== undefined;
+
+const createUITable = (): UITable => {
+  if (!hasUITable()) {
+    throw new Error(
+      'UITable is not available in this runtime. Table rendering requires Scriptable.'
+    );
+  }
+  return new UITable();
+};
+
 type GetConnected$PollerOpts<$Data extends AnyObj> = {
   connected$: Connected$Opts<$Data>;
   onUpdate: NoParamFn;
@@ -110,7 +122,7 @@ type RenderInput<State, Props> = {
 type RowEl = UITableRow | Container;
 
 export class Table<State, Props, $Data extends AnyObj | undefined> {
-  private table = new UITable();
+  private table: UITable = createUITable();
   // Don't store connected$ props in this stream, since  we will be duplicating
   // potentially huge amounts of data in the table. Rather, update the
   // `connected$ChangeCount` attribute with any stream change, thus triggering
@@ -361,6 +373,7 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
   // concept is the key to a dynamic UITable.
   async renderTable({ force = false }: { force?: boolean } = {}) {
     try {
+      const table = this.table;
       await this.beforeRender();
       await this.beforeEveryRender?.();
       await this.runOnRenderCount('ONCE', this.onSecondRender);
@@ -381,13 +394,13 @@ export class Table<State, Props, $Data extends AnyObj | undefined> {
         this.lastRows = rows;
       }
       const shouldRebuild = shouldRebuildRows(prevRows, rows);
-      reloadTableRows(this.table, rows, { rebuild: shouldRebuild });
+      reloadTableRows(table, rows, { rebuild: shouldRebuild });
       await this.runOnRenderCount('NONE', this.afterFirstRender);
       this.incrementRenderCount();
       if (!this.isActive) {
         this.isActive = true;
         this.callbackRegister.start('connected$Poller');
-        await this.table.present(this.fullscreen);
+        await table.present(this.fullscreen);
         const finalState = this.payload$.getData().state as State;
         await this.cleanup();
         return finalState;
