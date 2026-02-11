@@ -126,14 +126,15 @@ const getGetData = <T>(ioObj: IOObject<T>) =>
       }
       return cache$.getData().data;
     }
-    return new Promise(resolve => {
-      _getPersistedJson(ioObj).then(persistedData => {
+    return new Promise((resolve, reject) => {
+      _getPersistedJson(ioObj).then(async persistedData => {
         const parsedData = persistedData ?? defaultData;
         if (cache$) {
           cache$.setData({ data: parsedData }, { suppressChangeTrigger });
+          await cache$.flush();
         }
         resolve(parsedData);
-      });
+      }, reject);
     });
   }) as GetData<T>;
 
@@ -155,6 +156,7 @@ const getWrite =
     );
     if (cache$) {
       cache$.setData({ data });
+      await cache$.flush();
     }
     return data;
   };

@@ -99,6 +99,7 @@ export default class PersistedCache<
   async setData(data: CombinedData) {
     const { inMemoryData, persistedData } = this.splitData(data);
     this.cache$.setData(inMemoryData);
+    await this.cache$.flush();
     await this.io.write({ data: persistedData });
     return this.getAllData();
   }
