@@ -114,7 +114,7 @@ type ClickMap = Partial<Record<number, () => any>>;
 const getClickTimer = () =>
   (globalThis as { Timer?: unknown }).Timer === undefined ? null : new Timer();
 
-const executeTapListener = (() => {
+const getTapListener = () => {
   let tapCount = 0;
   let clickTimer: Timer | null = null;
   return (clickMap: ClickMap) => {
@@ -125,16 +125,17 @@ const executeTapListener = (() => {
     tapCount++;
     if (!clickTimer) clickTimer = getClickTimer();
     const executeFn = async () => {
+      const resolvedTapCount = tapCount;
+      tapCount = 0;
       try {
-        const action = clickMap[tapCount];
+        const action = clickMap[resolvedTapCount];
         if (!action) {
           throw new ErrorWithPayload('Action at index not found', {
-            tapCount,
+            tapCount: resolvedTapCount,
             maxClicks,
             clickKeysPassed: Object.keys(clickMap),
           });
         }
-        tapCount = 0;
         await action();
       } catch (e) {
         warnError(e, 'table row');
@@ -152,7 +153,7 @@ const executeTapListener = (() => {
       );
     }
   };
-})();
+};
 
 /** Base cell params must have a type, or must be an empty object. */
 const isCell = (x: UITableCell | BaseCellParams): x is UITableCell =>
@@ -170,6 +171,7 @@ export const BaseRow = ({
   bgColor,
 }: BaseRowOpts = {}) => {
   const returnRow = new UITableRow();
+  const executeTapListener = getTapListener();
   returnRow.isHeader = isHeader;
   returnRow.dismissOnSelect = dismissTableOnTap;
 
