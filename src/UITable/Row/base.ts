@@ -117,16 +117,26 @@ const getClickTimer = () =>
 const getTapListener = () => {
   let tapCount = 0;
   let clickTimer: Timer | null = null;
+  let lastTapAtMs = 0;
   return (clickMap: ClickMap) => {
+    const clickIntervalMs = getConfig('ON_TAP_CLICK_INTERVAL');
+    const nowMs = Date.now();
     const maxClicks = Math.max(
       ...Object.keys(clickMap).map(numStr => Number.parseInt(numStr, 10))
     );
+    // If a pending timer never fired (e.g. app context switch), discard stale
+    // tap state before counting a new tap.
+    if (lastTapAtMs > 0 && nowMs - lastTapAtMs > clickIntervalMs) {
+      tapCount = 0;
+    }
+    lastTapAtMs = nowMs;
     // Every time a tap comes in, restart the timer & increment the counter
     tapCount++;
     if (!clickTimer) clickTimer = getClickTimer();
     const executeFn = async () => {
       const resolvedTapCount = tapCount;
       tapCount = 0;
+      lastTapAtMs = 0;
       try {
         const action = clickMap[resolvedTapCount];
         if (!action) {
@@ -144,7 +154,7 @@ const getTapListener = () => {
     // The timer callback will only ever fire if a click timer reaches its full
     // duration
     if (clickTimer) {
-      clickTimer.timeInterval = getConfig('ON_TAP_CLICK_INTERVAL');
+      clickTimer.timeInterval = clickIntervalMs;
       clickTimer.invalidate();
       maxClicks <= tapCount ? executeFn() : clickTimer.schedule(executeFn);
     } else {
@@ -154,6 +164,8 @@ const getTapListener = () => {
     }
   };
 };
+/** Shared by default so multi-row containers can aggregate tap counts. */
+const executeTapListener = getTapListener();
 
 /** Base cell params must have a type, or must be an empty object. */
 const isCell = (x: UITableCell | BaseCellParams): x is UITableCell =>
@@ -171,7 +183,6 @@ export const BaseRow = ({
   bgColor,
 }: BaseRowOpts = {}) => {
   const returnRow = new UITableRow();
-  const executeTapListener = getTapListener();
   returnRow.isHeader = isHeader;
   returnRow.dismissOnSelect = dismissTableOnTap;
 
