@@ -67,6 +67,11 @@ export default class RepeatingTimer {
   }
 
   async start() {
+    if (this.isRunning) {
+      // eslint-disable-next-line no-console
+      console.warn('RepeatingTimer is already running');
+      return;
+    }
     if (!this.onFire)
       throw new Error('Can not start repeatinng timer w/o onFire callback set');
     this.timer.schedule(async () => {
@@ -100,10 +105,12 @@ export default class RepeatingTimer {
     }
     this.timer.invalidate();
     this.timer = getTimer(this.interval);
-    this.start();
+    this.isRunning = false;
+    void this.start();
   }
 
   async stop() {
+    if (!this.isRunning) return;
     this.timer.invalidate();
     this.isRunning = false;
     try {

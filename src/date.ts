@@ -66,7 +66,7 @@ const DATE_FORMATTER_MAP = {
   ),
   HHMMSSMMM: formatter(date =>
     [
-      HHMM,
+      HHMM(date),
       String(date.getSeconds()).padStart(2, '0'),
       String(date.getMilliseconds()).padStart(3, '0'),
     ].join(':')
@@ -128,10 +128,31 @@ export const formatDate = (
   format: keyof typeof DATE_FORMATTER_MAP
 ) => DATE_FORMATTER_MAP[format](date);
 
+/**
+ * Adds calendar/time units using JavaScript Date setter semantics. When adding
+ * months, dates near the end of a month can overflow into the following month;
+ * this behavior is preserved for compatibility and logged when it occurs.
+ */
 export const addToDate = (
   date: Date,
   { months = 0, days = 0, hours = 0, minutes = 0, seconds = 0, ms = 0 } = {}
 ) => {
+  if (months !== 0) {
+    const expectedMonth = new Date(date);
+    expectedMonth.setDate(1);
+    expectedMonth.setMonth(date.getMonth() + months);
+    const monthAdjusted = new Date(date);
+    monthAdjusted.setMonth(date.getMonth() + months);
+    if (
+      monthAdjusted.getFullYear() !== expectedMonth.getFullYear() ||
+      monthAdjusted.getMonth() !== expectedMonth.getMonth()
+    ) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `addToDate overflowed ${date.toISOString()} while adding ${months} month(s)`
+      );
+    }
+  }
   const dateClone = new Date(date);
   dateClone.setMonth(date.getMonth() + months);
   dateClone.setDate(date.getDate() + days);
@@ -207,6 +228,10 @@ const getReadableDaysLabel = (dayGap: number, abbreviate: boolean) => {
   }
 };
 
+/**
+ * @deprecated This uses a fixed UTC-8 offset and does not account for daylight
+ * saving time. Prefer a timezone-aware conversion at the call site.
+ */
 export const UTCToPacific = (date: Date) => addToDate(date, { hours: 8 });
 
 export const getReadableDaysFromNowLabel = (date: Date, abbreviate = false) => {
@@ -312,5 +337,15 @@ export const YYYYMMDDToDate = (dateString: string) => {
   const day = Number.parseInt(atoms[2]!);
   const date = new Date();
   date.setFullYear(year, month - 1, day);
-  return stripTime(date);
+  const result = stripTime(date);
+  if (
+    result.getFullYear() !== year ||
+    result.getMonth() !== month - 1 ||
+    result.getDate() !== day
+  ) {
+    throw new Error(
+      `Passed date string ${dateString}, which is not a valid date`
+    );
+  }
+  return result;
 };
