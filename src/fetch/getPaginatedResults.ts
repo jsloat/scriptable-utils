@@ -5,6 +5,8 @@ import { MaybePromise } from '../types/utilTypes';
 type GetPaginatedResultsOptsShared<Response, Returns> = {
   initRequest: () => MaybePromise<Response>;
   subsequentRequests: (prevResponse: Response) => MaybePromise<Response>;
+  /** Skip the configured request-count warning before continuing pagination. */
+  disableRequestLimit?: boolean;
   /** Transforms raw response to the returned type */
   transformResponse?: (response: Response) => Returns;
   /** Used to combine return data type (stitching page results together) */
@@ -33,6 +35,7 @@ const getPaginatedResultsRecur = async <Response, Returns>({
   isLastResponse,
   n = 1,
   onEachPageResult,
+  disableRequestLimit,
 }: GetPaginatedResultsOptsShared<Response, Returns> &
   GetPaginedResultsOptsInternal): Promise<Returns> => {
   const initResponse = await initRequest();
@@ -42,7 +45,7 @@ const getPaginatedResultsRecur = async <Response, Returns>({
   const MAX_LOOPS_BEFORE_WARNING = getConfig(
     'GET_PAGINATED_RESULTS_MAX_LOOPS_BEFORE_WARNING'
   );
-  if (n === MAX_LOOPS_BEFORE_WARNING) {
+  if (!disableRequestLimit && n === MAX_LOOPS_BEFORE_WARNING) {
     const shouldContinue = await destructiveConfirm('Continue requests?', {
       message: `You have already made ${MAX_LOOPS_BEFORE_WARNING} requests. Do you want to continue, or return the current results?`,
       cancelButtonTitle: 'Return current results',
@@ -60,6 +63,7 @@ const getPaginatedResultsRecur = async <Response, Returns>({
       isLastResponse,
       n: n + 1,
       onEachPageResult,
+      disableRequestLimit,
     })
   );
 };
